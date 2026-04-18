@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Modules\Attendance\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Attendance extends Model
+{
+    use SoftDeletes;
+
+    protected $connection = 'legacy';
+    protected $table = 'attendances';
+    protected $guarded = ['id'];
+    protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
+    protected $casts = [
+        'all_scans' => 'array'
+    ];
+
+    /**
+     * Get the attendance_working_hour that owns the Attendance.
+     */
+    public function attendance_working_hour(): BelongsTo
+    {
+        return $this->belongsTo(AttendanceWorkingHour::class, 'attendance_working_hour_id', 'id');
+    }
+
+    /**
+     * Get the attendance_status that owns the Attendance.
+     */
+    public function attendance_status(): BelongsTo
+    {
+        return $this->belongsTo(AttendanceStatus::class, 'attendance_status_id', 'id');
+    }
+}

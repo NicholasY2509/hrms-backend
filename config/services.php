@@ -18,6 +18,9 @@ return [
         'key' => env('POSTMARK_API_KEY'),
     ],
 
+    'auth_server' => [
+        'url' => env('PASSPORT_URL'),
+    ],
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],
