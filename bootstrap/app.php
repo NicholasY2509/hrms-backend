@@ -10,6 +10,14 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function () {
+            foreach (glob(base_path('routes/v*.php')) as $file) {
+                $version = basename($file, '.php');
+                Route::prefix("api/{$version}")
+                    ->middleware('api')
+                    ->group($file);
+            }
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         //

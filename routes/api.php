@@ -1,8 +1,6 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:api');
+// This file is reserved for non-versioned legacy routes if needed.
+// Versioned routes should be placed in v1.php, v2.php, etc.

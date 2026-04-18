@@ -42,10 +42,19 @@ class ModuleServiceProvider extends ServiceProvider
         $moduleName = basename($modulePath);
 
         // Load Routes
-        if (File::exists($modulePath . '/Routes/api.php')) {
-            Route::prefix('api/' . strtolower($moduleName))
-                ->middleware('api')
-                ->group($modulePath . '/Routes/api.php');
+        $routesPath = $modulePath . '/Routes';
+        if (File::exists($routesPath)) {
+            $routeFiles = File::files($routesPath);
+
+            foreach ($routeFiles as $file) {
+                if ($file->getExtension() === 'php' && $file->getFilenameWithoutExtension() !== 'web') {
+                    $version = $file->getFilenameWithoutExtension(); // e.g., 'v1'
+                    
+                    Route::prefix("api/{$version}/" . strtolower($moduleName))
+                        ->middleware('api')
+                        ->group($file->getPathname());
+                }
+            }
         }
 
         if (File::exists($modulePath . '/Routes/web.php')) {

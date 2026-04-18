@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Attendance\Controllers;
+namespace App\Modules\Attendance\Controllers\V1;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Attendance\Resources\AttendanceResource;
