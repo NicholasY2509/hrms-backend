@@ -20,6 +20,14 @@ class User extends Authenticatable
     protected $connection = 'legacy';
 
     /**
+     * Get the user_employee record.
+     */
+    public function user_employee()
+    {
+        return $this->hasOne(\App\Modules\Employee\Models\UserEmployee::class, 'user_id', 'id');
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

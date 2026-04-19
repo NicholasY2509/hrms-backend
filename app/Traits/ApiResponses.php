@@ -16,11 +16,20 @@ trait ApiResponses
      */
     protected function successResponse($data, string $message = 'Success', int $code = 200): JsonResponse
     {
-        return response()->json([
+        $response = [
             'status' => 'Success',
             'message' => $message,
-            'data' => $data
-        ], $code);
+        ];
+
+        if (is_array($data) && isset($data['data']) && (isset($data['links']) || isset($data['meta']))) {
+            $response['data'] = $data['data'];
+            if (isset($data['links'])) $response['links'] = $data['links'];
+            if (isset($data['meta'])) $response['meta'] = $data['meta'];
+        } else {
+            $response['data'] = $data;
+        }
+
+        return response()->json($response, $code);
     }
 
     /**
