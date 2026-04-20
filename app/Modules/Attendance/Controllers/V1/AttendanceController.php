@@ -3,6 +3,9 @@
 namespace App\Modules\Attendance\Controllers\V1;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Attendance\Requests\ClockInRequest;
+use App\Modules\Attendance\Requests\ClockOutRequest;
+use App\Modules\Attendance\Requests\GetAttendanceHistoryRequest;
 use App\Modules\Attendance\Resources\AttendanceResource;
 use App\Modules\Attendance\Services\AttendanceService;
 use App\Traits\ApiResponses;
@@ -23,6 +26,31 @@ class AttendanceController extends Controller
     public function __construct(AttendanceService $attendanceService)
     {
         $this->attendanceService = $attendanceService;
+    }
+
+    /**
+     * Get attendance history for the authenticated user.
+     * 
+     * @queryParam start_date date required The start date of the range (Y-m-d). Example: 2026-04-01
+     * @queryParam end_date date required The end date of the range (Y-m-d). Example: 2026-04-30
+     * 
+     * @response {
+     *  "status": "Success",
+     *  "message": "Attendance history retrieved",
+     *  "data": {
+     *      "records": [...],
+     *      "summary": [...]
+     *  }
+     * }
+     */
+    public function index(GetAttendanceHistoryRequest $request): JsonResponse
+    {
+        $data = $this->attendanceService->getHistoryWithSummary(Auth::id(), $request->validated());
+
+        return $this->successResponse([
+            'records' => AttendanceResource::collection($data['records']),
+            'summary' => $data['summary'],
+        ], 'Attendance history retrieved');
     }
 
     /**
@@ -54,4 +82,45 @@ class AttendanceController extends Controller
 
         return $this->successResponse(new AttendanceResource($attendance), 'Current status retrieved');
     }
+
+    /**
+     * Perform clock-in for the authenticated user.
+     * 
+     * @bodyParam latitude float required The latitude of the user's current location. Example: 3.5456069
+     * @bodyParam longitude float required The longitude of the user's current location. Example: 98.6984721
+     * @bodyParam photo file The photo taken during clock-in.
+     * 
+     * @response {
+     *  "status": "Success",
+     *  "message": "Berhasil melakukan absensi masuk!",
+     *  "data": {...}
+     * }
+     */
+    public function clockIn(ClockInRequest $request): JsonResponse
+    {
+        $attendance = $this->attendanceService->clockIn(Auth::id(), $request->validated());
+
+        return $this->successResponse(new AttendanceResource($attendance), 'Berhasil melakukan absensi masuk!');
+    }
+
+    /**
+     * Perform clock-out for the authenticated user.
+     * 
+     * @bodyParam latitude float required The latitude of the user's current location. Example: 3.5456069
+     * @bodyParam longitude float required The longitude of the user's current location. Example: 98.6984721
+     * @bodyParam photo file The photo taken during clock-out.
+     * 
+     * @response {
+     *  "status": "Success",
+     *  "message": "Berhasil melakukan absensi pulang!",
+     *  "data": {...}
+     * }
+     */
+    public function clockOut(ClockOutRequest $request): JsonResponse
+    {
+        $attendance = $this->attendanceService->clockOut(Auth::id(), $request->validated());
+
+        return $this->successResponse(new AttendanceResource($attendance), 'Berhasil melakukan absensi pulang!');
+    }
 }
+

@@ -16,6 +16,15 @@ class Employee extends Model
     protected $table = 'employees';
     protected $guarded = ['id'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
+    protected $appends = ['full_name'];
+
+    /**
+     * Get the employee's full name.
+     */
+    public function getFullNameAttribute(): string
+    {
+        return trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
+    }
 
     /**
      * Get the user_employee record.

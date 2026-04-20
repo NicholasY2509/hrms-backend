@@ -113,4 +113,29 @@ class UnpaidLeaveService
 
         return null;
     }
+
+    /**
+     * Get summary info for dashboard.
+     */
+    public function getDashboardSummary(int $employeeId): array
+    {
+        $pendingCount = \App\Modules\UnpaidLeave\Models\UnpaidLeave::where('employee_id', $employeeId)
+            ->whereNull('settled_at')
+            ->count();
+
+        return [
+            'pending_count' => $pendingCount
+        ];
+    }
+
+    /**
+     * Get upcoming company holidays.
+     */
+    public function getUpcomingHolidays(int $limit = 2)
+    {
+        return Holiday::where('date', '>=', Carbon::now()->toDateString())
+            ->orderBy('date', 'asc')
+            ->limit($limit)
+            ->get();
+    }
 }

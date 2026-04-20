@@ -32,4 +32,13 @@ class AttendanceWorkingHour extends Model
     {
         return $this->belongsTo(Employee::class, 'employee_id', 'id');
     }
+
+    /**
+     * Get the working_hour associated with this attendance record.
+     */
+    public function working_hour(): BelongsTo
+    {
+        return $this->belongsTo(WorkingHour::class, 'working_hour_id', 'id');
+    }
 }
+

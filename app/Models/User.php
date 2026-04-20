@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -25,6 +24,21 @@ class User extends Authenticatable
     public function user_employee()
     {
         return $this->hasOne(\App\Modules\Employee\Models\UserEmployee::class, 'user_id', 'id');
+    }
+
+    /**
+     * Get the employee record through user_employee.
+     */
+    public function employee()
+    {
+        return $this->hasOneThrough(
+            \App\Modules\Employee\Models\Employee::class,
+            \App\Modules\Employee\Models\UserEmployee::class,
+            'user_id',
+            'id',
+            'id',
+            'employee_id'
+        );
     }
 
     /**

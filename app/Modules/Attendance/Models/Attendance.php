@@ -33,4 +33,21 @@ class Attendance extends Model
     {
         return $this->belongsTo(AttendanceStatus::class, 'attendance_status_id', 'id');
     }
+
+    /**
+     * Get the incoming_location that owns the Attendance.
+     */
+    public function incoming_location(): BelongsTo
+    {
+        return $this->belongsTo(AttendanceLocation::class, 'incoming_location_id', 'id');
+    }
+
+    /**
+     * Get the outgoing_location that owns the Attendance.
+     */
+    public function outgoing_location(): BelongsTo
+    {
+        return $this->belongsTo(AttendanceLocation::class, 'outgoing_location_id', 'id');
+    }
 }
+
