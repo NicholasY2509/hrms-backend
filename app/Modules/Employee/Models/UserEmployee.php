@@ -11,7 +11,6 @@ class UserEmployee extends Model
 {
     use SoftDeletes;
 
-    protected $connection = 'legacy';
     protected $table = 'user_employees';
     protected $guarded = ['id'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];

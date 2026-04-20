@@ -11,7 +11,6 @@ class UnpaidLeave extends Model
 {
     use SoftDeletes;
 
-    protected $connection = 'legacy';
     protected $table = 'unpaid_leaves';
     protected $guarded = ['id'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];

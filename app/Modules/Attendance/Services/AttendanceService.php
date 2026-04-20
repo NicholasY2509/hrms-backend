@@ -85,10 +85,10 @@ class AttendanceService
         $time = $now->format('H:i:00');
 
         // Legacy "batas" logic
-        $batas = Carbon::parse('10:30:00');
-        if ($now->lessThan($batas)) {
-            throw new ApplicationException('Anda belum bisa melakukan absensi pulang!', 400);
-        }
+        // $batas = Carbon::parse('10:30:00');
+        // if ($now->lessThan($batas)) {
+        //     throw new ApplicationException('Anda belum bisa melakukan absensi pulang!', 400);
+        // }
 
         $workingHour = $this->attendanceRepository->getWorkingHourByUserId($userId, $date);
         if (!$workingHour) {
@@ -201,6 +201,14 @@ class AttendanceService
             'records' => $records,
             'summary' => $summary,
         ];
+    }
+
+    /**
+     * Get attendance summary for a user.
+     */
+    public function getSummary(int $userId, string $startDate, string $endDate)
+    {
+        return $this->attendanceRepository->getSummary($userId, $startDate, $endDate);
     }
 }
 

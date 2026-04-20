@@ -1,9 +1,10 @@
 <?php
 
+use App\Http\Middleware\SyncUserByEmail;
 use App\Modules\Attendance\Controllers\V1\AttendanceController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware([\App\Http\Middleware\SyncUserByEmail::class])->group(function () {
+Route::middleware([SyncUserByEmail::class])->group(function () {
     Route::get('/', [AttendanceController::class, 'index']);
     Route::get('/status', [AttendanceController::class, 'status']);
     Route::post('/clock-in', [AttendanceController::class, 'clockIn']);

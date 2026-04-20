@@ -28,6 +28,7 @@ class DashboardResource extends JsonResource
                 ];
             }),
             'tenure' => $this['tenure'],
+            'attendance_summary' => $this['attendance_summary'],
         ];
     }
 }

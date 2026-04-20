@@ -10,7 +10,6 @@ class EmployeeLeaveApproval extends Model
 {
     use SoftDeletes;
 
-    protected $connection = 'legacy';
     protected $table = 'employee_leave_approvals';
     protected $guarded = ['id'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];

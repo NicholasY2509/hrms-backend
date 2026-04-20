@@ -11,7 +11,6 @@ class UnpaidLeaveApproval extends Model
 {
     use SoftDeletes;
 
-    protected $connection = 'legacy';
     protected $table = 'unpaid_leave_approvals';
     protected $guarded = ['id'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];

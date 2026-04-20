@@ -38,12 +38,18 @@ class DashboardService
         $leaveSummary = $employeeId ? $this->unpaidLeaveService->getDashboardSummary($employeeId) : ['pending_count' => 0];
         $holidays = $this->unpaidLeaveService->getUpcomingHolidays(2);
 
+        // Fetch monthly attendance summary
+        $startOfMonth = Carbon::now()->startOfMonth()->toDateString();
+        $today = Carbon::now()->toDateString();
+        $attendanceSummary = $this->attendanceService->getSummary($userId, $startOfMonth, $today);
+
         return [
             'employee' => $employee,
             'attendance' => $attendance,
             'leave' => $leaveSummary,
             'holidays' => $holidays,
             'tenure' => $this->calculateTenure($employee?->join_date),
+            'attendance_summary' => $attendanceSummary,
         ];
     }
 

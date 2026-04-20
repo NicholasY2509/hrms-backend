@@ -16,7 +16,6 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use \Laravel\Passport\HasApiTokens, HasFactory, Notifiable;
 
-    protected $connection = 'legacy';
 
     /**
      * Get the user_employee record.

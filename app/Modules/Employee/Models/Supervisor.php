@@ -10,7 +10,6 @@ class Supervisor extends Model
 {
     use SoftDeletes;
 
-    protected $connection = 'legacy';
     protected $table = 'supervisors';
     protected $guarded = ['id'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
