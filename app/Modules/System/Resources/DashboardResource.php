@@ -19,7 +19,7 @@ class DashboardResource extends JsonResource
         return [
             'employee' => $this['employee'] ? new EmployeeResource($this['employee']) : null,
             'attendance' => $this['attendance'] ? new AttendanceResource($this['attendance']) : null,
-            'leave' => $this['leave'],
+            'pending_requests' => $this['pending_requests'],
             'holidays' => $this['holidays']->map(function ($holiday) {
                 return [
                     'name' => $holiday->name,
@@ -29,6 +29,7 @@ class DashboardResource extends JsonResource
             }),
             'tenure' => $this['tenure'],
             'attendance_summary' => $this['attendance_summary'],
+            'attendance_rate' => $this['attendance_rate'],
         ];
     }
 }

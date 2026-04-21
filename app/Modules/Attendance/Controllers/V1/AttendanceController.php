@@ -84,6 +84,39 @@ class AttendanceController extends Controller
     }
 
     /**
+     * Get working hour for a specific date.
+     * 
+     * @queryParam date date The date to retrieve (Y-m-d). Example: 2026-04-21
+     * 
+     * @response {
+     *  "status": "Success",
+     *  "message": "Working hour retrieved successfully",
+     *  "data": {
+     *      "id": 1,
+     *      "date": "2026-04-21",
+     *      "shift_start": "2026-04-21 08:30:00",
+     *      "shift_end": "2026-04-21 17:00:00"
+     *  }
+     * }
+     */
+    public function workingHour(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $userId = Auth::id();
+        $date = $request->query('date', \Carbon\Carbon::now()->format('Y-m-d'));
+
+        $workingHour = $this->attendanceService->getWorkingHourByDate($userId, $date);
+
+        if (!$workingHour) {
+            return $this->errorResponse('Data Jam Kerja tidak ditemukan untuk tanggal tersebut!', 404);
+        }
+
+        return $this->successResponse(
+            new \App\Modules\Attendance\Resources\AttendanceWorkingHourResource($workingHour),
+            'Working hour retrieved successfully'
+        );
+    }
+
+    /**
      * Perform clock-in for the authenticated user.
      * 
      * @bodyParam latitude float required The latitude of the user's current location. Example: 3.5456069

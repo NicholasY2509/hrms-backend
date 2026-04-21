@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware([SyncUserByEmail::class])->group(function () {
     Route::get('/', [AttendanceController::class, 'index']);
     Route::get('/status', [AttendanceController::class, 'status']);
+    Route::get('/working-hour', [AttendanceController::class, 'workingHour']);
     Route::post('/clock-in', [AttendanceController::class, 'clockIn']);
     Route::post('/clock-out', [AttendanceController::class, 'clockOut']);
 });

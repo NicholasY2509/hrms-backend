@@ -187,6 +187,14 @@ class AttendanceService
     }
 
     /**
+     * Get working hour for a user by date.
+     */
+    public function getWorkingHourByDate(int $userId, string $date): ?\App\Modules\Attendance\Models\AttendanceWorkingHour
+    {
+        return $this->attendanceRepository->getWorkingHourByUserId($userId, $date);
+    }
+
+    /**
      * Get attendance history and summary for a user.
      */
     public function getHistoryWithSummary(int $userId, array $params): array

@@ -48,6 +48,15 @@ class UnpaidLeave extends Model
             return 'Settled';
         }
 
+        // Prioritize Rejected status
+        $rejection = $this->unpaid_leave_approvals()
+            ->where('status', 'Rejected')
+            ->first();
+
+        if ($rejection) {
+            return "Rejected";
+        }
+
         $status = $this->confirmed_at ? 'Pending' : 'Draft';
 
         // Check for specific approval record matching the current basic status
@@ -60,14 +69,8 @@ class UnpaidLeave extends Model
             $approval = $this->unpaid_leave_approvals()
                 ->orderByDesc('updated_at')
                 ->first();
-        }
-
-        if ($approval) {
-            $approver = $approval->employee_id 
-                ? ($approval->employee?->full_name ?? '-') 
-                : ($approval->role ?? '-');
-                
-            return "{$approval->status} by {$approver}";
+        } else {
+            return "Pending";
         }
 
         return $status;

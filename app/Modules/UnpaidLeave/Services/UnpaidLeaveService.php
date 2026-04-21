@@ -115,17 +115,23 @@ class UnpaidLeaveService
     }
 
     /**
-     * Get summary info for dashboard.
+     * Get pending unpaid leave requests for dashboard.
+     *
+     * @param int $employeeId
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getDashboardSummary(int $employeeId): array
+    public function getPendingRequests(int $employeeId, int $limit = 5)
     {
-        $pendingCount = \App\Modules\UnpaidLeave\Models\UnpaidLeave::where('employee_id', $employeeId)
+        return \App\Modules\UnpaidLeave\Models\UnpaidLeave::with(['unpaid_leave_type', 'unpaid_leave_approvals.employee'])
+            ->where('employee_id', $employeeId)
             ->whereNull('settled_at')
-            ->count();
-
-        return [
-            'pending_count' => $pendingCount
-        ];
+            ->whereDoesntHave('unpaid_leave_approvals', function ($query) {
+                $query->where('status', 'Rejected');
+            })
+            ->latest()
+            ->limit($limit)
+            ->get();
     }
 
     /**
