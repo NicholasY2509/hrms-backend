@@ -22,9 +22,7 @@ class ClockInRequest extends FormRequest
         return [
             'latitude'  => 'required|numeric',
             'longitude' => 'required|numeric',
-            'photo'     => 'required|image|max:5120', // Increased limit for better photos
-            'face_image' => 'required|string', // Base64
-            'face_video' => 'nullable|string', // Base64 for liveness
+            'photo'     => 'required|image|max:5120',
         ];
     }
 }

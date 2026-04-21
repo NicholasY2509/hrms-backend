@@ -10,4 +10,5 @@ Route::middleware([SyncUserByEmail::class])->group(function () {
     Route::get('/working-hour', [AttendanceController::class, 'workingHour']);
     Route::post('/clock-in', [AttendanceController::class, 'clockIn']);
     Route::post('/clock-out', [AttendanceController::class, 'clockOut']);
+    Route::post('/check-location', [AttendanceController::class, 'checkLocation']);
 });

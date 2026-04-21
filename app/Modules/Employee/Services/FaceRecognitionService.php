@@ -18,7 +18,7 @@ class FaceRecognitionService
     }
 
     /**
-     * Register a new face profile.
+     * Register a new face profile and save it to the database.
      *
      * @param int $userId
      * @param array $images Uploaded image files
@@ -28,24 +28,42 @@ class FaceRecognitionService
      */
     public function register(int $userId, array $images, bool $livenessPassed): array
     {
+        Log::info('Face Recognition - Registration Started', [
+            'user_id' => $userId,
+            'image_count' => count($images),
+            'liveness_passed' => $livenessPassed,
+        ]);
+
         if (!$livenessPassed) {
             throw new Exception('Liveness check failed. Please try again.');
         }
 
-        $multipart = [
-            ['name' => 'user_id', 'contents' => $userId],
-        ];
+        $request = Http::withToken($this->apiKey)->asMultipart();
+
+        $request->attach('user_id', $userId);
+        $request->attach('liveness_passed', $livenessPassed ? '1' : '0');
 
         foreach ($images as $image) {
-            $multipart[] = [
-                'name' => 'images',
-                'contents' => fopen($image->path(), 'r'),
-                'filename' => $image->getClientOriginalName(),
-            ];
+            $request->attach(
+                'images',
+                fopen($image->path(), 'r'),
+                $image->getClientOriginalName()
+            );
         }
 
-        $response = Http::withToken($this->apiKey)
-            ->post("{$this->baseUrl}/v1/face/register", $multipart);
+        $url = "{$this->baseUrl}/face/register";
+        Log::info('Face Recognition - Sending Registration Request', [
+            'url' => $url,
+            'user_id' => $userId,
+        ]);
+
+        $response = $request->post($url);
+
+        Log::info('Face Recognition - Registration Response Received', [
+            'user_id' => $userId,
+            'status' => $response->status(),
+            'body' => $response->json(),
+        ]);
 
         if ($response->failed()) {
             Log::error('Face Registration Failed', [
@@ -56,7 +74,19 @@ class FaceRecognitionService
             throw new Exception($response->json('message') ?? 'Face registration failed');
         }
 
-        return $response->json();
+        $result = $response->json();
+
+        if ($result['success'] && ($result['face_detected'] ?? false)) {
+            \App\Modules\Employee\Models\UserFaceProfile::updateOrCreate(
+                ['user_id' => $userId],
+                [
+                    'embedding' => $result['embedding'],
+                    'registered_at' => now(),
+                ]
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -71,23 +101,40 @@ class FaceRecognitionService
      */
     public function verify(int $userId, $image, array $storedEmbedding, ?float $threshold = null): array
     {
-        $multipart = [
-            ['name' => 'user_id', 'contents' => $userId],
-            ['name' => 'stored_embedding', 'contents' => json_encode($storedEmbedding)],
-        ];
+        Log::info('Face Recognition - Verification Started', [
+            'user_id' => $userId,
+            'threshold' => $threshold,
+            'embedding_size' => count($storedEmbedding),
+        ]);
+
+        $request = Http::withToken($this->apiKey)->asMultipart();
+
+        $request->attach('user_id', $userId);
+        $request->attach('stored_embedding', json_encode($storedEmbedding));
 
         if ($threshold !== null) {
-            $multipart[] = ['name' => 'threshold', 'contents' => $threshold];
+            $request->attach('threshold', $threshold);
         }
 
-        $multipart[] = [
-            'name' => 'image',
-            'contents' => fopen($image->path(), 'r'),
-            'filename' => $image->getClientOriginalName(),
-        ];
+        $request->attach(
+            'image',
+            fopen($image->path(), 'r'),
+            $image->getClientOriginalName()
+        );
 
-        $response = Http::withToken($this->apiKey)
-            ->post("{$this->baseUrl}/v1/face/verify", $multipart);
+        $url = "{$this->baseUrl}/face/verify";
+        Log::info('Face Recognition - Sending Verification Request', [
+            'url' => $url,
+            'user_id' => $userId,
+        ]);
+
+        $response = $request->post($url);
+
+        Log::info('Face Recognition - Verification Response Received', [
+            'user_id' => $userId,
+            'status' => $response->status(),
+            'body' => $response->json(),
+        ]);
 
         if ($response->failed()) {
             Log::error('Face Verification Failed', [

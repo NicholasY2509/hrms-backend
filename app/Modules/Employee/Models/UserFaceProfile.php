@@ -13,6 +13,7 @@ class UserFaceProfile extends Model
     protected $fillable = [
         'user_id',
         'embedding',
+        'registered_at',
     ];
 
     protected $casts = [

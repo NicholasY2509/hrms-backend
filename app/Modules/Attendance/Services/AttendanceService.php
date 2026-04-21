@@ -6,9 +6,11 @@ use App\Modules\Attendance\Repositories\AttendanceRepository;
 use App\Modules\Attendance\Models\Attendance;
 
 use App\Exceptions\ApplicationException;
+use App\Modules\Employee\Models\UserFaceProfile;
 use App\Services\StorageService;
 use App\Modules\Attendance\Models\AttendanceLocation;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class AttendanceService
 {
@@ -31,30 +33,9 @@ class AttendanceService
      */
     public function clockIn(int $userId, array $data): Attendance
     {
-        // Face Verification (Mandatory)
-        $faceProfile = \App\Modules\Employee\Models\UserFaceProfile::where('user_id', $userId)->first();
+        $faceProfile = UserFaceProfile::where('user_id', $userId)->first();
         if (!$faceProfile) {
             throw new ApplicationException('Anda belum mendaftarkan wajah! Silahkan daftar di menu Profil.', 400);
-        }
-
-        try {
-            $verification = $this->faceService->verify(
-                $userId,
-                $data['face_image'],
-                $faceProfile->embedding,
-                $data['face_video'] ?? null
-            );
-
-            if (!$verification['matched']) {
-                throw new ApplicationException('Wajah tidak cocok! Silahkan coba lagi.', 400);
-            }
-
-            if (!$verification['liveness_passed']) {
-                throw new ApplicationException('Gagal verifikasi liveness! Pastikan Anda adalah orang asli.', 400);
-            }
-        } catch (\Exception $e) {
-            Log::error('Attendance Face Verification Error: ' . $e->getMessage());
-            throw new ApplicationException('Gagal melakukan verifikasi wajah: ' . $e->getMessage(), 400);
         }
 
         $now = Carbon::now();
@@ -111,29 +92,9 @@ class AttendanceService
     public function clockOut(int $userId, array $data): Attendance
     {
         // Face Verification (Mandatory)
-        $faceProfile = \App\Modules\Employee\Models\UserFaceProfile::where('user_id', $userId)->first();
+        $faceProfile = UserFaceProfile::where('user_id', $userId)->first();
         if (!$faceProfile) {
             throw new ApplicationException('Anda belum mendaftarkan wajah! Silahkan daftar di menu Profil.', 400);
-        }
-
-        try {
-            $verification = $this->faceService->verify(
-                $userId,
-                $data['face_image'],
-                $faceProfile->embedding,
-                $data['face_video'] ?? null
-            );
-
-            if (!$verification['matched']) {
-                throw new ApplicationException('Wajah tidak cocok! Silahkan coba lagi.', 400);
-            }
-
-            if (!$verification['liveness_passed']) {
-                throw new ApplicationException('Gagal verifikasi liveness! Pastikan Anda adalah orang asli.', 400);
-            }
-        } catch (\Exception $e) {
-            Log::error('Attendance Face Verification Error: ' . $e->getMessage());
-            throw new ApplicationException('Gagal melakukan verifikasi wajah: ' . $e->getMessage(), 400);
         }
 
         $now = Carbon::now();
@@ -273,6 +234,14 @@ class AttendanceService
     public function getSummary(int $userId, string $startDate, string $endDate)
     {
         return $this->attendanceRepository->getSummary($userId, $startDate, $endDate);
+    }
+
+    /**
+     * Check if a user's current location is valid.
+     */
+    public function checkUserLocation(int $userId, float $lat, float $lon): bool
+    {
+        return $this->validateLocation($userId, $lat, $lon) !== null;
     }
 }
 

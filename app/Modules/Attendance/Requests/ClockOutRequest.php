@@ -23,8 +23,6 @@ class ClockOutRequest extends FormRequest
             'latitude'  => 'required|numeric',
             'longitude' => 'required|numeric',
             'photo'     => 'required|image|max:5120',
-            'face_image' => 'required|string',
-            'face_video' => 'nullable|string',
         ];
     }
 }

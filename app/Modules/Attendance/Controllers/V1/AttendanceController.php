@@ -117,6 +117,34 @@ class AttendanceController extends Controller
     }
 
     /**
+     * Check if the user is within a valid geofence for attendance.
+     * 
+     * @bodyParam latitude float required The latitude of the user's current location.
+     * @bodyParam longitude float required The longitude of the user's current location.
+     */
+    public function checkLocation(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $request->validate([
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ]);
+
+        $isValid = $this->attendanceService->checkUserLocation(
+            Auth::id(),
+            $request->latitude,
+            $request->longitude
+        );
+
+        if ($isValid) {
+            return $this->successResponse([
+                'is_valid' => true,
+            ], 'Location is valid for attendance');
+        }
+
+        return $this->errorResponse('Anda berada di luar area absensi yang valid!', 422);
+    }
+
+    /**
      * Perform clock-in for the authenticated user.
      * 
      * @bodyParam latitude float required The latitude of the user's current location. Example: 3.5456069

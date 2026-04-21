@@ -54,14 +54,13 @@ class FaceController extends Controller
     /**
      * Register new face biometric data.
      *
-     * @bodyParam images array required List of Base64 encoded images.
-     * @bodyParam video string Base64 encoded video for liveness detection.
+     * @bodyParam images array required List of image files.
+     * @bodyParam liveness_passed boolean required Whether liveness check passed.
      *
      * @response {
      *  "status": "Success",
      *  "message": "Face registered successfully",
      *  "data": {
-     *      "liveness_passed": true,
      *      "face_detected": true
      *  }
      * }
@@ -78,14 +77,9 @@ class FaceController extends Controller
                 $data['liveness_passed']
             );
 
-            if ($result['success']) {
-                UserFaceProfile::updateOrCreate(
-                    ['user_id' => $userId],
-                    ['embedding' => json_encode($result['embedding'])]
-                );
-
+            if ($result['success'] && ($result['face_detected'] ?? false)) {
                 return $this->successResponse([
-                    'face_detected' => $result['face_detected'],
+                    'face_detected' => true,
                 ], 'Face registered successfully');
             }
 
@@ -112,13 +106,10 @@ class FaceController extends Controller
      *  }
      * }
      */
-    public function verify(Request $request): JsonResponse
+    public function verify(\App\Modules\Employee\Requests\FaceVerifyRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'image' => 'required|image|max:10240',
-            ]);
-
+            $data = $request->validated();
             $userId = Auth::id();
             $profile = UserFaceProfile::where('user_id', $userId)->first();
 
@@ -126,12 +117,11 @@ class FaceController extends Controller
                 return $this->errorResponse('Face profile not enrolled', 404);
             }
 
-            $embedding = json_decode($profile->embedding, true);
             $result = $this->faceService->verify(
                 $userId,
                 $request->file('image'),
-                $embedding,
-                0.85
+                $profile->embedding,
+                $data['threshold'] ?? 0.85
             );
 
             if ($result['success'] && $result['matched']) {
@@ -143,7 +133,11 @@ class FaceController extends Controller
 
             return $this->errorResponse(
                 $result['message'] ?? 'Face verification failed',
-                422
+                422,
+                [
+                    'matched' => false,
+                    'similarity_score' => $result['similarity_score'] ?? 0,
+                ]
             );
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), 500);

@@ -10,5 +10,6 @@ Route::middleware([\App\Http\Middleware\SyncUserByEmail::class])->group(function
     Route::prefix('face')->group(function () {
         Route::get('/status', [\App\Modules\Employee\Controllers\V1\FaceController::class, 'status']);
         Route::post('/register', [\App\Modules\Employee\Controllers\V1\FaceController::class, 'register']);
+        Route::post('/verify', [\App\Modules\Employee\Controllers\V1\FaceController::class, 'verify']);
     });
 });
