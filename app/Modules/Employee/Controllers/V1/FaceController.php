@@ -8,6 +8,7 @@ use App\Modules\Employee\Requests\FaceRegisterRequest;
 use App\Modules\Employee\Services\FaceRecognitionService;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Exception;
 
@@ -74,23 +75,74 @@ class FaceController extends Controller
             $result = $this->faceService->register(
                 $userId,
                 $data['images'],
-                $data['video'] ?? null
+                $data['liveness_passed']
             );
 
-            if ($result['success'] && $result['liveness_passed']) {
+            if ($result['success']) {
                 UserFaceProfile::updateOrCreate(
                     ['user_id' => $userId],
-                    ['embedding' => $result['embedding']]
+                    ['embedding' => json_encode($result['embedding'])]
                 );
 
                 return $this->successResponse([
-                    'liveness_passed' => true,
                     'face_detected' => $result['face_detected'],
                 ], 'Face registered successfully');
             }
 
             return $this->errorResponse(
-                $result['message'] ?? 'Liveness detection failed',
+                $result['message'] ?? 'Face registration failed',
+                422
+            );
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Verify face for attendance.
+     *
+     * @bodyParam image file required Uploaded image file.
+     *
+     * @response {
+     *  "status": "Success",
+     *  "message": "Face verified successfully",
+     *  "data": {
+     *      "matched": true,
+     *      "similarity_score": 0.92
+     *  }
+     * }
+     */
+    public function verify(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'image' => 'required|image|max:10240',
+            ]);
+
+            $userId = Auth::id();
+            $profile = UserFaceProfile::where('user_id', $userId)->first();
+
+            if (!$profile) {
+                return $this->errorResponse('Face profile not enrolled', 404);
+            }
+
+            $embedding = json_decode($profile->embedding, true);
+            $result = $this->faceService->verify(
+                $userId,
+                $request->file('image'),
+                $embedding,
+                0.85
+            );
+
+            if ($result['success'] && $result['matched']) {
+                return $this->successResponse([
+                    'matched' => true,
+                    'similarity_score' => $result['similarity_score'],
+                ], 'Face verified successfully');
+            }
+
+            return $this->errorResponse(
+                $result['message'] ?? 'Face verification failed',
                 422
             );
         } catch (Exception $e) {

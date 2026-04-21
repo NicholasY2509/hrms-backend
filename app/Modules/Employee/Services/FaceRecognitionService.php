@@ -21,18 +21,31 @@ class FaceRecognitionService
      * Register a new face profile.
      *
      * @param int $userId
-     * @param array $images Base64 encoded images
-     * @param string|null $video Base64 encoded video
+     * @param array $images Uploaded image files
+     * @param bool $livenessPassed Whether liveness check passed
      * @return array
      * @throws Exception
      */
-    public function register(int $userId, array $images, ?string $video = null): array
+    public function register(int $userId, array $images, bool $livenessPassed): array
     {
-        $response = Http::withToken($this->apiKey)->post("{$this->baseUrl}/face/register", [
-            'user_id' => $userId,
-            'images' => $images,
-            'video' => $video,
-        ]);
+        if (!$livenessPassed) {
+            throw new Exception('Liveness check failed. Please try again.');
+        }
+
+        $multipart = [
+            ['name' => 'user_id', 'contents' => $userId],
+        ];
+
+        foreach ($images as $image) {
+            $multipart[] = [
+                'name' => 'images',
+                'contents' => fopen($image->path(), 'r'),
+                'filename' => $image->getClientOriginalName(),
+            ];
+        }
+
+        $response = Http::withToken($this->apiKey)
+            ->post("{$this->baseUrl}/v1/face/register", $multipart);
 
         if ($response->failed()) {
             Log::error('Face Registration Failed', [
@@ -50,20 +63,31 @@ class FaceRecognitionService
      * Verify a face against a stored embedding.
      *
      * @param int $userId
-     * @param string $image Base64 encoded image
+     * @param \Illuminate\Http\UploadedFile $image
      * @param array $storedEmbedding
-     * @param string|null $video Base64 encoded video
+     * @param float|null $threshold
      * @return array
      * @throws Exception
      */
-    public function verify(int $userId, string $image, array $storedEmbedding, ?string $video = null): array
+    public function verify(int $userId, $image, array $storedEmbedding, ?float $threshold = null): array
     {
-        $response = Http::withToken($this->apiKey)->post("{$this->baseUrl}/face/verify", [
-            'user_id' => $userId,
-            'image' => $image,
-            'stored_embedding' => $storedEmbedding,
-            'video' => $video,
-        ]);
+        $multipart = [
+            ['name' => 'user_id', 'contents' => $userId],
+            ['name' => 'stored_embedding', 'contents' => json_encode($storedEmbedding)],
+        ];
+
+        if ($threshold !== null) {
+            $multipart[] = ['name' => 'threshold', 'contents' => $threshold];
+        }
+
+        $multipart[] = [
+            'name' => 'image',
+            'contents' => fopen($image->path(), 'r'),
+            'filename' => $image->getClientOriginalName(),
+        ];
+
+        $response = Http::withToken($this->apiKey)
+            ->post("{$this->baseUrl}/v1/face/verify", $multipart);
 
         if ($response->failed()) {
             Log::error('Face Verification Failed', [

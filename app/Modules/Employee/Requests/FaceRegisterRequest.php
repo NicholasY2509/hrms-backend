@@ -22,9 +22,9 @@ class FaceRegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'images' => 'required|array|min:1',
-            'images.*' => 'string', // Base64 strings
-            'video' => 'nullable|string', // Base64 string
+            'images' => 'required|array|min:1|max:10',
+            'images.*' => 'file|image|max:10240', // Max 10MB per image
+            'liveness_passed' => 'required|boolean',
         ];
     }
 }
