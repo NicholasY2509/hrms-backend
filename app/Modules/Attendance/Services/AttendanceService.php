@@ -38,16 +38,10 @@ class AttendanceService
             throw new ApplicationException('Anda belum mendaftarkan wajah! Silahkan daftar di menu Profil.', 400);
         }
 
-        $now = Carbon::now();
-        $date = $now->format('Y-m-d');
-        $time = $now->format('H:i:00');
+        $session = $this->resolveCurrentAttendanceSession($userId);
+        $workingHour = $session['working_hour'];
+        $attendance = $session['attendance'];
 
-        $workingHour = $this->attendanceRepository->getWorkingHourByUserId($userId, $date);
-        if (!$workingHour) {
-            throw new ApplicationException('Data Jam Kerja tidak ditemukan!', 400);
-        }
-
-        $attendance = $this->attendanceRepository->getAttendanceByWorkingHourId($workingHour->id);
         if ($attendance && $attendance->incoming_scan) {
             throw new ApplicationException('Anda sudah melakukan absensi masuk!', 400);
         }
@@ -61,6 +55,9 @@ class AttendanceService
             $attendance = new Attendance();
             $attendance->attendance_working_hour_id = $workingHour->id;
         }
+
+        $now = Carbon::now();
+        $time = $now->format('H:i:00');
 
         $attendance->incoming_scan = $time;
         $attendance->incoming_latitude = $data['latitude'];
@@ -97,22 +94,10 @@ class AttendanceService
             throw new ApplicationException('Anda belum mendaftarkan wajah! Silahkan daftar di menu Profil.', 400);
         }
 
-        $now = Carbon::now();
-        $date = $now->format('Y-m-d');
-        $time = $now->format('H:i:00');
+        $session = $this->resolveCurrentAttendanceSession($userId);
+        $workingHour = $session['working_hour'];
+        $attendance = $session['attendance'];
 
-        // Legacy "batas" logic
-        // $batas = Carbon::parse('10:30:00');
-        // if ($now->lessThan($batas)) {
-        //     throw new ApplicationException('Anda belum bisa melakukan absensi pulang!', 400);
-        // }
-
-        $workingHour = $this->attendanceRepository->getWorkingHourByUserId($userId, $date);
-        if (!$workingHour) {
-            throw new ApplicationException('Data Jam Kerja tidak ditemukan!', 400);
-        }
-
-        $attendance = $this->attendanceRepository->getAttendanceByWorkingHourId($workingHour->id);
         if (!$attendance || !$attendance->incoming_scan) {
             throw new ApplicationException('Anda belum melakukan absensi masuk!', 400);
         }
@@ -126,6 +111,9 @@ class AttendanceService
             throw new ApplicationException('Lokasi anda terlalu jauh!', 400);
         }
 
+        $now = Carbon::now();
+        $time = $now->format('H:i:00');
+
         $attendance->outgoing_scan = $time;
         $attendance->outgoing_latitude = $data['latitude'];
         $attendance->outgoing_longitude = $data['longitude'];
@@ -138,7 +126,7 @@ class AttendanceService
         $clockOutTime = Carbon::parse($workingHour->working_hour->clock_out);
         $currentTime = Carbon::parse($time);
 
-        if ($clockOutTime->greaterThan($currentTime)) {
+        if ($clockOutTime->greaterThan($currentTime) && $workingHour->attendance_at == $now->format('Y-m-d')) {
             $attendance->early_time = $clockOutTime->diff($currentTime)->format('%H:%I:%S');
         }
 
@@ -184,23 +172,93 @@ class AttendanceService
     }
 
     /**
+     * Resolve the most relevant attendance session for the user (handles night shifts and abandoned shifts).
+     */
+    public function resolveCurrentAttendanceSession(int $userId): array
+    {
+        $nearbySchedules = $this->attendanceRepository->getNearbyWorkingHours($userId);
+        $now = Carbon::now();
+
+        // Priority 1: Check for upcoming shift that is ready to Clock In (Start - 1 hour)
+        foreach ($nearbySchedules as $schedule) {
+            $attendance = $schedule->attendance;
+            if ($attendance && $attendance->incoming_scan) continue;
+
+            $scheduledStart = Carbon::parse($schedule->attendance_at . ' ' . $schedule->working_hour->clock_in);
+            $clockInWindowStart = (clone $scheduledStart)->subHour();
+            $clockInWindowEnd = (clone $scheduledStart)->addHours(4); // Keep window open for late clock in
+
+            if ($now->greaterThanOrEqualTo($clockInWindowStart) && $now->lessThanOrEqualTo($clockInWindowEnd)) {
+                return [
+                    'working_hour' => $schedule,
+                    'attendance' => $attendance
+                ];
+            }
+        }
+
+        // Priority 2: Check for unfinished session from Yesterday/Today within Clock Out window (End + 5 hours)
+        foreach ($nearbySchedules as $schedule) {
+            $attendance = $schedule->attendance;
+            if (!$attendance || !$attendance->incoming_scan || $attendance->outgoing_scan) continue;
+
+            $scheduledEnd = Carbon::parse($schedule->attendance_at . ' ' . $schedule->working_hour->clock_out);
+            
+            // Handle overnight shift: if end < start, then end is next day
+            $scheduledStart = Carbon::parse($schedule->attendance_at . ' ' . $schedule->working_hour->clock_in);
+            if ($scheduledEnd->lessThan($scheduledStart)) {
+                $scheduledEnd->addDay();
+            }
+
+            $clockOutWindowEnd = (clone $scheduledEnd)->addHours(5);
+
+            if ($now->lessThanOrEqualTo($clockOutWindowEnd)) {
+                return [
+                    'working_hour' => $schedule,
+                    'attendance' => $attendance
+                ];
+            }
+        }
+
+        // Default: Return today's schedule if available, otherwise yesterday's
+        $todayStr = $now->format('Y-m-d');
+        $todaySchedule = $nearbySchedules->where('attendance_at', $todayStr)->first();
+
+        if ($todaySchedule) {
+            return [
+                'working_hour' => $todaySchedule,
+                'attendance' => $todaySchedule->attendance
+            ];
+        }
+
+        $fallback = $nearbySchedules->last();
+        if (!$fallback) {
+            throw new ApplicationException('Data Jam Kerja tidak ditemukan!', 400);
+        }
+
+        return [
+            'working_hour' => $fallback,
+            'attendance' => $fallback->attendance
+        ];
+    }
+
+    /**
      * Get the attendance status for the authenticated user.
      */
     public function getUserStatus(int $userId): ?Attendance
     {
-        $attendance = $this->attendanceRepository->getStatusByUserId($userId);
+        try {
+            $session = $this->resolveCurrentAttendanceSession($userId);
+            $attendance = $session['attendance'];
 
-        if (!$attendance) {
-            $date = Carbon::now()->format('Y-m-d');
-            $workingHour = $this->attendanceRepository->getWorkingHourByUserId($userId, $date);
-
-            if ($workingHour) {
+            if (!$attendance) {
                 $attendance = new Attendance();
-                $attendance->setRelation('attendance_working_hour', $workingHour);
+                $attendance->setRelation('attendance_working_hour', $session['working_hour']);
             }
-        }
 
-        return $attendance;
+            return $attendance;
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**
@@ -220,7 +278,32 @@ class AttendanceService
         $endDate = $params['end_date'];
 
         $records = $this->attendanceRepository->getHistory($userId, $startDate, $endDate);
-        $summary = $this->attendanceRepository->getSummary($userId, $startDate, $endDate);
+        $summaryData = $this->attendanceRepository->getSummary($userId, $startDate, $endDate);
+
+        $totalData = $summaryData->sum('count');
+        $liburCount = $summaryData->where('name', 'Libur')->first()?->count ?? 0;
+
+        $summary = $summaryData->map(function ($item) use ($totalData, $liburCount) {
+            $count = $item->count;
+            
+            // Merge Libur count into Hadir for percentage calculation
+            if ($item->name === 'Hadir') {
+                $count += $liburCount;
+            }
+
+            // Libur itself should show 0% if it's already merged into Hadir
+            if ($item->name === 'Libur') {
+                $percentage = 0;
+            } else {
+                $percentage = ($totalData > 0) ? ($count / $totalData) * 100 : 0;
+            }
+            
+            return [
+                'name' => $item->name,
+                'count' => $item->count,
+                'percentage' => round($percentage, 1),
+            ];
+        });
 
         return [
             'records' => $records,

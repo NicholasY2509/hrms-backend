@@ -87,6 +87,24 @@ class AttendanceRepository
         return $attendance;
     }
     /**
+     * Get working hours for a user within a nearby window (Yesterday & Today).
+     */
+    public function getNearbyWorkingHours(int $userId): \Illuminate\Database\Eloquent\Collection
+    {
+        $yesterday = Carbon::yesterday()->format('Y-m-d');
+        $today = Carbon::now()->format('Y-m-d');
+
+        return AttendanceWorkingHour::query()
+            ->whereIn('attendance_at', [$yesterday, $today])
+            ->whereHas('employee.user_employee', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->with(['working_hour', 'attendance.attendance_status'])
+            ->orderBy('attendance_at', 'asc')
+            ->get();
+    }
+
+    /**
      * Get attendance history for a user within a date range.
      */
     public function getHistory(int $userId, string $startDate, string $endDate): \Illuminate\Database\Eloquent\Collection
