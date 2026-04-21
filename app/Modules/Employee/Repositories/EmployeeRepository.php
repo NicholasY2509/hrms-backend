@@ -18,7 +18,7 @@ class EmployeeRepository
             ->whereHas('user_employee', function ($query) use ($userId) {
                 $query->where('user_id', $userId);
             })
-            ->with(['user_employee.user', 'supervisor.employee'])
+            ->with(['user_employee.user', 'supervisor.employee', 'department', 'position'])
             ->first();
     }
 }
