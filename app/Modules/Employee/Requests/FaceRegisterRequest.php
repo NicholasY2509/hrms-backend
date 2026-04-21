@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Modules\Attendance\Requests;
+namespace App\Modules\Employee\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ClockOutRequest extends FormRequest
+class FaceRegisterRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -16,15 +16,15 @@ class ClockOutRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'latitude'  => 'required|numeric',
-            'longitude' => 'required|numeric',
-            'photo'     => 'required|image|max:5120',
-            'face_image' => 'required|string',
-            'face_video' => 'nullable|string',
+            'images' => 'required|array|min:1',
+            'images.*' => 'string', // Base64 strings
+            'video' => 'nullable|string', // Base64 string
         ];
     }
 }

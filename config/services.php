@@ -38,4 +38,9 @@ return [
         ],
     ],
 
+    'face_api' => [
+        'url' => env('FACE_API_URL', 'https://hrms-face-api.deltamastoyota.com'),
+        'key' => env('FACE_API_KEY'),
+    ],
+
 ];
