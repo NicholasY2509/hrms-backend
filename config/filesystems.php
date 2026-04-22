@@ -63,23 +63,17 @@ return [
         'gcs' => [
             'driver' => 'gcs',
             'keyFile' => (function($file) {
-                // Return path directly if it looks absolute or is a stream
-                if (empty($file)) {
-                    $file = storage_path('app/gcs-key.json');
-                }
-                
-                $fullPath = (str_starts_with($file, '/') || str_contains($file, ':')) ? $file : base_path($file);
-                
+                $path = $file ?: storage_path('app/gcs-key.json');
+                $fullPath = (str_starts_with($path, '/') || str_contains($path, ':')) ? $path : base_path($path);
                 if (file_exists($fullPath)) {
                     return json_decode(file_get_contents($fullPath), true);
                 }
-                
-                return $file;
+                return $fullPath;
             })(env('GOOGLE_CLOUD_KEY_FILE')),
-            'projectId' => env('GOOGLE_CLOUD_PROJECT_ID'),
-            'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET'),
-            'pathPrefix' => env('GOOGLE_CLOUD_STORAGE_PATH_PREFIX'),
-            'storageApiUri' => env('GOOGLE_CLOUD_STORAGE_STORAGE_API_URI'),
+            'projectId' => env('GOOGLE_CLOUD_PROJECT_ID', 'ddms-366407'),
+            'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET', 'deltamas-storage'),
+            'pathPrefix' => env('GOOGLE_CLOUD_STORAGE_PATH_PREFIX', ''),
+            'storageApiUri' => env('GOOGLE_CLOUD_STORAGE_STORAGE_API_URI', null),
             'visibility' => 'noPredefinedVisibility',
             'visibilityHandler' => \League\Flysystem\GoogleCloudStorage\UniformBucketLevelAccessVisibility::class,
             'throw' => true,
