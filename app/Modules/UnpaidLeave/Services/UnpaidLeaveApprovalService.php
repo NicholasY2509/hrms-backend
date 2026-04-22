@@ -43,7 +43,6 @@ class UnpaidLeaveApprovalService
         /** @var User $submitter */
         $submitter = auth()->user();
 
-        // Replicate legacy: if (!Auth::user()->hasRole('Head'))
         if (!$this->userHasRole($submitter, 'Head')) {
             $this->repository->create([
                 'unpaid_leave_id' => $leave->id,
@@ -51,7 +50,19 @@ class UnpaidLeaveApprovalService
                 'role' => 'Admin HRD',
             ]);
             
-            // TODO: In the future, trigger notification to Admin HRDs
+            // Notify Admin HRD users
+            $adminHrdUsers = User::whereHas('remote_profile', function($query) {
+                // This assumes your roles are stored/checked via the same logic as userHasRole
+                // However, for simplicity and parity, we fetch those with 'Admin HRD' role
+            })->get();
+
+            // Porting the legacy logic of fetching users with role 'Admin HRD'
+            // In typical Laravel Spatie or similar:
+            $adminHrdUsers = User::role('Admin HRD')->get(); 
+
+            foreach ($adminHrdUsers as $admin) {
+                $admin->notify(new \App\Modules\UnpaidLeave\Notifications\UnpaidLeaveApprovalNotification($leave));
+            }
         }
     }
 
@@ -70,6 +81,11 @@ class UnpaidLeaveApprovalService
                 'employee_id' => $config->approval_id,
                 'role' => null,
             ]);
+
+            $approver = Employee::with('user')->find($config->approval_id);
+            if ($approver && $approver->user) {
+                $approver->user->notify(new \App\Modules\UnpaidLeave\Notifications\UnpaidLeaveApprovalNotification($leave));
+            }
         }
     }
 
@@ -86,6 +102,11 @@ class UnpaidLeaveApprovalService
                 'employee_id' => $employee->supervisor->employee_id,
                 'role' => null,
             ]);
+
+            $supervisor = Employee::with('user')->find($employee->supervisor->employee_id);
+            if ($supervisor && $supervisor->user) {
+                $supervisor->user->notify(new \App\Modules\UnpaidLeave\Notifications\UnpaidLeaveApprovalNotification($leave));
+            }
         }
     }
 

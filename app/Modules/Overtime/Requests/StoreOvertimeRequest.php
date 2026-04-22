@@ -45,14 +45,27 @@ class StoreOvertimeRequest extends FormRequest
                 }
 
                 $diffInMinutes = $start->diffInMinutes($finish);
+                $overtimeDate = Carbon::parse($date);
+                $threeDaysAgo = Carbon::today()->subDays(3);
 
-                // Minimal 2 hours (120 minutes) for all except DAC
-                if ($this->input('type') !== Overtime::TYPE_DAC && $diffInMinutes < 120) {
+                // 3 days lock rule
+                if ($overtimeDate->lessThan($threeDaysAgo)) {
+                    $validator->errors()->add('date', 'Tanggal lembur tidak boleh lebih dari 3 hari yang lalu!');
+                }
+
+                if ($overtimeDate->greaterThan(Carbon::today())) {
+                    $validator->errors()->add('date', 'Tanggal lembur tidak boleh di masa depan!');
+                }
+
+                $roundedHours = floor($diffInMinutes / 60);
+
+                // Minimal 2 hours (rounded) for all except DAC
+                if ($this->input('type') !== Overtime::TYPE_DAC && $roundedHours < 2) {
                     $validator->errors()->add('finish_time', 'Total waktu lembur tidak boleh kurang dari 2 jam!');
                 }
 
-                // Maximal 4 hours for non-holiday and non-DAC
-                if (!in_array($this->input('type'), [Overtime::TYPE_HOLIDAY, Overtime::TYPE_DAC]) && $diffInMinutes > 240) {
+                // Maximal 4 hours (rounded) for non-holiday and non-DAC
+                if (!in_array($this->input('type'), [Overtime::TYPE_HOLIDAY, Overtime::TYPE_DAC]) && $roundedHours > 4) {
                     $validator->errors()->add('finish_time', 'Total waktu lembur tidak boleh lebih dari 4 jam!');
                 }
             }

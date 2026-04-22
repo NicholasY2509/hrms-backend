@@ -67,8 +67,9 @@ class OvertimeService
                 $totalMinutes -= (($overlap1 + $overlap2) / 60);
             }
 
-            $hours = floor($totalMinutes / 60);
-            $minutes = round($totalMinutes % 60);
+            $totalMinutesRounded = floor($totalMinutes / 60) * 60;
+            $hours = floor($totalMinutesRounded / 60);
+            $minutes = 0; // Always 0 as per "round below" rule
             $totalTimeStr = sprintf('%02d:%02d', $hours, $minutes);
 
             $codeType = $type === Overtime::TYPE_HOLIDAY ? 'NTN' : ($type === Overtime::TYPE_DAC ? 'DAC' : 'UMUM');

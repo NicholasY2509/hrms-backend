@@ -44,7 +44,12 @@ class UnpaidLeaveService
     public function createUnpaidLeave(array $data, ?UploadedFile $attachment = null)
     {
         return DB::transaction(function () use ($data, $attachment) {
+            $type = \App\Modules\UnpaidLeave\Models\UnpaidLeaveType::findOrFail($data['unpaid_leave_type_id']);
             $totalDays = $this->calculateTotalDaysExcludingHolidays($data['start_date'], $data['end_date']);
+
+            if ($type->limit && $totalDays > $type->limit) {
+                throw new \App\Exceptions\ApplicationException('Jumlah Hari untuk Tipe Pengajuan Izin melebihi batas!', 400);
+            }
 
             if ($attachment) {
                 $data['attachment'] = StorageService::store($attachment, 'unpaid_leaves');
