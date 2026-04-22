@@ -76,10 +76,10 @@ return [
                 
                 return $file;
             })(env('GOOGLE_CLOUD_KEY_FILE')),
-            'projectId' => env('GOOGLE_CLOUD_PROJECT_ID', 'ddms-366407'),
-            'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET', 'deltamas-storage'),
-            'pathPrefix' => env('GOOGLE_CLOUD_STORAGE_PATH_PREFIX', ''),
-            'storageApiUri' => env('GOOGLE_CLOUD_STORAGE_STORAGE_API_URI', null),
+            'projectId' => env('GOOGLE_CLOUD_PROJECT_ID'),
+            'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET'),
+            'pathPrefix' => env('GOOGLE_CLOUD_STORAGE_PATH_PREFIX'),
+            'storageApiUri' => env('GOOGLE_CLOUD_STORAGE_STORAGE_API_URI'),
             'visibility' => 'noPredefinedVisibility',
             'visibilityHandler' => \League\Flysystem\GoogleCloudStorage\UniformBucketLevelAccessVisibility::class,
             'throw' => true,
