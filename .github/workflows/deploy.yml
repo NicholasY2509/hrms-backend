@@ -1,0 +1,113 @@
+name: Deploy HRMS API Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HRMS_API_PROD_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan ${{ secrets.HRMS_API_PROD_HOST }} >> ~/.ssh/known_hosts
+
+      # ==============================
+      # Deploy ke server
+      # ==============================
+      - name: Create Release & Setup
+        run: |
+          RELEASE=$(date +%Y_%m_%d_%H%M)
+          echo "RELEASE=$RELEASE" >> $GITHUB_ENV
+
+          ssh ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOFSETUP
+          set -e
+
+          APP_DIR=/var/www/hrms-api.deltamastoyota.com
+          RELEASE=$RELEASE
+
+          mkdir -p \$APP_DIR/releases
+          cd \$APP_DIR/releases
+
+          eval "\$(ssh-agent -s)"
+          ssh-add ~/.ssh/hrms-api-deploy
+
+          git clone git@github.com:${{ github.repository }}.git \$RELEASE
+          cd \$RELEASE
+
+          # ==============================
+          # Symlink .env
+          # ==============================
+          ln -sfn \$APP_DIR/shared/.env .env
+
+          # ==============================
+          # Shared storage (WAJIB rm dulu)
+          # ==============================
+          rm -rf storage
+          mkdir -p \$APP_DIR/shared/storage/app/public
+          mkdir -p \$APP_DIR/shared/storage/framework/{sessions,views,cache/data}
+          mkdir -p \$APP_DIR/shared/storage/logs
+          ln -sfn \$APP_DIR/shared/storage storage
+
+          # ==============================
+          # Symlink GCS key
+          # ==============================
+          ln -sfn \$APP_DIR/shared/gcs-key.json storage/app/gcs-key.json
+
+          # ==============================
+          # Shared bootstrap cache
+          # ==============================
+          rm -rf bootstrap/cache
+          mkdir -p \$APP_DIR/shared/bootstrap/cache
+          ln -sfn \$APP_DIR/shared/bootstrap/cache bootstrap/cache
+
+          # ==============================
+          # Composer (tetap di server karena butuh PHP extensions)
+          # ==============================
+          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+          # ==============================
+          # Laravel optimize
+          # ==============================
+          php artisan migrate --force
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+          php artisan event:cache
+
+          EOFSETUP
+
+      # ==============================
+      # Switch symlink & restart services
+      # ==============================
+      - name: Activate Release
+        run: |
+          ssh ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOFACTIVATE
+          set -e
+
+          APP_DIR=/var/www/hrms-api.deltamastoyota.com
+          RELEASE=${{ env.RELEASE }}
+
+          # Update current symlink
+          ln -sfn \$APP_DIR/releases/\$RELEASE \$APP_DIR/current
+
+          cd \$APP_DIR/current
+          php artisan queue:restart || true
+
+          # Reload PHP-FPM agar OPcache clear
+          sudo systemctl reload php8.3-fpm || sudo systemctl reload php8.2-fpm || true
+
+          # ==============================
+          # Cleanup old releases (Keep only 5 latest)
+          # ==============================
+          cd \$APP_DIR/releases
+          ls -1t | tail -n +6 | xargs -d '\n' rm -rf
+
+          EOFACTIVATE
