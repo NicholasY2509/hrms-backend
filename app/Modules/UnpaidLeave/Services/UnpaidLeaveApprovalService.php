@@ -51,18 +51,18 @@ class UnpaidLeaveApprovalService
             ]);
             
             // Notify Admin HRD users
+            // FIXME: Currently we cannot query users by role because roles are managed remotely 
+            // and not stored in the local database. Admin HRD users will still see the request 
+            // in their approval list, but proactive notification is disabled until local role mapping is implemented.
+            /*
             $adminHrdUsers = User::whereHas('remote_profile', function($query) {
-                // This assumes your roles are stored/checked via the same logic as userHasRole
-                // However, for simplicity and parity, we fetch those with 'Admin HRD' role
             })->get();
-
-            // Porting the legacy logic of fetching users with role 'Admin HRD'
-            // In typical Laravel Spatie or similar:
             $adminHrdUsers = User::role('Admin HRD')->get(); 
 
             foreach ($adminHrdUsers as $admin) {
                 $admin->notify(new \App\Modules\UnpaidLeave\Notifications\UnpaidLeaveApprovalNotification($leave));
             }
+            */
         }
     }
 

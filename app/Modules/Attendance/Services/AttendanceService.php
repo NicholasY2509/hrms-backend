@@ -42,6 +42,22 @@ class AttendanceService
         $workingHour = $session['working_hour'];
         $attendance = $session['attendance'];
 
+        $now = Carbon::now();
+
+        // Enforce 1-hour early clock-in limit
+        $scheduledStart = Carbon::parse($workingHour->attendance_at . ' ' . $workingHour->working_hour->clock_in);
+        $clockInWindowStart = (clone $scheduledStart)->subHour();
+        $clockInWindowEnd = (clone $scheduledStart)->addHours(4); // Keep window open for late clock in
+
+        if ($now->lessThan($clockInWindowStart)) {
+            $diff = $now->diffInMinutes($scheduledStart);
+            throw new ApplicationException("Belum waktunya absen masuk! Silahkan tunggu {$diff} menit lagi.", 400);
+        }
+
+        if ($now->greaterThan($clockInWindowEnd)) {
+             throw new ApplicationException("Batas waktu absen masuk sudah berakhir!", 400);
+        }
+
         if ($attendance && $attendance->incoming_scan) {
             throw new ApplicationException('Anda sudah melakukan absensi masuk!', 400);
         }
@@ -106,12 +122,25 @@ class AttendanceService
             throw new ApplicationException('Anda sudah melakukan absensi pulang!', 400);
         }
 
+        $now = Carbon::now();
+
+        // Enforce 5-hour clock-out limit (Shift End + 5 hours)
+        $scheduledEnd = Carbon::parse($workingHour->attendance_at . ' ' . $workingHour->working_hour->clock_out);
+        $scheduledStart = Carbon::parse($workingHour->attendance_at . ' ' . $workingHour->working_hour->clock_in);
+        if ($scheduledEnd->lessThan($scheduledStart)) {
+            $scheduledEnd->addDay();
+        }
+        $clockOutWindowEnd = (clone $scheduledEnd)->addHours(5);
+
+        if ($now->greaterThan($clockOutWindowEnd)) {
+             throw new ApplicationException("Batas waktu absen pulang sudah berakhir! Sesi ini sudah kadaluarsa.", 400);
+        }
+
         $location = $this->validateLocation($userId, $data['latitude'], $data['longitude']);
         if (!$location) {
             throw new ApplicationException('Lokasi anda terlalu jauh!', 400);
         }
 
-        $now = Carbon::now();
         $time = $now->format('H:i:00');
 
         $attendance->outgoing_scan = $time;

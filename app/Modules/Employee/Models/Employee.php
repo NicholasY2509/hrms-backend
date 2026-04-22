@@ -2,10 +2,13 @@
 
 namespace App\Modules\Employee\Models;
 
+use App\Modules\Attendance\Models\AttendanceWorkingHour;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
@@ -47,6 +50,21 @@ class Employee extends Model
     public function user_employee(): HasOne
     {
         return $this->hasOne(UserEmployee::class, 'employee_id', 'id');
+    }
+
+    /**
+     * Get the user associated with the Employee through user_employee.
+     */
+    public function user(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            User::class,
+            UserEmployee::class,
+            'employee_id',
+            'id',
+            'id',
+            'user_id'
+        );
     }
 
     /**

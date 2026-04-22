@@ -2,7 +2,9 @@
 
 namespace App\Modules\UnpaidLeave\Services;
 
+use App\Exceptions\ApplicationException;
 use App\Modules\UnpaidLeave\Models\Holiday;
+use App\Modules\UnpaidLeave\Models\UnpaidLeaveType;
 use App\Modules\UnpaidLeave\Repositories\UnpaidLeaveRepository;
 use App\Modules\UnpaidLeave\Services\UnpaidLeaveApprovalService;
 use Illuminate\Support\Facades\DB;
@@ -44,11 +46,11 @@ class UnpaidLeaveService
     public function createUnpaidLeave(array $data, ?UploadedFile $attachment = null)
     {
         return DB::transaction(function () use ($data, $attachment) {
-            $type = \App\Modules\UnpaidLeave\Models\UnpaidLeaveType::findOrFail($data['unpaid_leave_type_id']);
+            $type = UnpaidLeaveType::findOrFail($data['unpaid_leave_type_id']);
             $totalDays = $this->calculateTotalDaysExcludingHolidays($data['start_date'], $data['end_date']);
 
             if ($type->limit && $totalDays > $type->limit) {
-                throw new \App\Exceptions\ApplicationException('Jumlah Hari untuk Tipe Pengajuan Izin melebihi batas!', 400);
+                throw new ApplicationException('Jumlah Hari untuk Tipe Pengajuan Izin melebihi batas!', 400);
             }
 
             if ($attachment) {
@@ -60,7 +62,6 @@ class UnpaidLeaveService
 
             $leave = $this->repository->create($data);
 
-            // Generate automated approvals matching legacy logic
             $this->approvalService->generateInitialApprovals($leave);
 
             return $leave;
