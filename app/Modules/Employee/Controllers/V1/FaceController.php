@@ -121,7 +121,7 @@ class FaceController extends Controller
                 $userId,
                 $request->file('image'),
                 $profile->embedding,
-                $data['threshold'] ?? 0.85
+                max($data['threshold'] ?? 0.8, 0.8)
             );
 
             if ($result['success'] && $result['matched']) {
