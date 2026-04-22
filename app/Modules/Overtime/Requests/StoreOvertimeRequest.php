@@ -46,8 +46,8 @@ class StoreOvertimeRequest extends FormRequest
 
                 $diffInMinutes = $start->diffInMinutes($finish);
 
-                // Minimal 2 hours (120 minutes) for all
-                if ($diffInMinutes < 120) {
+                // Minimal 2 hours (120 minutes) for all except DAC
+                if ($this->input('type') !== Overtime::TYPE_DAC && $diffInMinutes < 120) {
                     $validator->errors()->add('finish_time', 'Total waktu lembur tidak boleh kurang dari 2 jam!');
                 }
 

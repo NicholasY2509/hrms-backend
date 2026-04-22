@@ -20,7 +20,13 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+        $middleware->throttleApi('api');
+        
+        // Specific rate limiting for authentication endpoints
+        $middleware->alias([
+            'throttle.auth' => \Illuminate\Routing\Middleware\ThrottleRequests::class . ':auth',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

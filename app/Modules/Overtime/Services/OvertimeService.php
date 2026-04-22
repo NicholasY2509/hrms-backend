@@ -45,11 +45,32 @@ class OvertimeService
             }
 
             $totalMinutes = $startDateTime->diffInMinutes($finishDateTime);
+            
+            $type = $data['type'] ?? Overtime::TYPE_GENERAL;
+
+            // Handle break time subtraction for NATIONAL (Holiday) overtimes
+            if ($type === Overtime::TYPE_HOLIDAY) {
+                $breakStart1 = Carbon::parse($startDateTime->format('Y-m-d') . ' 12:00:00');
+                $breakEnd1 = Carbon::parse($startDateTime->format('Y-m-d') . ' 13:00:00');
+                
+                // Day 1 breakage
+                $overlap1 = max(0, min($finishDateTime->timestamp, $breakEnd1->timestamp) - max($startDateTime->timestamp, $breakStart1->timestamp));
+                
+                // Day 2 breakage (if cross-day)
+                $overlap2 = 0;
+                if ($finishDateTime->timestamp > $startDateTime->copy()->addDay()->startOfDay()->timestamp) {
+                    $breakStart2 = $breakStart1->copy()->addDay();
+                    $breakEnd2 = $breakEnd1->copy()->addDay();
+                    $overlap2 = max(0, min($finishDateTime->timestamp, $breakEnd2->timestamp) - max($startDateTime->timestamp, $breakStart2->timestamp));
+                }
+                
+                $totalMinutes -= (($overlap1 + $overlap2) / 60);
+            }
+
             $hours = floor($totalMinutes / 60);
-            $minutes = $totalMinutes % 60;
+            $minutes = round($totalMinutes % 60);
             $totalTimeStr = sprintf('%02d:%02d', $hours, $minutes);
 
-            $type = $data['type'] ?? Overtime::TYPE_GENERAL;
             $codeType = $type === Overtime::TYPE_HOLIDAY ? 'NTN' : ($type === Overtime::TYPE_DAC ? 'DAC' : 'UMUM');
 
             $overtime = Overtime::create([
