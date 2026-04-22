@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\UploadedFile;
 use Carbon\Carbon;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class StorageService
 {
@@ -20,8 +23,29 @@ class StorageService
         $directory = 'uploads/' . ltrim($path, '/') . '/' . Carbon::now()->format('Y/m/d');
         $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
 
-        // Basic storage logic. If intervention/image was installed, we'd add compression here.
-        return $file->storeAs($directory, $fileName, 'public');
+        try {
+            $mimeType = $file->getMimeType();
+
+            if (str_starts_with($mimeType, 'image/') && !in_array($mimeType, ['image/svg+xml', 'image/gif'])) {
+                $manager = new ImageManager(new Driver());
+                $image = $manager->read($file->getRealPath());
+
+                $image->scaleDown(width: 1920);
+
+                $encoded = $image->toJpeg(75);
+
+                $fileName = pathinfo($fileName, PATHINFO_FILENAME) . '.jpg';
+                $fullPath = $directory . '/' . $fileName;
+
+                Storage::put($fullPath, (string) $encoded);
+
+                return $fullPath;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Image compression failed: ' . $e->getMessage());
+        }
+
+        return $file->storeAs($directory, $fileName);
     }
 
     /**
@@ -40,6 +64,16 @@ class StorageService
             return $path;
         }
 
-        return Storage::disk('public')->url($path);
+        // Prioritize GCS temporary URLs if configured (helps in production even if FILESYSTEM_DISK is local/public)
+        if (config('filesystems.disks.gcs.bucket') && config('filesystems.disks.gcs.driver') === 'gcs') {
+            try {
+                return Storage::disk('gcs')->temporaryUrl($path, now()->addMinutes(60));
+            } catch (\Throwable $e) {
+                // Fallback to default behavior if GCS fails
+                Log::warning('GCS temporary URL generation failed: ' . $e->getMessage());
+            }
+        }
+
+        return Storage::url($path);
     }
 }
