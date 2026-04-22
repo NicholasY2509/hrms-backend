@@ -133,11 +133,7 @@ class FaceController extends Controller
 
             return $this->errorResponse(
                 $result['message'] ?? 'Face verification failed',
-                422,
-                [
-                    'matched' => false,
-                    'similarity_score' => $result['similarity_score'] ?? 0,
-                ]
+                422
             );
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), 500);

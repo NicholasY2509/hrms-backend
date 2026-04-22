@@ -28,7 +28,8 @@ class AuthController extends Controller
      *      "name": "John Doe",
      *      "email": "john@example.com",
      *      "is_linked_to_employee": true,
-     *      "employee_id": 101
+     *      "employee_id": 101,
+     *      "profileUrl": "https://storage.googleapis.com/bucket/avatars/john.jpg"
      *  }
      * }
      */
@@ -41,7 +42,7 @@ class AuthController extends Controller
         }
 
         // Eager load the employee shortcut relationship
-        $user->load(['employee']);
+        $user->load(['employee', 'user_employee']);
 
         return $this->successResponse(new UserResource($user), 'User details retrieved');
     }
