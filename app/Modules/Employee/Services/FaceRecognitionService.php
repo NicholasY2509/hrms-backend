@@ -10,11 +10,24 @@ class FaceRecognitionService
 {
     protected string $baseUrl;
     protected string $apiKey;
+    protected \App\Modules\Employee\Repositories\UserFaceProfileRepository $repository;
 
-    public function __construct()
+    public function __construct(\App\Modules\Employee\Repositories\UserFaceProfileRepository $repository)
     {
         $this->baseUrl = config('services.face_api.url');
         $this->apiKey = config('services.face_api.key');
+        $this->repository = $repository;
+    }
+
+    /**
+     * Get face profile by user ID.
+     *
+     * @param int $userId
+     * @return \App\Modules\Employee\Models\UserFaceProfile|null
+     */
+    public function getProfile(int $userId): ?\App\Modules\Employee\Models\UserFaceProfile
+    {
+        return $this->repository->findByUserId($userId);
     }
 
     /**
@@ -56,7 +69,7 @@ class FaceRecognitionService
         $result = $response->json();
 
         if ($result['success'] && ($result['face_detected'] ?? false)) {
-            \App\Modules\Employee\Models\UserFaceProfile::updateOrCreate(
+            $this->repository->updateOrCreate(
                 ['user_id' => $userId],
                 [
                     'embedding' => $result['embedding'],
@@ -73,18 +86,26 @@ class FaceRecognitionService
      *
      * @param int $userId
      * @param \Illuminate\Http\UploadedFile $image
-     * @param array $storedEmbedding
      * @param float|null $threshold
      * @return array
      * @throws Exception
      */
-    public function verify(int $userId, $image, array $storedEmbedding, ?float $threshold = null): array
+    public function verify(int $userId, $image, ?float $threshold = null): array
     {
+        $profile = $this->getProfile($userId);
+
+        if (!$profile) {
+            return [
+                'success' => false,
+                'message' => 'Face profile not enrolled',
+                'matched' => false
+            ];
+        }
 
         $request = Http::withToken($this->apiKey)->asMultipart();
 
         $request->attach('user_id', $userId);
-        $request->attach('stored_embedding', json_encode($storedEmbedding));
+        $request->attach('stored_embedding', json_encode($profile->embedding));
 
         if ($threshold !== null) {
             $request->attach('threshold', $threshold);

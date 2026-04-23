@@ -3,7 +3,6 @@
 namespace App\Modules\Employee\Controllers\V1;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Employee\Models\UserFaceProfile;
 use App\Modules\Employee\Requests\FaceRegisterRequest;
 use App\Modules\Employee\Services\FaceRecognitionService;
 use App\Traits\ApiResponses;
@@ -43,10 +42,11 @@ class FaceController extends Controller
     public function status(): JsonResponse
     {
         $userId = Auth::id();
-        $profile = UserFaceProfile::where('user_id', $userId)->first();
+        $profile = $this->faceService->getProfile($userId);
 
         return $this->successResponse([
             'is_enrolled' => !is_null($profile),
+            'can_change' => $profile?->can_change ?? false,
             'enrolled_at' => $profile?->created_at?->format('Y-m-d H:i:s'),
         ], 'Face profile status retrieved');
     }
@@ -111,29 +111,26 @@ class FaceController extends Controller
         try {
             $data = $request->validated();
             $userId = Auth::id();
-            $profile = UserFaceProfile::where('user_id', $userId)->first();
-
-            if (!$profile) {
-                return $this->errorResponse('Face profile not enrolled', 404);
-            }
 
             $result = $this->faceService->verify(
                 $userId,
                 $request->file('image'),
-                $profile->embedding,
                 max($data['threshold'] ?? 0.8, 0.8)
             );
 
-            if ($result['success'] && $result['matched']) {
+            if ($result['success'] && ($result['matched'] ?? false)) {
                 return $this->successResponse([
                     'matched' => true,
-                    'similarity_score' => $result['similarity_score'],
+                    'similarity_score' => $result['similarity_score'] ?? null,
                 ], 'Face verified successfully');
             }
 
+            // Return 404 if profile not enrolled, which is now handled by the service message
+            $statusCode = ($result['message'] ?? '') === 'Face profile not enrolled' ? 404 : 422;
+
             return $this->errorResponse(
                 $result['message'] ?? 'Face verification failed',
-                422
+                $statusCode
             );
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), 500);

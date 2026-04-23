@@ -14,10 +14,12 @@ class UserFaceProfile extends Model
         'user_id',
         'embedding',
         'registered_at',
+        'can_change',
     ];
 
     protected $casts = [
         'embedding' => 'array',
+        'can_change' => 'boolean',
     ];
 
     /**
