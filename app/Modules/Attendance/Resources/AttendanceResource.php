@@ -50,6 +50,10 @@ class AttendanceResource extends JsonResource
                     $isLocked = true;
                     $lockTitle = 'Shift Belum Tersedia';
                     $lockMessage = 'Shift Anda belum dimulai. Anda baru dapat absen masuk pada pukul ' . $windowStart->format('H:i') . '.';
+                } elseif ($now->greaterThanOrEqualTo($shiftEnd)) {
+                    $isLocked = true;
+                    $lockTitle = 'Shift Sudah Berakhir';
+                    $lockMessage = 'Shift Anda untuk jadwal ini sudah berakhir.';
                 } elseif ($now->greaterThanOrEqualTo($clockInDeadline)) {
                     $isLocked = true;
                     $lockTitle = 'Batas Absen Masuk Berakhir';
