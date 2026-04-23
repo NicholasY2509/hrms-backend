@@ -74,6 +74,7 @@ class FaceRecognitionService
                 [
                     'embedding' => $result['embedding'],
                     'registered_at' => now(),
+                    'can_change' => false,
                 ]
             );
         }
