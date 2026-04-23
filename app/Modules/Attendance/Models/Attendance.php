@@ -14,7 +14,8 @@ class Attendance extends Model
     protected $guarded = ['id'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
     protected $casts = [
-        'all_scans' => 'array'
+        'all_scans' => 'array',
+        'mobile_scans' => 'array'
     ];
 
     /**

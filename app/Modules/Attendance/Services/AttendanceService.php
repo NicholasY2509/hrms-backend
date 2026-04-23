@@ -47,19 +47,24 @@ class AttendanceService
         // Enforce 1-hour early clock-in limit
         $scheduledStart = Carbon::parse($workingHour->attendance_at . ' ' . $workingHour->working_hour->clock_in);
         $clockInWindowStart = (clone $scheduledStart)->subHour();
-        $clockInWindowEnd = (clone $scheduledStart)->addHours(4); // Keep window open for late clock in
+        // Keep window open until 1 hour before shift end
+        $scheduledEnd = Carbon::parse($workingHour->attendance_at . ' ' . $workingHour->working_hour->clock_out);
+        if ($scheduledEnd->lessThan($scheduledStart)) {
+            $scheduledEnd->addDay();
+        }
+        $clockInWindowEnd = (clone $scheduledEnd)->subHour();
 
         if ($now->lessThan($clockInWindowStart)) {
             $diff = $now->diffInMinutes($scheduledStart);
             throw new ApplicationException("Belum waktunya absen masuk! Silahkan tunggu {$diff} menit lagi.", 400);
         }
 
-        if ($now->greaterThan($clockInWindowEnd)) {
-             throw new ApplicationException("Batas waktu absen masuk sudah berakhir!", 400);
+        if ($now->greaterThanOrEqualTo($clockInWindowEnd)) {
+             throw new ApplicationException("Batas waktu absen masuk sudah berakhir (kurang dari 1 jam sebelum shift berakhir)!", 400);
         }
 
-        if ($attendance && $attendance->incoming_scan) {
-            throw new ApplicationException('Anda sudah melakukan absensi masuk!', 400);
+        if ($attendance && $this->isCurrentlyClockedIn($attendance)) {
+            throw new ApplicationException('Anda sudah melakukan absensi masuk, silahkan absen pulang terlebih dahulu!', 400);
         }
 
         $location = $this->validateLocation($userId, $data['latitude'], $data['longitude']);
@@ -72,25 +77,41 @@ class AttendanceService
             $attendance->attendance_working_hour_id = $workingHour->id;
         }
 
-        $now = Carbon::now();
         $time = $now->format('H:i:00');
 
-        $attendance->incoming_scan = $time;
-        $attendance->incoming_latitude = $data['latitude'];
-        $attendance->incoming_longitude = $data['longitude'];
-        $attendance->incoming_location_id = $location->id;
-
-        if (isset($data['photo'])) {
-            $attendance->incoming_photo = StorageService::store($data['photo'], 'attendances');
+        if (!$attendance->incoming_scan) {
+            $attendance->incoming_scan = $time;
+            $attendance->incoming_latitude = $data['latitude'];
+            $attendance->incoming_longitude = $data['longitude'];
+            $attendance->incoming_location_id = $location->id;
         }
+
+        $photoPath = null;
+        if (isset($data['photo'])) {
+            $photoPath = StorageService::store($data['photo'], 'attendances');
+            if (!$attendance->incoming_photo) {
+                $attendance->incoming_photo = $photoPath;
+            }
+        }
+
+        $mobileScans = $attendance->mobile_scans ?? [];
+        $mobileScans[] = [
+            'type' => 'in',
+            'time' => $time,
+            'latitude' => $data['latitude'],
+            'longitude' => $data['longitude'],
+            'location_id' => $location->id,
+            'photo' => $photoPath
+        ];
+        $attendance->mobile_scans = $mobileScans;
 
         $clockInTime = Carbon::parse($workingHour->working_hour->clock_in);
         $currentTime = Carbon::parse($time);
 
-        if ($currentTime->greaterThan($clockInTime)) {
+        if (!$attendance->late_time && $currentTime->greaterThan($clockInTime)) {
             $attendance->late_time = $currentTime->diff($clockInTime)->format('%H:%I:%S');
             $attendance->attendance_status_id = self::STATUS_LATE;
-        } else {
+        } elseif (!$attendance->attendance_status_id) {
             $attendance->attendance_status_id = self::STATUS_PRESENT;
         }
 
@@ -118,8 +139,8 @@ class AttendanceService
             throw new ApplicationException('Anda belum melakukan absensi masuk!', 400);
         }
 
-        if ($attendance->outgoing_scan) {
-            throw new ApplicationException('Anda sudah melakukan absensi pulang!', 400);
+        if (!$this->isCurrentlyClockedIn($attendance)) {
+            throw new ApplicationException('Anda belum melakukan absensi masuk lagi, atau sudah absen pulang!', 400);
         }
 
         $now = Carbon::now();
@@ -148,9 +169,22 @@ class AttendanceService
         $attendance->outgoing_longitude = $data['longitude'];
         $attendance->outgoing_location_id = $location->id;
 
+        $photoPath = null;
         if (isset($data['photo'])) {
-            $attendance->outgoing_photo = StorageService::store($data['photo'], 'attendances');
+            $photoPath = StorageService::store($data['photo'], 'attendances');
+            $attendance->outgoing_photo = $photoPath;
         }
+
+        $mobileScans = $attendance->mobile_scans ?? [];
+        $mobileScans[] = [
+            'type' => 'out',
+            'time' => $time,
+            'latitude' => $data['latitude'],
+            'longitude' => $data['longitude'],
+            'location_id' => $location->id,
+            'photo' => $photoPath
+        ];
+        $attendance->mobile_scans = $mobileScans;
 
         $clockOutTime = Carbon::parse($workingHour->working_hour->clock_out);
         $currentTime = Carbon::parse($time);
@@ -214,10 +248,14 @@ class AttendanceService
             if ($attendance && $attendance->incoming_scan) continue;
 
             $scheduledStart = Carbon::parse($schedule->attendance_at . ' ' . $schedule->working_hour->clock_in);
+            $scheduledEnd = Carbon::parse($schedule->attendance_at . ' ' . $schedule->working_hour->clock_out);
+            if ($scheduledEnd->lessThan($scheduledStart)) {
+                $scheduledEnd->addDay();
+            }
             $clockInWindowStart = (clone $scheduledStart)->subHour();
-            $clockInWindowEnd = (clone $scheduledStart)->addHours(4); // Keep window open for late clock in
+            $clockInWindowEnd = (clone $scheduledEnd)->subHour(); // 1 hour before shift ends
 
-            if ($now->greaterThanOrEqualTo($clockInWindowStart) && $now->lessThanOrEqualTo($clockInWindowEnd)) {
+            if ($now->greaterThanOrEqualTo($clockInWindowStart) && $now->lessThan($clockInWindowEnd)) {
                 return [
                     'working_hour' => $schedule,
                     'attendance' => $attendance
@@ -228,7 +266,7 @@ class AttendanceService
         // Priority 2: Check for unfinished session from Yesterday/Today within Clock Out window (End + 5 hours)
         foreach ($nearbySchedules as $schedule) {
             $attendance = $schedule->attendance;
-            if (!$attendance || !$attendance->incoming_scan || $attendance->outgoing_scan) continue;
+            if (!$attendance || !$attendance->incoming_scan) continue;
 
             $scheduledEnd = Carbon::parse($schedule->attendance_at . ' ' . $schedule->working_hour->clock_out);
             
@@ -354,6 +392,37 @@ class AttendanceService
     public function checkUserLocation(int $userId, float $lat, float $lon): bool
     {
         return $this->validateLocation($userId, $lat, $lon) !== null;
+    }
+
+    /**
+     * Determine if the user is effectively clocked in.
+     */
+    public function isCurrentlyClockedIn(?Attendance $attendance): bool
+    {
+        if (!$attendance || !$attendance->incoming_scan) {
+            return false;
+        }
+
+        $lastMachineOut = $attendance->outgoing_scan;
+        
+        $mobileScans = is_string($attendance->mobile_scans) 
+            ? json_decode($attendance->mobile_scans, true) 
+            : ($attendance->mobile_scans ?? []);
+            
+        $lastMobileScan = empty($mobileScans) ? null : end($mobileScans);
+        
+        if (!$lastMachineOut) {
+            return true;
+        }
+
+        if ($lastMobileScan && $lastMobileScan['type'] === 'in') {
+            $mobileInTime = $lastMobileScan['time'];
+            if ($mobileInTime > $lastMachineOut) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 }
 

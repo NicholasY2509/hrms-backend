@@ -30,6 +30,41 @@ class AttendanceResource extends JsonResource
             }
         }
 
+        $isClockedIn = false;
+        if ($this->resource) {
+            $attendanceService = app(\App\Modules\Attendance\Services\AttendanceService::class);
+            $isClockedIn = $attendanceService->isCurrentlyClockedIn($this->resource);
+        }
+
+        $now = \Carbon\Carbon::now();
+        $isLocked = false;
+        $lockTitle = null;
+        $lockMessage = null;
+
+        if ($shiftStart && $shiftEnd) {
+            if (!$isClockedIn) {
+                $windowStart = (clone $shiftStart)->subHour();
+                $clockInDeadline = (clone $shiftEnd)->subHour();
+                
+                if ($now->lessThan($windowStart)) {
+                    $isLocked = true;
+                    $lockTitle = 'Shift Belum Tersedia';
+                    $lockMessage = 'Shift Anda belum dimulai. Anda baru dapat absen masuk pada pukul ' . $windowStart->format('H:i') . '.';
+                } elseif ($now->greaterThanOrEqualTo($clockInDeadline)) {
+                    $isLocked = true;
+                    $lockTitle = 'Batas Absen Masuk Berakhir';
+                    $lockMessage = 'Anda tidak dapat absen masuk karena waktu shift akan segera berakhir (< 1 jam).';
+                }
+            } else {
+                $windowEnd = (clone $shiftEnd)->addHours(5);
+                if ($now->greaterThan($windowEnd)) {
+                    $isLocked = true;
+                    $lockTitle = 'Batas Absen Berakhir';
+                    $lockMessage = 'Batas waktu untuk melakukan absensi pulang pada sesi ini sudah berakhir.';
+                }
+            }
+        }
+
         return [
             'id' => $this->id,
             'attendance_at' => $date,
@@ -38,6 +73,11 @@ class AttendanceResource extends JsonResource
             'shift_start' => $shiftStart?->toDateTimeString(),
             'shift_end' => $shiftEnd?->toDateTimeString(),
             'status' => $this->attendance_status?->name,
+            'is_clocked_in' => $isClockedIn,
+            'is_locked' => $isLocked,
+            'lock_title' => $lockTitle,
+            'lock_message' => $lockMessage,
+            'mobile_scans' => $this->mobile_scans,
             'all_scans' => $this->all_scans,
             'incoming_photo' => $this->incoming_photo,
             'outgoing_photo' => $this->outgoing_photo,
