@@ -10,20 +10,12 @@ use Illuminate\Support\Str;
 
 class AuthSyncService
 {
-    /**
-     * Synchronize user details using a bearer token.
-     *
-     * @param string $token
-     * @return User|null
-     */
     public function syncUserByToken(string $token): ?User
     {
-        // Use a hash of the token as the cache key to avoid hitting the remote server on every request
         $tokenHash = md5($token);
         $cacheKey = "user_auth_{$tokenHash}";
-        $cacheDuration = 60 * 60 * 6; // 6 hours
+        $cacheDuration = 60 * 60 * 6;
 
-        // 1. Check if we already have a cached user for this specific token
         $cachedUserInfo = Cache::get($cacheKey);
         if ($cachedUserInfo) {
             $user = User::where('email', $cachedUserInfo['email'])->first();
@@ -33,7 +25,6 @@ class AuthSyncService
             }
         }
 
-        // 2. If not cached or user not found, fetch from remote Passport server
         $remoteData = $this->fetchRemoteUserProfile($token);
 
         if (!$remoteData || !isset($remoteData['data']['email'])) {
@@ -42,19 +33,15 @@ class AuthSyncService
 
         $email = $remoteData['data']['email'];
         
-        // 3. Find or synchronize the user in the local/legacy database
         $user = User::where('email', $email)->first();
 
         if (!$user) {
-            // If user doesn't exist in legacy, create them (or you could throw an error if you only want existing users)
             $user = User::create([
                 'email' => $email,
-                'password' => bcrypt(Str::random(16)), // Placeholder for local requirements
+                'password' => bcrypt(Str::random(16)),
                 'name' => $remoteData['data']['name'] ?? 'Remote User',
             ]);
         }
-
-        // 4. Cache the token result
         if ($user) {
             Cache::put($cacheKey, [
                 'email' => $email,

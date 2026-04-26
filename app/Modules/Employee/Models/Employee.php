@@ -4,6 +4,9 @@ namespace App\Modules\Employee\Models;
 
 use App\Modules\Attendance\Models\AttendanceWorkingHour;
 use App\Models\User;
+use App\Modules\Organization\Models\Department;
+use App\Modules\Organization\Models\WorkLocation;
+use App\Modules\Organization\Models\WorkPosition;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;

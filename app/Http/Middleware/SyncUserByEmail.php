@@ -27,8 +27,6 @@ class SyncUserByEmail
         $token = $request->bearerToken();
 
         if ($token) {
-            // We use the sync service to find or create the user via the remote profile endpoint
-            // This happens even if Auth::user() is null because the sub ID might not match.
             $user = $this->authSyncService->syncUserByToken($token);
 
             if ($user) {

@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Modules\Employee\Models;
+namespace App\Modules\Organization\Models;
 
+use App\Modules\Employee\Models\Employee;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Department extends Model
@@ -12,4 +14,9 @@ class Department extends Model
     protected $table = 'departments';
     protected $guarded = ['id'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
+
+    public function employees(): HasMany
+    {
+        return $this->hasMany(Employee::class, 'department_id', 'id');
+    }
 }

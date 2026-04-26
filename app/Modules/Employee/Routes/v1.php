@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Employee\Controllers\V1\EmployeeController;
+use App\Modules\Employee\Controllers\V1\EmployeeSearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware([\App\Http\Middleware\SyncUserByEmail::class])->group(function () {
@@ -12,4 +13,6 @@ Route::middleware([\App\Http\Middleware\SyncUserByEmail::class])->group(function
         Route::post('/register', [\App\Modules\Employee\Controllers\V1\FaceController::class, 'register']);
         Route::post('/verify', [\App\Modules\Employee\Controllers\V1\FaceController::class, 'verify']);
     });
+
+    Route::get('/search', EmployeeSearchController::class);
 });
