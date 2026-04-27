@@ -5,6 +5,7 @@ namespace App\Modules\Employee\Models;
 use App\Modules\Attendance\Models\AttendanceWorkingHour;
 use App\Models\User;
 use App\Modules\Organization\Models\Department;
+use App\Modules\Organization\Models\Team;
 use App\Modules\Organization\Models\WorkLocation;
 use App\Modules\Organization\Models\WorkPosition;
 use Illuminate\Database\Eloquent\Model;
@@ -76,6 +77,11 @@ class Employee extends Model
     public function attendance_working_hours(): HasMany
     {
         return $this->hasMany(AttendanceWorkingHour::class, 'employee_id', 'id');
+    }
+
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(Team::class, 'team_id', 'id');
     }
 
     /**

@@ -4,6 +4,7 @@ use App\Modules\ApprovalWorkflow\Controllers\V1\ApprovalGroupController;
 use App\Modules\ApprovalWorkflow\Controllers\V1\ApprovalSchemeController;
 use App\Modules\ApprovalWorkflow\Controllers\V1\ApprovalRuleController;
 use App\Modules\ApprovalWorkflow\Controllers\V1\ApprovalStepTypeController;
+use App\Modules\ApprovalWorkflow\Controllers\V1\ApprovalActionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware([\App\Http\Middleware\SyncUserByEmail::class])->group(function () {
@@ -12,13 +13,14 @@ Route::middleware([\App\Http\Middleware\SyncUserByEmail::class])->group(function
     Route::prefix('groups')->group(function () {
         Route::get('/', [ApprovalGroupController::class, 'index']);
         Route::post('/', [ApprovalGroupController::class, 'store']);
-        Route::get('/{id}', [ApprovalGroupController::class, 'show']);
+        // Route::get('/{id}', [ApprovalGroupController::class, 'show']); // Conflicts with index if not careful, but okay with id
         Route::post('/{id}/sync-employees', [ApprovalGroupController::class, 'syncEmployees']);
         Route::delete('/{id}', [ApprovalGroupController::class, 'destroy']);
     });
 
     // Approval Schemes (Top-level categories like Unpaid Leave, Overtime)
     Route::prefix('schemes')->group(function () {
+        // These are accessed via search or specific IDs
         Route::get('/', [ApprovalSchemeController::class, 'index']);
         Route::post('/', [ApprovalSchemeController::class, 'store']);
         Route::get('/{id}', [ApprovalSchemeController::class, 'show']);
@@ -39,6 +41,13 @@ Route::middleware([\App\Http\Middleware\SyncUserByEmail::class])->group(function
         Route::post('/', [ApprovalStepTypeController::class, 'store']);
         Route::patch('/{id}', [ApprovalStepTypeController::class, 'update']);
         Route::delete('/{id}', [ApprovalStepTypeController::class, 'destroy']);
+    });
+
+    // Approval Actions (The Manager's Dashboard API)
+    Route::prefix('actions')->group(function () {
+        Route::get('/', [ApprovalActionController::class, 'index']);
+        Route::post('{id}/approve', [ApprovalActionController::class, 'approve']);
+        Route::post('{id}/reject', [ApprovalActionController::class, 'reject']);
     });
 
 });

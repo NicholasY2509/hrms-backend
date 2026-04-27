@@ -6,7 +6,6 @@ use App\Exceptions\ApplicationException;
 use App\Modules\UnpaidLeave\Models\Holiday;
 use App\Modules\UnpaidLeave\Models\UnpaidLeaveType;
 use App\Modules\UnpaidLeave\Repositories\UnpaidLeaveRepository;
-use App\Modules\UnpaidLeave\Services\UnpaidLeaveApprovalService;
 use Illuminate\Support\Facades\DB;
 use App\Services\StorageService;
 use Carbon\Carbon;
@@ -15,14 +14,10 @@ use Illuminate\Http\UploadedFile;
 class UnpaidLeaveService
 {
     protected UnpaidLeaveRepository $repository;
-    protected UnpaidLeaveApprovalService $approvalService;
-
     public function __construct(
-        UnpaidLeaveRepository $repository,
-        UnpaidLeaveApprovalService $approvalService
+        UnpaidLeaveRepository $repository
     ) {
         $this->repository = $repository;
-        $this->approvalService = $approvalService;
     }
 
     /**
@@ -61,8 +56,6 @@ class UnpaidLeaveService
             $data['confirmed_at'] = Carbon::now()->toDateString();
 
             $leave = $this->repository->create($data);
-
-            $this->approvalService->generateInitialApprovals($leave);
 
             return $leave;
         });
@@ -129,11 +122,11 @@ class UnpaidLeaveService
      */
     public function getPendingRequests(int $employeeId, int $limit = 5)
     {
-        return \App\Modules\UnpaidLeave\Models\UnpaidLeave::with(['unpaid_leave_type', 'unpaid_leave_approvals.employee'])
+        return \App\Modules\UnpaidLeave\Models\UnpaidLeave::with(['unpaid_leave_type', 'approvalRequest'])
             ->where('employee_id', $employeeId)
             ->whereNull('settled_at')
-            ->whereDoesntHave('unpaid_leave_approvals', function ($query) {
-                $query->where('status', 'Rejected');
+            ->whereHas('approvalRequest', function ($query) {
+                $query->where('status', 'pending');
             })
             ->latest()
             ->limit($limit)

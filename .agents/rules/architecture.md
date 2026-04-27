@@ -52,6 +52,7 @@ app/Modules/[ModuleName]/
 - **Traits**: Use the `ApiResponses` trait in all controllers for consistent JSON structure.
 - **Success Mapping**: 
   - `successResponse($data, $message, $code)`
+- **Pagination**: When returning paginated collections, use `$resource->collection($paginator)->response()->getData(true)` as the `$data` argument. This promotes `links` and `meta` to the top level.
 - **Error Mapping**:
   - `errorResponse($message, $code)`
 - **Inter-module**: Use Events/Listeners for decoupling. If a Service needs logic from another module, inject that module's Service.

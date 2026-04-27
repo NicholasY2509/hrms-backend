@@ -29,7 +29,8 @@ class ApprovalGroupController extends Controller
     public function index(Request $request): JsonResponse
     {   
         $groups = $this->service->paginateGroups($request->input('per_page', 15));
-        return $this->successResponse(ApprovalGroupResource::collection($groups), 'Groups retrieved');
+        $resource = ApprovalGroupResource::collection($groups);
+        return $this->successResponse($resource->response()->getData(true), 'Groups retrieved');
     }
 
     /**

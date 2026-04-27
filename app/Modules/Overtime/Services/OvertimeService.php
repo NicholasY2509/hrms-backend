@@ -90,9 +90,6 @@ class OvertimeService
                 'real_overtime_price' => $data['estimated_cost'] ?? 0,
             ]);
 
-            // Create Approvals (Always HRD + Supervisor as per user request)
-            $this->createApprovals($overtime, $employee);
-
             // Handle Attachments
             if (!empty($data['attachments'])) {
                 foreach ($data['attachments'] as $file) {
@@ -107,7 +104,7 @@ class OvertimeService
                 }
             }
 
-            return $overtime->load(['employee', 'overtime_type', 'overtime_approvals']);
+            return $overtime->load(['employee', 'overtime_type', 'approvalRequest.steps']);
         });
     }
 
@@ -137,38 +134,6 @@ class OvertimeService
         }
 
         return $prefix . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
-    }
-
-    /**
-     * Create unified approvals for the overtime request.
-     *
-     * @param Overtime $overtime
-     * @param Employee $employee
-     * @return void
-     */
-    protected function createApprovals(Overtime $overtime, Employee $employee)
-    {
-        // 1. Admin HRD Approval (Role based)
-        OvertimeApproval::create([
-            'overtime_id' => $overtime->id,
-            'role' => 'Admin HRD',
-            'status' => 'Pending',
-        ]);
-
-        // 2. Supervisor Approval (Directly to Supervisor's employee_id)
-        if ($employee->supervisor_id) {
-            // Assuming the legacy supervisor link still exists via supervisor_id on employee
-            // In the modular system, we might need to find the employee_id of that supervisor
-            $supervisorEmployeeId = DB::table('supervisors')->where('id', $employee->supervisor_id)->value('employee_id');
-            
-            if ($supervisorEmployeeId) {
-                OvertimeApproval::create([
-                    'overtime_id' => $overtime->id,
-                    'employee_id' => $supervisorEmployeeId,
-                    'status' => 'Pending',
-                ]);
-            }
-        }
     }
 
     /**
