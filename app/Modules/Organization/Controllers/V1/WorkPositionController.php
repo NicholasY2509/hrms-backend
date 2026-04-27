@@ -5,6 +5,7 @@ namespace App\Modules\Organization\Controllers\V1;
 use App\Http\Controllers\Controller;
 use App\Modules\Organization\Models\WorkPosition;
 use App\Modules\Organization\Repositories\WorkPositionRepository;
+use App\Modules\Organization\Requests\WorkPositionIndexRequest;
 use App\Modules\Organization\Requests\WorkPositionRequest;
 use App\Modules\Organization\Resources\WorkPositionResource;
 use App\Modules\Organization\Services\WorkPositionService;
@@ -27,19 +28,18 @@ class WorkPositionController extends Controller
 
     /**
      * Get all work positions.
-     * 
-     * @queryParam search string Search by name or alias.
-     * @queryParam per_page int Results per page.
      */
-    public function index(Request $request): JsonResponse
+    public function index(WorkPositionIndexRequest $request): JsonResponse
     {
         $workPositions = $this->repository->getPaginated(
             $request->only('search'),
             $request->input('per_page', 15)
         );
 
+        $resource = WorkPositionResource::collection($workPositions);
+
         return $this->successResponse(
-            WorkPositionResource::collection($workPositions),
+            $resource->response()->getData(true),
             'Work positions retrieved successfully'
         );
     }

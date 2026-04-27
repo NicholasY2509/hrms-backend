@@ -24,12 +24,17 @@ class ApprovalStepTypeController extends Controller
     ) {}
 
     /**
-     * List all available approval step types (Paginated).
+     * List all available step types.
+     * 
+     * @queryParam search string Search by name or slug.
+     * @queryParam per_page int Results per page.
      */
     public function index(Request $request): JsonResponse
     {
         $types = $this->service->paginateTypes($request->input('per_page', 15));
-        return $this->successResponse(ApprovalStepTypeResource::collection($types), 'Step types retrieved');
+        $resource = ApprovalStepTypeResource::collection($types);
+        
+        return $this->successResponse($resource->response()->getData(true), 'Step types retrieved');
     }
 
     /**
@@ -44,7 +49,7 @@ class ApprovalStepTypeController extends Controller
     /**
      * Update an approval step type.
      */
-    public function update(UpdateApprovalStepTypeRequest $request, int $id): JsonResponse
+    public function update(UpdateApprovalStepTypeRequest $request, $id): JsonResponse
     {
         $type = $this->service->updateType($id, $request->validated());
         if (!$type) return $this->errorResponse('Step type not found', 404);
@@ -55,7 +60,7 @@ class ApprovalStepTypeController extends Controller
     /**
      * Delete an approval step type.
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy($id): JsonResponse
     {
         if ($this->service->deleteType($id)) {
             return $this->successResponse(null, 'Step type deleted');

@@ -1,7 +1,8 @@
 <?php
 
 use App\Modules\ApprovalWorkflow\Controllers\V1\ApprovalGroupController;
-use App\Modules\ApprovalWorkflow\Controllers\V1\ApprovalPolicyController;
+use App\Modules\ApprovalWorkflow\Controllers\V1\ApprovalSchemeController;
+use App\Modules\ApprovalWorkflow\Controllers\V1\ApprovalRuleController;
 use App\Modules\ApprovalWorkflow\Controllers\V1\ApprovalStepTypeController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,13 +17,20 @@ Route::middleware([\App\Http\Middleware\SyncUserByEmail::class])->group(function
         Route::delete('/{id}', [ApprovalGroupController::class, 'destroy']);
     });
 
-    // Approval Policies Configuration
-    Route::prefix('policies')->group(function () {
-        Route::get('/', [ApprovalPolicyController::class, 'index']);
-        Route::post('/', [ApprovalPolicyController::class, 'store']);
-        Route::get('/{id}', [ApprovalPolicyController::class, 'show']);
-        Route::post('/{id}/steps', [ApprovalPolicyController::class, 'updateSteps']);
-        Route::delete('/{id}', [ApprovalPolicyController::class, 'destroy']);
+    // Approval Schemes (Top-level categories like Unpaid Leave, Overtime)
+    Route::prefix('schemes')->group(function () {
+        Route::get('/', [ApprovalSchemeController::class, 'index']);
+        Route::post('/', [ApprovalSchemeController::class, 'store']);
+        Route::get('/{id}', [ApprovalSchemeController::class, 'show']);
+        Route::patch('/{id}', [ApprovalSchemeController::class, 'update']);
+        Route::delete('/{id}', [ApprovalSchemeController::class, 'destroy']);
+    });
+
+    // Approval Rules (The actual flows: Default or Position-specific)
+    Route::prefix('rules')->group(function () {
+        Route::post('/', [ApprovalRuleController::class, 'store']);
+        Route::patch('/{id}', [ApprovalRuleController::class, 'update']);
+        Route::delete('/{id}', [ApprovalRuleController::class, 'destroy']);
     });
 
     // Master Data for Step Types

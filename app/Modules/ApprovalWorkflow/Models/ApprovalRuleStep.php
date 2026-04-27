@@ -6,21 +6,21 @@ use App\Modules\Employee\Models\Employee;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ApprovalPolicyStep extends Model
+class ApprovalRuleStep extends Model
 {
-    protected $table = 'approval_policy_steps';
+    protected $table = 'approval_rule_steps';
     protected $guarded = ['id'];
 
     /**
-     * Parent policy.
+     * Parent rule.
      */
-    public function policy(): BelongsTo
+    public function rule(): BelongsTo
     {
-        return $this->belongsTo(ApprovalPolicy::class, 'approval_policy_id');
+        return $this->belongsTo(ApprovalRule::class, 'approval_rule_id');
     }
 
     /**
-     * Get the target group if type is 'group'.
+     * Relationship to Approval Group (if type is 'group').
      */
     public function group(): BelongsTo
     {
@@ -28,7 +28,7 @@ class ApprovalPolicyStep extends Model
     }
 
     /**
-     * Get the target employee if type is 'employee'.
+     * Relationship to specific Employee (if type is 'user').
      */
     public function employee(): BelongsTo
     {

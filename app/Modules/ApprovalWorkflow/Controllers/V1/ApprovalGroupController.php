@@ -44,7 +44,7 @@ class ApprovalGroupController extends Controller
     /**
      * Get a specific approval group.
      */
-    public function show(int $id): JsonResponse
+    public function show($id): JsonResponse
     {
         $group = $this->service->getGroup($id);
         if (!$group) return $this->errorResponse('Group not found', 404);
@@ -56,7 +56,7 @@ class ApprovalGroupController extends Controller
      * Sync employees to a group.
      * @bodyParam employee_ids array required List of employee IDs.
      */
-    public function syncEmployees(SyncGroupEmployeesRequest $request, int $id): JsonResponse
+    public function syncEmployees(SyncGroupEmployeesRequest $request, $id): JsonResponse
     {
         if ($this->service->updateGroupEmployees($id, $request->employee_ids)) {
             return $this->successResponse(null, 'Employees synced to group');
@@ -68,7 +68,7 @@ class ApprovalGroupController extends Controller
     /**
      * Delete an approval group.
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy($id): JsonResponse
     {
         if ($this->service->deleteGroup($id)) {
             return $this->successResponse(null, 'Group deleted');
