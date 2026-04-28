@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\ApprovalWorkflow\Controllers\V1;
+namespace App\Modules\ApprovalWorkflow\Controllers\V1\Configuration;
 
 use App\Http\Controllers\Controller;
 use App\Modules\ApprovalWorkflow\Services\ApprovalSchemeService;

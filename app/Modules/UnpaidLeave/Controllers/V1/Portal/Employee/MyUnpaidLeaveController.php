@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\UnpaidLeave\Controllers\V1;
+namespace App\Modules\UnpaidLeave\Controllers\V1\Portal\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Modules\UnpaidLeave\Requests\V1\StoreUnpaidLeaveRequest;
@@ -11,7 +11,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class UnpaidLeaveController extends Controller
+/**
+ * @group Unpaid Leave
+ * @subgroup Employee Portal
+ */
+class MyUnpaidLeaveController extends Controller
 {
     use ApiResponses;
 

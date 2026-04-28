@@ -12,7 +12,12 @@ The application is organized into self-contained modules located in `app/Modules
 ### Directory Structure
 ```text
 app/Modules/[ModuleName]/
- ├── Controllers/     # Lean controllers (delegate to Services).
+ ├── Controllers/     
+ │   └── V1/
+ │       ├── Portal/        # Daily usage for Employees and Managers.
+ │       │   ├── Employee/  # Self-service actions (My profile, my leave).
+ │       │   └── Management/# Operational oversight (Team search, all reports).
+ │       └── Configuration/ # System-level setup (IT/Admin rules & policies).
  ├── Services/        # Business logic and cross-module interaction.
  ├── Repositories/    # Data access logic (Eloquent queries).
  ├── Models/          # Eloquent models specific to the module.
@@ -27,7 +32,11 @@ app/Modules/[ModuleName]/
 ## 2. Layers & Responsibilities
 
 ### Controllers
-- **Rule**: Keep controllers lean. They should only handle HTTP concerns (request input, session/auth context, and returning responses).
+- **Rule**: Keep controllers lean. They should only handle HTTP concerns.
+- **Rule**: Organize controllers into `V1/Portal` or `V1/Configuration` sub-directories:
+    - **Portal/Employee**: Features for the individual user (Self-Service).
+    - **Portal/Management**: Features for HR/Managers to oversee data (Operational).
+    - **Configuration**: Features for IT/Superadmins to setup system rules (Structural).
 - **Rule**: Delegate all business logic to **Services**.
 - **Rule**: Use Type-Hinting in the constructor to inject Services.
 - **Rule**: Use API Resources for formatting all JSON responses.

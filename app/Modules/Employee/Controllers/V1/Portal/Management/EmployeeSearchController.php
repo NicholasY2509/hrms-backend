@@ -1,6 +1,11 @@
 <?php
 
-namespace App\Modules\Employee\Controllers\V1;
+namespace App\Modules\Employee\Controllers\V1\Portal\Management;
+
+/**
+ * @group Employee
+ * @subgroup Management Portal
+ */
 
 use App\Http\Controllers\Controller;
 use App\Modules\Employee\Models\Employee;

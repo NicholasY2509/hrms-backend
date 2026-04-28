@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Employee\Controllers\V1;
+namespace App\Modules\Employee\Controllers\V1\Portal\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Employee\Resources\EmployeeResource;
@@ -11,10 +11,11 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * @group Employee
+ * @subgroup Employee Portal
  *
- * API for employee-related information.
+ * API for employee self-service.
  */
-class EmployeeController extends Controller
+class MyProfileController extends Controller
 {
     use ApiResponses;
 

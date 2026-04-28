@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Attendance\Controllers\V1;
+namespace App\Modules\Attendance\Controllers\V1\Portal\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Attendance\Requests\ClockInRequest;
@@ -14,10 +14,11 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * @group Attendance
+ * @subgroup Employee Portal
  *
- * API for managing attendance.
+ * API for managing personal attendance.
  */
-class AttendanceController extends Controller
+class MyAttendanceController extends Controller
 {
     use ApiResponses;
 

@@ -1,6 +1,11 @@
 <?php
 
-namespace App\Modules\Employee\Controllers\V1;
+namespace App\Modules\Employee\Controllers\V1\Portal\Employee;
+
+/**
+ * @group Face Recognition
+ * @subgroup Employee Portal
+ */
 
 use App\Http\Controllers\Controller;
 use App\Modules\Employee\Requests\FaceRegisterRequest;

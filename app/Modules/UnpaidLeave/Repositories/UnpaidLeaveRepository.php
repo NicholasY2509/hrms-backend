@@ -8,6 +8,26 @@ use Illuminate\Database\Eloquent\Collection;
 class UnpaidLeaveRepository
 {
     /**
+     * Get paginated unpaid leaves with optional filters.
+     */
+    public function paginate(array $filters = [], int $perPage = 15)
+    {
+        $query = UnpaidLeave::with(['unpaid_leave_type', 'employee', 'unpaid_leave_approvals.employee'])
+            ->orderByDesc('start_date')
+            ->orderByDesc('id');
+
+        if (!empty($filters['employee_id'])) {
+            $query->where('employee_id', $filters['employee_id']);
+        }
+
+        if (!empty($filters['unpaid_leave_type_id'])) {
+            $query->where('unpaid_leave_type_id', $filters['unpaid_leave_type_id']);
+        }
+
+        return $query->paginate($perPage);
+    }
+
+    /**
      * Get all unpaid leaves for a specific employee.
      *
      * @param int $employeeId
@@ -15,10 +35,7 @@ class UnpaidLeaveRepository
      */
     public function getByEmployeeId(int $employeeId, int $perPage = 15)
     {
-        return UnpaidLeave::with(['unpaid_leave_type', 'unpaid_leave_approvals.employee'])
-            ->where('employee_id', $employeeId)
-            ->orderByDesc('start_date')
-            ->paginate($perPage);
+        return $this->paginate(['employee_id' => $employeeId], $perPage);
     }
 
     /**

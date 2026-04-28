@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\UnpaidLeave\Controllers\V1;
+namespace App\Modules\UnpaidLeave\Controllers\V1\Configuration;
 
 use App\Http\Controllers\Controller;
 use App\Modules\UnpaidLeave\Resources\V1\UnpaidLeaveTypeResource;
@@ -8,6 +8,10 @@ use App\Modules\UnpaidLeave\Services\UnpaidLeaveTypeService;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * @group Unpaid Leave
+ * @subgroup Configuration
+ */
 class UnpaidLeaveTypeController extends Controller
 {
     use ApiResponses;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Overtime\Controllers;
+namespace App\Modules\Overtime\Controllers\V1\Portal\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Overtime\Models\Overtime;
@@ -12,9 +12,10 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 /**
- * @group Overtime Management
+ * @group Overtime
+ * @subgroup Employee Portal
  */
-class OvertimeController extends Controller
+class MyOvertimeController extends Controller
 {
     use ApiResponses;
 

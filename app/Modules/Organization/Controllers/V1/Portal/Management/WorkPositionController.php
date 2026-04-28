@@ -1,6 +1,11 @@
 <?php
 
-namespace App\Modules\Organization\Controllers\V1;
+namespace App\Modules\Organization\Controllers\V1\Portal\Management;
+
+/**
+ * @group Organization
+ * @subgroup Management Portal
+ */
 
 use App\Http\Controllers\Controller;
 use App\Modules\Organization\Models\WorkPosition;
