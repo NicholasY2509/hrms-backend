@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Modules\ApprovalWorkflow\Models\ApprovalScheme;
+use App\Modules\ApprovalWorkflow\Models\ApprovalRule;
 use App\Modules\ApprovalWorkflow\Models\ApprovalRequest;
 use App\Modules\ApprovalWorkflow\Models\ApprovalRequestStep;
 use Carbon\Carbon;
@@ -72,7 +73,13 @@ class MigrateLegacyApprovals extends Command
                 ['name' => $name, 'is_active' => true]
             );
 
-            // 2. Get unique primary records that have approvals
+            // 2. Ensure Default Rule exists for this scheme
+            $rule = ApprovalRule::firstOrCreate(
+                ['approval_scheme_id' => $scheme->id, 'is_default' => true],
+                ['is_active' => true]
+            );
+
+            // 3. Get unique primary records that have approvals
             $primaryIds = DB::table($config['approval_table'])
                 ->distinct()
                 ->pluck($config['fk']);
@@ -80,15 +87,6 @@ class MigrateLegacyApprovals extends Command
             $this->info("Found " . $primaryIds->count() . " records with legacy approvals.");
 
             foreach ($primaryIds as $id) {
-                // Check if already migrated
-                $exists = ApprovalRequest::where('approvable_type', $config['model'])
-                    ->where('approvable_id', $id)
-                    ->exists();
-
-                if ($exists) {
-                    $this->comment("Skipping Record ID: {$id} (Already migrated)");
-                    continue;
-                }
 
                 // Get legacy steps
                 $legacySteps = DB::table($config['approval_table'])
@@ -101,8 +99,7 @@ class MigrateLegacyApprovals extends Command
                     continue;
                 }
 
-                // 3. Create Approval Request
-                // We'll infer status based on the latest step or overall logic
+                // 4. Create Approval Request
                 $finalStatus = 'pending';
                 if ($legacySteps->contains('status', 'Rejected')) {
                     $finalStatus = 'rejected';
@@ -110,28 +107,74 @@ class MigrateLegacyApprovals extends Command
                     $finalStatus = 'approved';
                 }
 
-                $request = ApprovalRequest::create([
-                    'approval_rule_id' => 1, // Default rule placeholder
-                    'approvable_type' => $config['model'],
-                    'approvable_id' => $id,
-                    'status' => strtolower($finalStatus),
-                    'current_step_sequence' => $legacySteps->count() + 1, // Mark as finished if all done
-                ]);
+                // Determine current step sequence
+                $currentStepSequence = 1;
+                if ($finalStatus === 'approved') {
+                    $currentStepSequence = $legacySteps->count() + 1;
+                } elseif ($finalStatus === 'rejected') {
+                    // Find the first rejected step
+                    $rejectedStepIdx = $legacySteps->search(fn($s) => $s->status === 'Rejected');
+                    $currentStepSequence = $rejectedStepIdx !== false ? $rejectedStepIdx + 1 : 1;
+                } else {
+                    // Pending - find the first pending step
+                    $pendingStepIdx = $legacySteps->search(fn($s) => $s->status === 'Pending');
+                    if ($pendingStepIdx !== false) {
+                        $currentStepSequence = $pendingStepIdx + 1;
+                    } else {
+                        // All steps actioned but overall status is pending? Default to count+1 or 1
+                        $currentStepSequence = $legacySteps->count() + 1;
+                    }
+                }
 
-                // 4. Create Steps
+                // Get the document number from the primary table
+                $primaryRecord = DB::table($config['primary_table'])
+                    ->where('id', $id)
+                    ->first();
+                
+                $referenceNumber = $primaryRecord->document_no ?? $primaryRecord->document_number ?? $id;
+
+                $request = ApprovalRequest::updateOrCreate(
+                    [
+                        'approvable_type' => $config['model'],
+                        'approvable_id' => $id,
+                    ],
+                    [
+                        'approval_rule_id' => $rule->id,
+                        'reference_number' => $referenceNumber,
+                        'status' => strtolower($finalStatus),
+                        'current_step_sequence' => $currentStepSequence,
+                    ]
+                );
+
+                // 5. Create Steps
                 foreach ($legacySteps as $index => $lStep) {
-                    ApprovalRequestStep::create([
-                        'approval_request_id' => $request->id,
-                        'approver_type' => 'user',
-                        'approver_id' => $lStep->employee_id,
-                        'sequence' => $index + 1,
-                        'status' => strtolower($lStep->status),
-                        'notes' => $lStep->note ?? null,
-                        'actioned_by' => $lStep->employee_id,
-                        'actioned_at' => $lStep->updated_at,
-                        'created_at' => $lStep->created_at,
-                        'updated_at' => $lStep->updated_at,
-                    ]);
+                    $approverType = 'user';
+                    $approverId = $lStep->employee_id;
+
+                    // Specific rule: Admin HRD
+                    if (isset($lStep->role) && $lStep->role === 'Admin HRD') {
+                        $approverType = 'group';
+                        $approverId = 1;
+                    }
+
+                    $status = strtolower($lStep->status);
+
+                    ApprovalRequestStep::updateOrCreate(
+                        [
+                            'approval_request_id' => $request->id,
+                            'sequence' => $index + 1,
+                        ],
+                        [
+                            'approver_type' => $approverType,
+                            'approver_id' => $approverId,
+                            'status' => $status,
+                            'notes' => $lStep->note ?? null,
+                            'actioned_by' => ($status !== 'pending') ? $lStep->employee_id : null,
+                            'actioned_at' => ($status !== 'pending') ? $lStep->updated_at : null,
+                            'created_at' => $lStep->created_at,
+                            'updated_at' => $lStep->updated_at,
+                        ]
+                    );
                 }
 
                 $this->info("Successfully migrated Record ID: {$id}");

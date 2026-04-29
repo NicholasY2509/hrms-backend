@@ -58,6 +58,7 @@ trait Approvable
             // 4. Create the runtime Approval Request
             $request = $this->approvalRequest()->create([
                 'approval_rule_id' => $rule->id,
+                'reference_number' => $this->document_no ?? $this->document_number ?? null,
                 'status' => 'pending',
                 'current_step_sequence' => 1,
             ]);

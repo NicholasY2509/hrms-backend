@@ -3,6 +3,7 @@
 namespace App\Modules\ApprovalWorkflow\Models;
 
 use App\Models\User;
+use App\Modules\Employee\Models\Employee;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -36,8 +37,14 @@ class ApprovalRequestStep extends Model
      */
     public function approver(): BelongsTo
     {
-        // approver_id could point to User or Group depending on approver_type
-        // For simplicity, we treat it as a generic relationship here
-        return $this->belongsTo(User::class, 'approver_id');
+        return $this->belongsTo(Employee::class, 'approver_id');
+    }
+
+    /**
+     * The target group resolved during initialization.
+     */
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(ApprovalGroup::class, 'approver_id');
     }
 }

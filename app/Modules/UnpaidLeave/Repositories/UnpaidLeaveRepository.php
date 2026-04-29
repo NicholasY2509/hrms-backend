@@ -12,7 +12,7 @@ class UnpaidLeaveRepository
      */
     public function paginate(array $filters = [], int $perPage = 15)
     {
-        $query = UnpaidLeave::with(['unpaid_leave_type', 'employee', 'unpaid_leave_approvals.employee'])
+        $query = UnpaidLeave::with(['unpaid_leave_type', 'employee', 'approvalRequest.steps.actor', 'approvalRequest.steps.approver', 'approvalRequest.steps.group.employees'])
             ->orderByDesc('start_date')
             ->orderByDesc('id');
 
@@ -57,7 +57,7 @@ class UnpaidLeaveRepository
      */
     public function find(int $id): ?UnpaidLeave
     {
-        return UnpaidLeave::with(['unpaid_leave_type', 'employee', 'unpaid_leave_approvals.employee'])
+        return UnpaidLeave::with(['unpaid_leave_type', 'employee', 'approvalRequest.steps.actor', 'approvalRequest.steps.approver', 'approvalRequest.steps.group.employees'])
             ->find($id);
     }
 }

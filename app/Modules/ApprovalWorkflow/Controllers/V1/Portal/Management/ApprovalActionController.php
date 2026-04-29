@@ -28,12 +28,14 @@ class ApprovalActionController extends Controller
     /**
      * List all pending requests for the authenticated manager.
      * 
-     * Returns a unified list of leaves, overtimes, etc.
+     * @queryParam type string Filter by request type (e.g., Overtime, UnpaidLeave).
+     * @queryParam per_page int Results per page. Default: 15.
      */
     public function index(Request $request): JsonResponse
     {
         $approvals = $this->service->getMyPendingApprovals(
-            $request->input('per_page', 15)
+            $request->input('per_page', 15),
+            $request->input('type')
         );
 
         $resource = ApprovalRequestResource::collection($approvals);

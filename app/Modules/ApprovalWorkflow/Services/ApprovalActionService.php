@@ -20,12 +20,12 @@ class ApprovalActionService
     /**
      * Get pending requests for the authenticated user.
      */
-    public function getMyPendingApprovals(int $perPage = 15)
+    public function getMyPendingApprovals(int $perPage = 15, ?string $type = null)
     {
         $employeeId = Auth::user()->employee->id ?? null;
         if (!$employeeId) return collect([]);
 
-        return $this->repository->getPendingForEmployee($employeeId, $perPage);
+        return $this->repository->getPendingForEmployee($employeeId, $perPage, $type);
     }
 
     /**

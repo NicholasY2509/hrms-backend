@@ -33,16 +33,18 @@ class UnpaidLeaveResource extends JsonResource
             'confirmed_at' => $this->confirmed_at,
             'settled_at' => $this->settled_at,
             'status' => $this->status,
-            'approvals' => $this->unpaid_leave_approvals->map(function ($approval) {
+            'approvals' => $this->approvalRequest?->steps->map(function ($step) {
                 return [
-                    'id' => $approval->id,
-                    'approver_name' => $approval->employee?->full_name ?? $approval->role,
-                    'role' => $approval->role,
-                    'status' => $approval->status,
-                    'note' => $approval->note,
-                    'updated_at' => $approval->updated_at?->toDateTimeString(),
+                    'id' => $step->id,
+                    'approver_name' => $step->actor?->name ?? ($step->approver_type === 'group'
+                        ? $step->group?->employees->pluck('full_name')->join(', ') ?: 'No members'
+                        : $step->approver?->full_name),
+                    'role' => $step->approver_type,
+                    'status' => $step->status,
+                    'note' => $step->notes,
+                    'updated_at' => $step->actioned_at?->toDateTimeString() ?? $step->updated_at?->toDateTimeString(),
                 ];
-            }),
+            }) ?? [],
         ];
     }
 }
