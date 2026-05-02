@@ -20,15 +20,25 @@ class OvertimeResource extends JsonResource
             'employee' => [
                 'id' => $this->employee_id,
                 'full_name' => $this->employee?->full_name,
+                'nik' => $this->employee?->employee_id_number,
+                'department' => [
+                    'id' => $this->employee?->department_id,
+                    'name' => $this->employee?->department?->name,
+                ],
+                'position' => [
+                    'id' => $this->employee?->work_position_id,
+                    'name' => $this->employee?->position?->name,
+                ],
             ],
-            'overtime_type' => [
-                'id' => $this->overtime_type_id,
-                'name' => $this->overtime_type?->name ?? $this->type, // Fallback to raw type string
-            ],
+            'document_no' => $this->document_no,
+            'overtime_type' => $this->type,
+            'dac_type' => $this->overtime_type?->name ?? null,
             'date' => $this->date,
             'start_time' => $this->start_time,
             'finish_time' => $this->finish_time,
             'total_time' => $this->total_time,
+            'estimated_overtime_price' => $this->estimated_overtime_price,
+            'real_overtime_price' => $this->real_overtime_price,
             'note' => $this->note,
             'attachment_urls' => $this->overtime_attachments->map(function ($attachment) {
                 return StorageService::url($attachment->path);
@@ -41,6 +51,7 @@ class OvertimeResource extends JsonResource
                     'approver_name' => $step->actor?->name ?? ($step->approver_type === 'group'
                         ? $step->group?->employees->pluck('full_name')->join(', ') ?: 'No members'
                         : $step->approver?->full_name),
+                    'approver_id' => $step->getResolvedApproverIds(),
                     'role' => $step->approver_type,
                     'status' => $step->status,
                     'note' => $step->notes,

@@ -12,19 +12,11 @@ class UnpaidLeaveRepository
      */
     public function paginate(array $filters = [], int $perPage = 15)
     {
-        $query = UnpaidLeave::with(['unpaid_leave_type', 'employee', 'approvalRequest.steps.actor', 'approvalRequest.steps.approver', 'approvalRequest.steps.group.employees'])
+        return UnpaidLeave::with(['unpaid_leave_type', 'employee.department', 'employee.position', 'approvalRequest.steps.actor', 'approvalRequest.steps.approver', 'approvalRequest.steps.group.employees'])
+            ->filter($filters)
             ->orderByDesc('start_date')
-            ->orderByDesc('id');
-
-        if (!empty($filters['employee_id'])) {
-            $query->where('employee_id', $filters['employee_id']);
-        }
-
-        if (!empty($filters['unpaid_leave_type_id'])) {
-            $query->where('unpaid_leave_type_id', $filters['unpaid_leave_type_id']);
-        }
-
-        return $query->paginate($perPage);
+            ->orderByDesc('id')
+            ->paginate($perPage);
     }
 
     /**
@@ -59,5 +51,17 @@ class UnpaidLeaveRepository
     {
         return UnpaidLeave::with(['unpaid_leave_type', 'employee', 'approvalRequest.steps.actor', 'approvalRequest.steps.approver', 'approvalRequest.steps.group.employees'])
             ->find($id);
+    }
+
+    /**
+     * Update an unpaid leave record.
+     */
+    public function update(int $id, array $data): bool
+    {
+        $leave = UnpaidLeave::find($id);
+        if (!$leave) {
+            return false;
+        }
+        return $leave->update($data);
     }
 }

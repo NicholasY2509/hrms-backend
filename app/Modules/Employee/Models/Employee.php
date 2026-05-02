@@ -3,7 +3,7 @@
 namespace App\Modules\Employee\Models;
 
 use App\Modules\Attendance\Models\AttendanceWorkingHour;
-use App\Models\User;
+use App\Modules\User\Models\User;
 use App\Modules\Organization\Models\Department;
 use App\Modules\Organization\Models\Team;
 use App\Modules\Organization\Models\WorkLocation;
@@ -114,5 +114,52 @@ class Employee extends Model
     public function position(): BelongsTo
     {
         return $this->belongsTo(WorkPosition::class, 'work_position_id', 'id');
+    }
+
+    /**
+     * Get the work location associated with this Employee.
+     */
+    public function work_location(): BelongsTo
+    {
+        return $this->belongsTo(WorkLocation::class, 'work_location_id', 'id');
+    }
+
+    /**
+     * Scope a query to apply filters.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param array $filters
+     * @return void
+     */
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('employee_id_number', 'like', "%{$search}%")
+                  ->orWhere(\DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%");
+            });
+        });
+
+        $query->when($filters['work_position_id'] ?? null, function ($query, $positionId) {
+            $query->where('work_position_id', $positionId);
+        });
+
+        $query->when($filters['team_id'] ?? null, function ($query, $teamId) {
+            $query->where('team_id', $teamId);
+        });
+
+        $query->when($filters['department_id'] ?? null, function ($query, $departmentId) {
+            $query->where('department_id', $departmentId);
+        });
+
+        $query->when($filters['work_location_id'] ?? null, function ($query, $locationId) {
+            $query->where('work_location_id', $locationId);
+        });
+
+        $query->when($filters['work_employee_status_id'] ?? null, function ($query, $statusId) {
+            $query->where('work_employee_status_id', $statusId);
+        });
     }
 }

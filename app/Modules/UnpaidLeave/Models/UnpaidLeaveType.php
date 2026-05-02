@@ -12,4 +12,8 @@ class UnpaidLeaveType extends Model
     protected $table = 'unpaid_leave_types';
     protected $guarded = ['id'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
+
+    protected $casts = [
+        'is_annual_leave_deduction' => 'boolean',
+    ];
 }

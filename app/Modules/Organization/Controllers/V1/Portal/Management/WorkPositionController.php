@@ -32,7 +32,9 @@ class WorkPositionController extends Controller
     ) {}
 
     /**
-     * Get all work positions.
+     * List work positions.
+     * 
+     * Get a paginated list of work positions with optional search.
      */
     public function index(WorkPositionIndexRequest $request): JsonResponse
     {
@@ -41,21 +43,16 @@ class WorkPositionController extends Controller
             $request->input('per_page', 15)
         );
 
-        $resource = WorkPositionResource::collection($workPositions);
-
         return $this->successResponse(
-            $resource->response()->getData(true),
+            WorkPositionResource::collection($workPositions)->response()->getData(true),
             'Work positions retrieved successfully'
         );
     }
 
     /**
-     * Store a new work position.
+     * Create work position.
      * 
-     * @bodyParam name string required The name of the position.
-     * @bodyParam alias string The alias of the position.
-     * @bodyParam uang_makan number required
-     * @bodyParam criteria array List of criteria.
+     * Store a new work position in the system.
      */
     public function store(WorkPositionRequest $request): JsonResponse
     {
@@ -69,24 +66,22 @@ class WorkPositionController extends Controller
     }
 
     /**
-     * Get work position details.
+     * Get work position.
+     * 
+     * Get detailed information about a specific work position.
      */
-    public function show(int $id): JsonResponse
+    public function show(WorkPosition $workPosition): JsonResponse
     {
-        $workPosition = $this->repository->findById($id);
-
-        if (!$workPosition) {
-            return $this->errorResponse('Work position not found', 404);
-        }
-
         return $this->successResponse(
-            new WorkPositionResource($workPosition),
+            new WorkPositionResource($workPosition->load(['criteria', 'approvals'])),
             'Work position details retrieved'
         );
     }
 
     /**
-     * Update a work position.
+     * Update work position.
+     * 
+     * Update the details of an existing work position.
      */
     public function update(WorkPositionRequest $request, WorkPosition $workPosition): JsonResponse
     {
@@ -99,7 +94,9 @@ class WorkPositionController extends Controller
     }
 
     /**
-     * Delete a work position.
+     * Delete work position.
+     * 
+     * Remove a work position from the system.
      */
     public function destroy(WorkPosition $workPosition): JsonResponse
     {

@@ -2,7 +2,7 @@
 
 namespace App\Modules\ApprovalWorkflow\Models;
 
-use App\Models\User;
+use App\Modules\User\Models\User;
 use App\Modules\Employee\Models\Employee;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -46,5 +46,18 @@ class ApprovalRequestStep extends Model
     public function group(): BelongsTo
     {
         return $this->belongsTo(ApprovalGroup::class, 'approver_id');
+    }
+
+    /**
+     * Resolve the approver ID(s).
+     * Returns an array of employee IDs for groups, or a single ID for individuals.
+     */
+    public function getResolvedApproverIds()
+    {
+        if ($this->approver_type === 'group') {
+            return $this->group?->employees->pluck('id')->toArray() ?? [];
+        }
+
+        return $this->approver_id;
     }
 }

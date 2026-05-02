@@ -43,4 +43,9 @@ return [
         'key' => env('FACE_API_KEY'),
     ],
 
+    'legacy_system' => [
+        'key' => env('LEGACY_SYSTEM_KEY', 'legacy_hrms'),
+        'secret' => env('LEGACY_SYSTEM_SECRET'),
+    ],
+
 ];

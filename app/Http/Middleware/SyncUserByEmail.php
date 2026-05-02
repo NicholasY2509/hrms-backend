@@ -30,7 +30,7 @@ class SyncUserByEmail
         if (app()->environment('local') && $userId) {
             \Illuminate\Support\Facades\Log::info("Impersonating User ID: {$userId}");
             
-            $user = \App\Models\User::find($userId);
+            $user = \App\Modules\User\Models\User::find($userId);
             if ($user) {
                 Auth::setUser($user);
                 Auth::guard('api')->setUser($user);
@@ -48,12 +48,15 @@ class SyncUserByEmail
                 Auth::login($user);
                 return $next($request);
             }
+
+            return response()->json([
+                'status' => 'Error',
+                'message' => 'User Sync Failed with provided token',
+                'data' => null
+            ], 401);
         }
 
-        return response()->json([
-            'status' => 'Error',
-            'message' => 'Unauthenticated or User Sync Failed',
-            'data' => null
-        ], 401);
+        // No token provided, let next middleware try (e.g., Legacy Auth)
+        return $next($request);
     }
 }

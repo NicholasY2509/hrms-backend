@@ -22,6 +22,8 @@ class ApprovalRequestStepResource extends JsonResource
             'sequence' => $this->sequence,
             'status' => $this->status,
             'notes' => $this->notes,
+            'attachment' => $this->attachment,
+            'attachment_url' => \App\Services\StorageService::url($this->attachment),
             'actioned_at' => $this->actioned_at,
             'actor' => new UserResource($this->whenLoaded('actor')),
         ];

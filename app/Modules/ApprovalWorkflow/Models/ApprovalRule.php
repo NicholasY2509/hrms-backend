@@ -2,6 +2,7 @@
 
 namespace App\Modules\ApprovalWorkflow\Models;
 
+use App\Modules\Organization\Models\WorkLocation;
 use App\Modules\Organization\Models\WorkPosition;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,6 +27,14 @@ class ApprovalRule extends Model
     public function workPosition(): BelongsTo
     {
         return $this->belongsTo(WorkPosition::class, 'work_position_id');
+    }
+
+    /**
+     * Relationship to the Work Location.
+     */
+    public function workLocation(): BelongsTo
+    {
+        return $this->belongsTo(WorkLocation::class, 'work_location_id');
     }
 
     /**

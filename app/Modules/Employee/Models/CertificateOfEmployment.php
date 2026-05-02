@@ -21,4 +21,9 @@ class CertificateOfEmployment extends Model
     {
         return $this->belongsTo(Employee::class);
     }
+
+    public function workPosition(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\Organization\Models\WorkPosition::class, 'work_position_id');
+    }
 }

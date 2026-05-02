@@ -1,28 +1,28 @@
 <?php
 
-namespace App\Models;
+namespace App\Modules\User\Models;
 
-use Database\Factories\UserFactory;
+use App\Modules\Employee\Models\Employee;
+use App\Modules\Employee\Models\UserEmployee;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Passport\HasApiTokens;
 
 #[Fillable(['email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use \Laravel\Passport\HasApiTokens, HasFactory, Notifiable;
-
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * Get the user_employee record.
      */
     public function user_employee()
     {
-        return $this->hasOne(\App\Modules\Employee\Models\UserEmployee::class, 'user_id', 'id');
+        return $this->hasOne(UserEmployee::class, 'user_id', 'id');
     }
 
     /**
@@ -31,8 +31,8 @@ class User extends Authenticatable
     public function employee()
     {
         return $this->hasOneThrough(
-            \App\Modules\Employee\Models\Employee::class,
-            \App\Modules\Employee\Models\UserEmployee::class,
+            Employee::class,
+            UserEmployee::class,
             'user_id',
             'id',
             'id',
@@ -50,5 +50,19 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Scope for filtering.
+     */
+    public function scopeFilter($query, array $filters)
+    {
+        $search = $filters['search'] ?? false;
+
+        $query->when($search, function ($query, $search) {
+            $query->where(function ($query) use ($search) {
+                $query->where('email', 'like', "%$search%");
+            });
+        });
     }
 }

@@ -31,7 +31,9 @@ class TeamController extends Controller
     ) {}
 
     /**
-     * Get all teams.
+     * List teams.
+     * 
+     * Get a paginated list of teams with optional search.
      */
     public function index(TeamIndexRequest $request): JsonResponse
     {
@@ -40,20 +42,16 @@ class TeamController extends Controller
             $request->input('per_page', 15)
         );
 
-        $resource = TeamResource::collection($teams);
-
         return $this->successResponse(
-            $resource->response()->getData(true),
+            TeamResource::collection($teams)->response()->getData(true),
             'Teams retrieved successfully'
         );
     }
 
     /**
-     * Store a new team.
+     * Create team.
      * 
-     * @bodyParam name string required The name of the team.
-     * @bodyParam department_id int required The ID of the department.
-     * @bodyParam team_head_id int The ID of the employee who heads the team.
+     * Store a new team in the system.
      */
     public function store(TeamRequest $request): JsonResponse
     {
@@ -67,24 +65,22 @@ class TeamController extends Controller
     }
 
     /**
-     * Get team details.
+     * Get team.
+     * 
+     * Get detailed information about a specific team.
      */
-    public function show(int $id): JsonResponse
+    public function show(Team $team): JsonResponse
     {
-        $team = $this->repository->findById($id);
-
-        if (!$team) {
-            return $this->errorResponse('Team not found', 404);
-        }
-
         return $this->successResponse(
-            new TeamResource($team),
+            new TeamResource($team->load(['department', 'head'])),
             'Team details retrieved'
         );
     }
 
     /**
-     * Update a team.
+     * Update team.
+     * 
+     * Update the details of an existing team.
      */
     public function update(TeamRequest $request, Team $team): JsonResponse
     {
@@ -97,7 +93,9 @@ class TeamController extends Controller
     }
 
     /**
-     * Delete a team.
+     * Delete team.
+     * 
+     * Remove a team from the system.
      */
     public function destroy(Team $team): JsonResponse
     {

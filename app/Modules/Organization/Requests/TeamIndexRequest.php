@@ -4,6 +4,10 @@ namespace App\Modules\Organization\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @queryParam search string Filter by name. Example: Backend
+ * @queryParam per_page integer Number of items per page. Default: 15. Example: 20
+ */
 class TeamIndexRequest extends FormRequest
 {
     public function authorize(): bool

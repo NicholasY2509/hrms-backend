@@ -47,11 +47,20 @@ class ApprovalActionController extends Controller
      * Approve a request.
      * 
      * @bodyParam notes string optional Approval notes.
+     * @bodyParam attachment file optional Evidence for approval.
      */
     public function approve(Request $request, int $id): JsonResponse
     {
+        $request->validate([
+            'attachment' => 'nullable|file|max:5120',
+        ]);
+
         try {
-            $approvalRequest = $this->service->approve($id, $request->input('notes'));
+            $approvalRequest = $this->service->approve(
+                $id, 
+                $request->input('notes'),
+                $request->file('attachment')
+            );
             return $this->successResponse($approvalRequest, 'Pengajuan berhasil disetujui.');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 400);
@@ -62,15 +71,21 @@ class ApprovalActionController extends Controller
      * Reject a request.
      * 
      * @bodyParam notes string required Reason for rejection.
+     * @bodyParam attachment file optional Evidence for rejection.
      */
     public function reject(Request $request, int $id): JsonResponse
     {
         $request->validate([
-            'notes' => 'required|string'
+            'notes' => 'required|string',
+            'attachment' => 'nullable|file|max:5120',
         ]);
 
         try {
-            $approvalRequest = $this->service->reject($id, $request->input('notes'));
+            $approvalRequest = $this->service->reject(
+                $id, 
+                $request->input('notes'),
+                $request->file('attachment')
+            );
             return $this->successResponse($approvalRequest, 'Pengajuan telah ditolak.');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 400);

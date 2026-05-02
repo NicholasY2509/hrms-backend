@@ -52,12 +52,13 @@ class ApprovalRuleRepository
     /**
      * Find the best matching rule for a scheme and work position.
      */
-    public function findBestMatch(int $schemeId, ?int $workPositionId = null): ?ApprovalRule
+    public function findBestMatch(int $schemeId, ?int $workPositionId = null, ?int $workLocationId = null): ?ApprovalRule
     {
-        // 1. Try specific position
-        if ($workPositionId) {
+        // 1. Try specific position AND specific location
+        if ($workPositionId && $workLocationId) {
             $rule = ApprovalRule::where('approval_scheme_id', $schemeId)
                 ->where('work_position_id', $workPositionId)
+                ->where('work_location_id', $workLocationId)
                 ->where('is_active', true)
                 ->with(['steps.group', 'steps.employee'])
                 ->first();
@@ -65,7 +66,19 @@ class ApprovalRuleRepository
             if ($rule) return $rule;
         }
 
-        // 2. Try global default
+        // 2. Try specific position (Global location for that position)
+        if ($workPositionId) {
+            $rule = ApprovalRule::where('approval_scheme_id', $schemeId)
+                ->where('work_position_id', $workPositionId)
+                ->whereNull('work_location_id')
+                ->where('is_active', true)
+                ->with(['steps.group', 'steps.employee'])
+                ->first();
+                
+            if ($rule) return $rule;
+        }
+
+        // 3. Try global default for the scheme
         return ApprovalRule::where('approval_scheme_id', $schemeId)
             ->where('is_default', true)
             ->where('is_active', true)

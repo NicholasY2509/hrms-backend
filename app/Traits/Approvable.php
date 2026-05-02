@@ -43,15 +43,16 @@ trait Approvable
                 return;
             }
 
-            // 2. Determine Applicant's Work Position
+            // 2. Determine Applicant's Work Position & Location
             $workPositionId = $this->resolveApplicantWorkPositionId();
+            $workLocationId = $this->resolveApplicantWorkLocationId();
 
-            // 3. Find the Best Matching Rule (Specific Position -> Global Default)
+            // 3. Find the Best Matching Rule (Specific Position + Location -> Specific Position -> Global Default)
             $repository = app(ApprovalRuleRepository::class);
-            $rule = $repository->findBestMatch($scheme->id, $workPositionId);
+            $rule = $repository->findBestMatch($scheme->id, $workPositionId, $workLocationId);
 
             if (!$rule) {
-                Log::warning("No matching approval rule found for scheme {$scheme->id} and position {$workPositionId}");
+                Log::warning("No matching approval rule found for scheme {$scheme->id}, position {$workPositionId}, and location {$workLocationId}");
                 return;
             }
 
@@ -95,6 +96,24 @@ trait Approvable
         // Try through user relationship
         if (isset($this->user->employee) && $this->user->employee->work_position_id) {
             return $this->user->employee->work_position_id;
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve the applicant's work location from the model.
+     */
+    protected function resolveApplicantWorkLocationId(): ?int
+    {
+        // Try direct relationship
+        if (isset($this->employee) && $this->employee->work_location_id) {
+            return $this->employee->work_location_id;
+        }
+
+        // Try through user relationship
+        if (isset($this->user->employee) && $this->user->employee->work_location_id) {
+            return $this->user->employee->work_location_id;
         }
 
         return null;

@@ -4,6 +4,10 @@ namespace App\Modules\Organization\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @queryParam search string Filter by name or alias. Example: Manager
+ * @queryParam per_page integer Number of items per page. Default: 15. Example: 20
+ */
 class WorkPositionIndexRequest extends FormRequest
 {
     public function authorize(): bool
@@ -14,16 +18,7 @@ class WorkPositionIndexRequest extends FormRequest
     public function rules(): array
     {
         return [
-            /**
-             * The search term to filter by name or alias.
-             * @example Manager
-             */
             'search' => 'nullable|string',
-            
-            /**
-             * The number of results per page.
-             * @example 15
-             */
             'per_page' => 'nullable|integer',
         ];
     }

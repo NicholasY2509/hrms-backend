@@ -5,6 +5,8 @@ namespace App\Modules\ApprovalWorkflow\Services;
 use App\Modules\ApprovalWorkflow\Models\ApprovalRequest;
 use App\Modules\ApprovalWorkflow\Models\ApprovalRequestStep;
 use App\Modules\ApprovalWorkflow\Repositories\ApprovalActionRepository;
+use App\Services\StorageService;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -31,25 +33,29 @@ class ApprovalActionService
     /**
      * Approve a specific request.
      */
-    public function approve(int $requestId, ?string $notes = null)
+    public function approve(int $requestId, ?string $notes = null, ?UploadedFile $attachment = null)
     {
-        return DB::transaction(function () use ($requestId, $notes) {
+        return DB::transaction(function () use ($requestId, $notes, $attachment) {
             $employeeId = Auth::user()->employee->id;
             $step = $this->repository->findStepForAction($requestId, $employeeId);
 
             if (!$step) {
-                throw new \Exception("Anda tidak memiliki otoritas untuk menyetujui pengajuan ini atau pengajuan sudah diproses.");
+                throw new \Exception(Auth::user()->employee->full_name . " Tidak Memiliki Otoritas");
             }
+
+            $attachmentPath = $attachment 
+                ? StorageService::store($attachment, 'approvals') 
+                : null;
 
             // 1. Update the Step
             $step->update([
                 'status' => 'approved',
                 'notes' => $notes,
+                'attachment' => $attachmentPath,
                 'actioned_by' => Auth::id(),
                 'actioned_at' => now(),
             ]);
 
-            // 2. Check if all steps are approved
             $request = $step->request;
             $allApproved = !$request->steps()->where('status', '!=', 'approved')->exists();
 
@@ -70,9 +76,9 @@ class ApprovalActionService
     /**
      * Reject a specific request.
      */
-    public function reject(int $requestId, string $notes)
+    public function reject(int $requestId, string $notes, ?UploadedFile $attachment = null)
     {
-        return DB::transaction(function () use ($requestId, $notes) {
+        return DB::transaction(function () use ($requestId, $notes, $attachment) {
             $employeeId = Auth::user()->employee->id;
             $step = $this->repository->findStepForAction($requestId, $employeeId);
 
@@ -80,10 +86,15 @@ class ApprovalActionService
                 throw new \Exception("Anda tidak memiliki otoritas untuk menolak pengajuan ini.");
             }
 
+            $attachmentPath = $attachment 
+                ? StorageService::store($attachment, 'approvals') 
+                : null;
+
             // 1. Update the Step
             $step->update([
                 'status' => 'rejected',
                 'notes' => $notes,
+                'attachment' => $attachmentPath,
                 'actioned_by' => Auth::id(),
                 'actioned_at' => now(),
             ]);
@@ -105,13 +116,9 @@ class ApprovalActionService
     protected function syncParentModelStatus(ApprovalRequest $request, string $status)
     {
         $model = $request->approvable;
-        if ($model) {
-            // Some models might have a status column, others might use settled_at
-            if ($status === 'approved') {
-                $model->update(['status' => 'approved', 'settled_at' => now()]);
-            } else {
-                $model->update(['status' => 'rejected']);
-            }
+        
+        if ($model && method_exists($model, 'syncApprovalStatus')) {
+            $model->syncApprovalStatus($status);
         }
     }
 }

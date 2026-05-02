@@ -68,7 +68,16 @@ class MyOvertimeController extends Controller
      */
     public function store(StoreOvertimeRequest $request): JsonResponse
     {
-        $overtime = $this->service->storeOvertime($request->validated());
+        $employeeId = auth()->user()->user_employee?->employee_id;
+
+        if (!$employeeId) {
+            return $this->errorResponse('Employee record not found for this user.', 404);
+        }
+
+        $data = $request->validated();
+        $data['employee_id'] = $employeeId;
+
+        $overtime = $this->service->storeOvertime($data);
 
         return $this->successResponse(new OvertimeResource($overtime), 'Pengajuan lembur berhasil dibuat.', 201);
     }

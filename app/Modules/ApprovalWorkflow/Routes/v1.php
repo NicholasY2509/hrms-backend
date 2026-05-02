@@ -8,7 +8,7 @@ use App\Modules\ApprovalWorkflow\Controllers\V1\Portal\Management\ApprovalAction
 use App\Modules\ApprovalWorkflow\Controllers\V1\Portal\Management\EmployeeSearchController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware([\App\Http\Middleware\SyncUserByEmail::class])->group(function () {
+Route::middleware('api.auth')->group(function () {
 
     /**
      * --------------------------------------------------------------------------

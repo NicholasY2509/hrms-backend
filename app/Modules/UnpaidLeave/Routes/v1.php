@@ -21,6 +21,7 @@ Route::middleware([\App\Http\Middleware\SyncUserByEmail::class])->group(function
             Route::prefix('leaves')->group(function () {
                 Route::get('/', [UnpaidLeaveManagementController::class, 'index']);
                 Route::get('/{id}', [UnpaidLeaveManagementController::class, 'show']);
+                Route::post('/{id}/settle', [UnpaidLeaveManagementController::class, 'settle']);
             });
         });
     });

@@ -5,9 +5,10 @@ namespace App\Modules\ApprovalWorkflow\Controllers\V1\Configuration;
 use App\Http\Controllers\Controller;
 use App\Modules\ApprovalWorkflow\Services\ApprovalRuleService;
 use App\Modules\ApprovalWorkflow\Resources\V1\ApprovalRuleResource;
+use App\Modules\ApprovalWorkflow\Requests\V1\StoreApprovalRuleRequest;
+use App\Modules\ApprovalWorkflow\Requests\V1\UpdateApprovalRuleRequest;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 /**
  * @group Approval Workflow
@@ -23,21 +24,17 @@ class ApprovalRuleController extends Controller
 
     /**
      * Create a new rule (Default or Position-specific) within a scheme.
+     * 
+     * @bodyParam approval_scheme_id integer required The ID of the approval scheme.
+     * @bodyParam work_position_id integer optional The ID of the work position this rule applies to.
+     * @bodyParam work_location_id integer optional The ID of the work location this rule applies to.
+     * @bodyParam is_default boolean optional Whether this is the default rule for the scheme.
+     * @bodyParam is_active boolean optional Whether the rule is active.
+     * @bodyParam steps array optional The steps for this rule.
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreApprovalRuleRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'approval_scheme_id' => 'required|exists:approval_schemes,id',
-            'work_position_id' => 'nullable|exists:work_positions,id',
-            'is_default' => 'boolean',
-            'is_active' => 'boolean',
-            'steps' => 'nullable|array',
-            'steps.*.type_slug' => 'required|string',
-            'steps.*.target_id' => 'nullable|integer',
-            'steps.*.sequence' => 'nullable|integer',
-        ]);
-
-        $rule = $this->service->createRule($validated);
+        $rule = $this->service->createRule($request->validated());
         
         return $this->successResponse(
             new ApprovalRuleResource($rule), 
@@ -48,18 +45,15 @@ class ApprovalRuleController extends Controller
 
     /**
      * Update a rule and its steps.
+     * 
+     * @bodyParam work_position_id integer optional The ID of the work position.
+     * @bodyParam work_location_id integer optional The ID of the work location.
+     * @bodyParam is_active boolean optional Whether the rule is active.
+     * @bodyParam steps array optional The steps for this rule.
      */
-    public function update(Request $request, $id): JsonResponse
+    public function update(UpdateApprovalRuleRequest $request, $id): JsonResponse
     {
-        $validated = $request->validate([
-            'is_active' => 'boolean',
-            'steps' => 'nullable|array',
-            'steps.*.type_slug' => 'required|string',
-            'steps.*.target_id' => 'nullable|integer',
-            'steps.*.sequence' => 'nullable|integer',
-        ]);
-
-        $rule = $this->service->updateRule($id, $validated);
+        $rule = $this->service->updateRule($id, $request->validated());
         if (!$rule) return $this->errorResponse('Rule not found', 404);
         
         return $this->successResponse(

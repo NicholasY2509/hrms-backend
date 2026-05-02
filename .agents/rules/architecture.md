@@ -40,7 +40,7 @@ app/Modules/[ModuleName]/
 - **Rule**: Delegate all business logic to **Services**.
 - **Rule**: Use Type-Hinting in the constructor to inject Services.
 - **Rule**: Use API Resources for formatting all JSON responses.
-- **Documentation**: Every public method MUST have PHPDoc comments with `@group`, `@bodyParam`, and `@response` for documentation generation.
+- **Documentation**: Every public method MUST have PHPDoc comments with `@group`, `@bodyParam`, and `@response` for documentation generation. For `index` methods, use dedicated **Form Requests** and `@queryParam` tags within the request class to document filters and pagination parameters for Scribe.
 
 ### Services
 - **Rule**: Services contain the core business logic.
@@ -71,11 +71,11 @@ app/Modules/[ModuleName]/
   - Classes: PascalCase.
   - Methods/Variables: camelCase (except Model properties which are snake_case).
   - Routes: kebab-case.
-- **Validation**: Use **Form Requests** (`app/Modules/Order/Requests/...`) for all validation logic. Do not validate inside controllers.
+- **Validation**: Use **Form Requests** (`app/Modules/Order/Requests/...`) for ALL validation logic, including `index` methods (query parameter filtering and pagination). Do not validate inside controllers.
 - **Real-time**: Use Laravel Echo/Broadcasting for live updates. Traits like `BroadcastsTableUpdates` should be utilized where status changes occur.
 
 ## Agent Behavior Instructions
 - **Scaffolding**: When adding a new module, ALWAYS create the full directory structure: `Controllers`, `Services`, `Repositories`, `Models`, `Routes`, etc.
 - **Module Discovery**: Before modifying code, check if the logic belongs to an existing module or requires a new one.
 - **Consistency**: Follow the existing pattern of lean controllers and service-based logic. Never put complex queries directly in a Controller.
-- **Docs**: Always update or include the `@group` and `@bodyParam` tags in controllers when adding/modifying endpoints.
+- **Docs**: Always update or include the `@group`, `@bodyParam`, and `@queryParam` tags (via Request classes) in controllers when adding/modifying endpoints.

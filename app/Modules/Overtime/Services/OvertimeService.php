@@ -5,6 +5,7 @@ namespace App\Modules\Overtime\Services;
 use App\Modules\Overtime\Models\Overtime;
 use App\Modules\Overtime\Models\OvertimeApproval;
 use App\Modules\Overtime\Models\OvertimeAttachment;
+use App\Modules\Overtime\Models\OvertimeType;
 use App\Modules\Overtime\Repositories\OvertimeRepository;
 use App\Modules\Employee\Models\Employee;
 use Carbon\Carbon;
@@ -39,7 +40,6 @@ class OvertimeService
                 ? Carbon::parse($data['finish_time']) 
                 : Carbon::parse($data['date'] . ' ' . $data['finish_time']);
             
-            // Handle cross-day finish time if necessary
             if ($finishDateTime->lessThan($startDateTime)) {
                 $finishDateTime->addDay();
             }
@@ -48,15 +48,12 @@ class OvertimeService
             
             $type = $data['type'] ?? Overtime::TYPE_GENERAL;
 
-            // Handle break time subtraction for NATIONAL (Holiday) overtimes
             if ($type === Overtime::TYPE_HOLIDAY) {
                 $breakStart1 = Carbon::parse($startDateTime->format('Y-m-d') . ' 12:00:00');
                 $breakEnd1 = Carbon::parse($startDateTime->format('Y-m-d') . ' 13:00:00');
                 
-                // Day 1 breakage
                 $overlap1 = max(0, min($finishDateTime->timestamp, $breakEnd1->timestamp) - max($startDateTime->timestamp, $breakStart1->timestamp));
                 
-                // Day 2 breakage (if cross-day)
                 $overlap2 = 0;
                 if ($finishDateTime->timestamp > $startDateTime->copy()->addDay()->startOfDay()->timestamp) {
                     $breakStart2 = $breakStart1->copy()->addDay();
@@ -87,7 +84,7 @@ class OvertimeService
                 'total_time' => $totalTimeStr,
                 'note' => $data['note'] ?? null,
                 'estimated_overtime_price' => $data['estimated_cost'] ?? 0,
-                'real_overtime_price' => $data['estimated_cost'] ?? 0,
+                // 'real_overtime_price' => $data['estimated_cost'] ?? 0,
             ]);
 
             // Handle Attachments
@@ -151,6 +148,28 @@ class OvertimeService
         ]);
 
         return $overtime;
+    }
+
+    /**
+     * Update an overtime request (Management Portal).
+     *
+     * @param Overtime $overtime
+     * @param array $data
+     * @return Overtime
+     */
+    public function updateOvertime(Overtime $overtime, array $data)
+    {
+        // Automatically resolve estimated price if type is changed but price is not
+        if (isset($data['overtime_type_id']) && !isset($data['estimated_overtime_price'])) {
+            $overtimeType = OvertimeType::find($data['overtime_type_id']);
+            if ($overtimeType) {
+                $data['estimated_overtime_price'] = $overtimeType->price;
+            }
+        }
+
+        $overtime->update($data);
+
+        return $overtime->fresh(['employee', 'overtime_type', 'approvalRequest.steps']);
     }
 
     /**

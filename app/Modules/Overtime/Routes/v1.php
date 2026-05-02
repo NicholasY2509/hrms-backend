@@ -18,8 +18,8 @@ Route::middleware([\App\Http\Middleware\SyncUserByEmail::class])->group(function
         Route::prefix('management')->group(function () {
             Route::get('/', [OvertimeManagementController::class, 'index']);
             Route::get('/{id}', [OvertimeManagementController::class, 'show']);
+            Route::patch('/{id}', [OvertimeManagementController::class, 'update']);
+            Route::post('/{id}/settle', [OvertimeManagementController::class, 'settle']);
         });
-
     });
-
 });

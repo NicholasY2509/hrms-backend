@@ -31,7 +31,9 @@ class DepartmentController extends Controller
     ) {}
 
     /**
-     * Get all departments.
+     * List departments.
+     * 
+     * Get a paginated list of departments with optional search.
      */
     public function index(DepartmentIndexRequest $request): JsonResponse
     {
@@ -40,19 +42,16 @@ class DepartmentController extends Controller
             $request->input('per_page', 15)
         );
 
-        $resource = DepartmentResource::collection($departments);
-
         return $this->successResponse(
-            $resource->response()->getData(true),
+            DepartmentResource::collection($departments)->response()->getData(true),
             'Departments retrieved successfully'
         );
     }
 
     /**
-     * Store a new department.
+     * Create department.
      * 
-     * @bodyParam name string required The name of the department.
-     * @bodyParam dept_head_id int The ID of the employee who heads the department.
+     * Store a new department in the system.
      */
     public function store(DepartmentRequest $request): JsonResponse
     {
@@ -66,24 +65,22 @@ class DepartmentController extends Controller
     }
 
     /**
-     * Get department details.
+     * Get department.
+     * 
+     * Get detailed information about a specific department.
      */
-    public function show(int $id): JsonResponse
+    public function show(Department $department): JsonResponse
     {
-        $department = $this->repository->findById($id);
-
-        if (!$department) {
-            return $this->errorResponse('Department not found', 404);
-        }
-
         return $this->successResponse(
-            new DepartmentResource($department),
+            new DepartmentResource($department->load(['head'])),
             'Department details retrieved'
         );
     }
 
     /**
-     * Update a department.
+     * Update department.
+     * 
+     * Update the details of an existing department.
      */
     public function update(DepartmentRequest $request, Department $department): JsonResponse
     {
@@ -96,7 +93,9 @@ class DepartmentController extends Controller
     }
 
     /**
-     * Delete a department.
+     * Delete department.
+     * 
+     * Remove a department from the system.
      */
     public function destroy(Department $department): JsonResponse
     {
