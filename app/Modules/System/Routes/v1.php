@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Middleware\SyncUserByEmail;
 use App\Modules\System\Controllers\V1\AuthController;
 use App\Modules\System\Controllers\V1\DashboardController;
 use App\Modules\System\Controllers\V1\SystemController;

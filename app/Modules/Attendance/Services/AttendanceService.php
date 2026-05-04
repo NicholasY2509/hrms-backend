@@ -11,6 +11,7 @@ use App\Services\StorageService;
 use App\Modules\Attendance\Models\AttendanceLocation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Modules\Attendance\Models\AttendanceSetting;
 
 class AttendanceService
 {
@@ -44,15 +45,18 @@ class AttendanceService
 
         $now = Carbon::now();
 
-        // Enforce 1-hour early clock-in limit
+        $startMinutes = AttendanceSetting::getValue('attendance_clock_in_start_minutes', 60);
+        $endMinutes = AttendanceSetting::getValue('attendance_clock_in_end_minutes', 60);
+
+        // Enforce early clock-in limit
         $scheduledStart = Carbon::parse($workingHour->attendance_at . ' ' . $workingHour->working_hour->clock_in);
-        $clockInWindowStart = (clone $scheduledStart)->subHour();
-        // Keep window open until 1 hour before shift end
+        $clockInWindowStart = (clone $scheduledStart)->subMinutes($startMinutes);
+        // Keep window open until $endMinutes before shift end
         $scheduledEnd = Carbon::parse($workingHour->attendance_at . ' ' . $workingHour->working_hour->clock_out);
         if ($scheduledEnd->lessThan($scheduledStart)) {
             $scheduledEnd->addDay();
         }
-        $clockInWindowEnd = (clone $scheduledEnd)->subHour();
+        $clockInWindowEnd = (clone $scheduledEnd)->subMinutes($endMinutes);
 
         if ($now->lessThan($clockInWindowStart)) {
             $diff = $now->diffInMinutes($scheduledStart);
@@ -60,7 +64,7 @@ class AttendanceService
         }
 
         if ($now->greaterThanOrEqualTo($clockInWindowEnd)) {
-             throw new ApplicationException("Batas waktu absen masuk sudah berakhir (kurang dari 1 jam sebelum shift berakhir)!", 400);
+             throw new ApplicationException("Batas waktu absen masuk sudah berakhir (kurang dari {$endMinutes} menit sebelum shift berakhir)!", 400);
         }
 
         if ($attendance && $this->isCurrentlyClockedIn($attendance)) {
@@ -145,13 +149,15 @@ class AttendanceService
 
         $now = Carbon::now();
 
-        // Enforce 5-hour clock-out limit (Shift End + 5 hours)
+        $endHours = AttendanceSetting::getValue('attendance_clock_out_end_hours', 5);
+
+        // Enforce clock-out limit (Shift End + X hours)
         $scheduledEnd = Carbon::parse($workingHour->attendance_at . ' ' . $workingHour->working_hour->clock_out);
         $scheduledStart = Carbon::parse($workingHour->attendance_at . ' ' . $workingHour->working_hour->clock_in);
         if ($scheduledEnd->lessThan($scheduledStart)) {
             $scheduledEnd->addDay();
         }
-        $clockOutWindowEnd = (clone $scheduledEnd)->addHours(5);
+        $clockOutWindowEnd = (clone $scheduledEnd)->addHours($endHours);
 
         if ($now->greaterThan($clockOutWindowEnd)) {
              throw new ApplicationException("Batas waktu absen pulang sudah berakhir! Sesi ini sudah kadaluarsa.", 400);
@@ -220,7 +226,7 @@ class AttendanceService
      */
     protected function calculateDistance($lat1, $lon1, $lat2, $lon2): float
     {
-        $earthRadius = 6371000;
+        $earthRadius = AttendanceSetting::getValue('attendance_earth_radius_meters', 6371000);
 
         $dLat = deg2rad($lat2 - $lat1);
         $dLon = deg2rad($lon2 - $lon1);
@@ -247,13 +253,16 @@ class AttendanceService
             $attendance = $schedule->attendance;
             if ($attendance && $attendance->incoming_scan) continue;
 
+            $startMinutes = AttendanceSetting::getValue('attendance_clock_in_start_minutes', 60);
+            $endMinutes = AttendanceSetting::getValue('attendance_clock_in_end_minutes', 60);
+
             $scheduledStart = Carbon::parse($schedule->attendance_at . ' ' . $schedule->working_hour->clock_in);
             $scheduledEnd = Carbon::parse($schedule->attendance_at . ' ' . $schedule->working_hour->clock_out);
             if ($scheduledEnd->lessThan($scheduledStart)) {
                 $scheduledEnd->addDay();
             }
-            $clockInWindowStart = (clone $scheduledStart)->subHour();
-            $clockInWindowEnd = (clone $scheduledEnd)->subHour(); // 1 hour before shift ends
+            $clockInWindowStart = (clone $scheduledStart)->subMinutes($startMinutes);
+            $clockInWindowEnd = (clone $scheduledEnd)->subMinutes($endMinutes); // X minutes before shift ends
 
             if ($now->greaterThanOrEqualTo($clockInWindowStart) && $now->lessThan($clockInWindowEnd)) {
                 return [
@@ -276,7 +285,8 @@ class AttendanceService
                 $scheduledEnd->addDay();
             }
 
-            $clockOutWindowEnd = (clone $scheduledEnd)->addHours(5);
+            $endHours = AttendanceSetting::getValue('attendance_clock_out_end_hours', 5);
+            $clockOutWindowEnd = (clone $scheduledEnd)->addHours($endHours);
 
             if ($now->lessThanOrEqualTo($clockOutWindowEnd)) {
                 return [

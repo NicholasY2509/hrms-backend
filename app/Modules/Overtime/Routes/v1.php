@@ -2,9 +2,10 @@
 
 use App\Modules\Overtime\Controllers\V1\Portal\Employee\MyOvertimeController;
 use App\Modules\Overtime\Controllers\V1\Portal\Management\OvertimeManagementController;
+use App\Modules\Overtime\Controllers\V1\Portal\Management\OvertimeTypeController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware([\App\Http\Middleware\SyncUserByEmail::class])->group(function () {
+Route::middleware(['api.auth'])->group(function () {
 
     Route::prefix('portal')->group(function () {
         
@@ -16,10 +17,19 @@ Route::middleware([\App\Http\Middleware\SyncUserByEmail::class])->group(function
         });
 
         Route::prefix('management')->group(function () {
+            Route::prefix('types')->group(function () {
+                Route::get('/', [OvertimeTypeController::class, 'index']);
+                Route::post('/', [OvertimeTypeController::class, 'store']);
+                Route::get('/{id}', [OvertimeTypeController::class, 'show']);
+                Route::put('/{id}', [OvertimeTypeController::class, 'update']);
+                Route::delete('/{id}', [OvertimeTypeController::class, 'destroy']);
+            });
+
             Route::get('/', [OvertimeManagementController::class, 'index']);
             Route::get('/{id}', [OvertimeManagementController::class, 'show']);
             Route::patch('/{id}', [OvertimeManagementController::class, 'update']);
             Route::post('/{id}/settle', [OvertimeManagementController::class, 'settle']);
         });
     });
+    
 });

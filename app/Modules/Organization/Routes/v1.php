@@ -6,11 +6,13 @@ use App\Modules\Organization\Controllers\V1\Portal\Management\WorkLocationContro
 use App\Modules\Organization\Controllers\V1\Portal\Management\WorkPositionController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('portal/management')->group(function () {
-    
-    Route::apiResource('work-locations', WorkLocationController::class);
-    Route::apiResource('work-positions', WorkPositionController::class);
-    Route::apiResource('departments', DepartmentController::class);
-    Route::apiResource('teams', TeamController::class);
+Route::middleware(['api.auth'])->group(function () {
+    Route::prefix('portal/management')->group(function () {
+        
+        Route::apiResource('work-locations', WorkLocationController::class);
+        Route::apiResource('work-positions', WorkPositionController::class);
+        Route::apiResource('departments', DepartmentController::class);
+        Route::apiResource('teams', TeamController::class);
 
+    });
 });
