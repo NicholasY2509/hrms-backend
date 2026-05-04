@@ -31,7 +31,8 @@ class ApprovalSchemeRepository
         return ApprovalScheme::with([
             'rules.steps.group', 
             'rules.steps.employee',
-            'rules.workPosition'
+            'rules.workPosition',
+            'rules.workLocation',
         ])->find($id);
     }
 
