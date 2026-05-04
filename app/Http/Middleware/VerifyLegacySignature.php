@@ -83,7 +83,6 @@ class VerifyLegacySignature
             $user = User::where('email', $userEmail)->first();
             if ($user) {
                 Auth::setUser($user);
-                Auth::guard('api')->setUser($user);
                 $request->setUserResolver(fn() => $user);
             } else {
                 Log::warning("Legacy Auth: User not found for email: {$userEmail}");

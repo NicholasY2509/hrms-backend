@@ -33,7 +33,6 @@ class SyncUserByEmail
             $user = \App\Modules\User\Models\User::find($userId);
             if ($user) {
                 Auth::setUser($user);
-                Auth::guard('api')->setUser($user);
                 $request->setUserResolver(fn() => $user);
                 return $next($request);
             }
@@ -45,7 +44,8 @@ class SyncUserByEmail
             $user = $this->authSyncService->syncUserByToken($token);
 
             if ($user) {
-                Auth::login($user);
+                Auth::setUser($user);
+                $request->setUserResolver(fn() => $user);
                 return $next($request);
             }
 
