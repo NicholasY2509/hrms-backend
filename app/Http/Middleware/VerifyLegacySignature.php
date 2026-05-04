@@ -46,13 +46,22 @@ class VerifyLegacySignature
         }
 
         // 3. Verify Signature
-        // Data to sign: timestamp + method + path + body
         $method = strtoupper($request->getMethod());
         $path = '/' . ltrim($request->getPathInfo(), '/');
         $body = $request->getContent();
         
         $dataToSign = $timestamp . $method . $path . $body;
         $expectedSignature = hash_hmac('sha256', $dataToSign, $secret);
+
+        Log::debug("Legacy Auth Verification Attempt", [
+            'timestamp' => $timestamp,
+            'method' => $method,
+            'path' => $path,
+            'body_length' => strlen($body),
+            'data_to_sign' => $dataToSign,
+            'expected_signature' => $expectedSignature,
+            'received_signature' => $signature
+        ]);
 
         if (!hash_equals($expectedSignature, $signature)) {
             Log::warning("Legacy Auth Failed: Signature mismatch", [
