@@ -22,7 +22,7 @@ class DepartmentRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'heads' => ['nullable', 'array'],
-            'heads.*.work_location_id' => ['required_with:heads', 'integer', 'exists:work_locations,id'],
+            'heads.*.work_location_id' => ['nullable', 'integer', 'exists:work_locations,id'],
             'heads.*.employee_id' => ['required_with:heads', 'integer', 'exists:employees,id'],
         ];
     }

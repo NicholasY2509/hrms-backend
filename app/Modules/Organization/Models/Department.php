@@ -37,7 +37,8 @@ class Department extends Model
      */
     public function headAt(int $workLocationId): ?DepartmentHead
     {
-        return $this->heads()->where('work_location_id', $workLocationId)->first();
+        return $this->heads()->where('work_location_id', $workLocationId)->first()
+            ?? $this->heads()->whereNull('work_location_id')->first();
     }
 
     public function employees(): HasMany
