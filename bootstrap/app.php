@@ -1,8 +1,13 @@
 <?php
 
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SyncUserByEmail;
+use App\Http\Middleware\UnifiedApiAuth;
+use App\Http\Middleware\VerifyLegacySignature;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,12 +25,14 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+        $middleware->append(SecurityHeaders::class);
         $middleware->throttleApi('api');
         
         // Specific rate limiting for authentication endpoints
         $middleware->alias([
-            'throttle.auth' => \Illuminate\Routing\Middleware\ThrottleRequests::class . ':auth',
+            'throttle.auth' => ThrottleRequests::class . ':auth',
+            'api.auth' => UnifiedApiAuth::class,
+            'legacy.auth' => VerifyLegacySignature::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

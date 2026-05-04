@@ -12,7 +12,12 @@ The application is organized into self-contained modules located in `app/Modules
 ### Directory Structure
 ```text
 app/Modules/[ModuleName]/
- ├── Controllers/     # Lean controllers (delegate to Services).
+ ├── Controllers/     
+ │   └── V1/
+ │       ├── Portal/        # Daily usage for Employees and Managers.
+ │       │   ├── Employee/  # Self-service actions (My profile, my leave).
+ │       │   └── Management/# Operational oversight (Team search, all reports).
+ │       └── Configuration/ # System-level setup (IT/Admin rules & policies).
  ├── Services/        # Business logic and cross-module interaction.
  ├── Repositories/    # Data access logic (Eloquent queries).
  ├── Models/          # Eloquent models specific to the module.
@@ -27,11 +32,15 @@ app/Modules/[ModuleName]/
 ## 2. Layers & Responsibilities
 
 ### Controllers
-- **Rule**: Keep controllers lean. They should only handle HTTP concerns (request input, session/auth context, and returning responses).
+- **Rule**: Keep controllers lean. They should only handle HTTP concerns.
+- **Rule**: Organize controllers into `V1/Portal` or `V1/Configuration` sub-directories:
+    - **Portal/Employee**: Features for the individual user (Self-Service).
+    - **Portal/Management**: Features for HR/Managers to oversee data (Operational).
+    - **Configuration**: Features for IT/Superadmins to setup system rules (Structural).
 - **Rule**: Delegate all business logic to **Services**.
 - **Rule**: Use Type-Hinting in the constructor to inject Services.
 - **Rule**: Use API Resources for formatting all JSON responses.
-- **Documentation**: Every public method MUST have PHPDoc comments with `@group`, `@bodyParam`, and `@response` for documentation generation.
+- **Documentation**: Every public method MUST have PHPDoc comments with `@group`, `@bodyParam`, and `@response` for documentation generation. For `index` methods, use dedicated **Form Requests** and `@queryParam` tags within the request class to document filters and pagination parameters for Scribe.
 
 ### Services
 - **Rule**: Services contain the core business logic.
@@ -52,6 +61,7 @@ app/Modules/[ModuleName]/
 - **Traits**: Use the `ApiResponses` trait in all controllers for consistent JSON structure.
 - **Success Mapping**: 
   - `successResponse($data, $message, $code)`
+- **Pagination**: When returning paginated collections, use `$resource->collection($paginator)->response()->getData(true)` as the `$data` argument. This promotes `links` and `meta` to the top level.
 - **Error Mapping**:
   - `errorResponse($message, $code)`
 - **Inter-module**: Use Events/Listeners for decoupling. If a Service needs logic from another module, inject that module's Service.
@@ -61,11 +71,11 @@ app/Modules/[ModuleName]/
   - Classes: PascalCase.
   - Methods/Variables: camelCase (except Model properties which are snake_case).
   - Routes: kebab-case.
-- **Validation**: Use **Form Requests** (`app/Modules/Order/Requests/...`) for all validation logic. Do not validate inside controllers.
+- **Validation**: Use **Form Requests** (`app/Modules/Order/Requests/...`) for ALL validation logic, including `index` methods (query parameter filtering and pagination). Do not validate inside controllers.
 - **Real-time**: Use Laravel Echo/Broadcasting for live updates. Traits like `BroadcastsTableUpdates` should be utilized where status changes occur.
 
 ## Agent Behavior Instructions
 - **Scaffolding**: When adding a new module, ALWAYS create the full directory structure: `Controllers`, `Services`, `Repositories`, `Models`, `Routes`, etc.
 - **Module Discovery**: Before modifying code, check if the logic belongs to an existing module or requires a new one.
 - **Consistency**: Follow the existing pattern of lean controllers and service-based logic. Never put complex queries directly in a Controller.
-- **Docs**: Always update or include the `@group` and `@bodyParam` tags in controllers when adding/modifying endpoints.
+- **Docs**: Always update or include the `@group`, `@bodyParam`, and `@queryParam` tags (via Request classes) in controllers when adding/modifying endpoints.

@@ -1,0 +1,114 @@
+<?php
+
+namespace App\Modules\Employee\Controllers\V1\Portal\Management;
+
+/**
+ * @group Employee
+ * @subgroup Management Portal
+ */
+
+use App\Http\Controllers\Controller;
+use App\Modules\Employee\Models\Employee;
+use App\Modules\Employee\Resources\EmployeeResource;
+use App\Traits\ApiResponses;
+use App\Modules\Employee\Requests\ListEmployeeRequest;
+use App\Modules\Employee\Requests\StoreEmployeeRequest;
+use App\Modules\Employee\Requests\UpdateEmployeeRequest;
+use App\Modules\Employee\Services\EmployeeService;
+use Illuminate\Http\JsonResponse;
+
+class EmployeeManagementController extends Controller
+{
+    use ApiResponses;
+
+    protected EmployeeService $employeeService;
+
+    public function __construct(EmployeeService $employeeService)
+    {
+        $this->employeeService = $employeeService;
+    }
+
+    /**
+     * @group Employee
+     * @subgroup Management
+     * 
+     * List all employees with search and pagination.
+     */
+    public function index(ListEmployeeRequest $request): JsonResponse
+    {
+        $filters = $request->validated();
+        $perPage = $request->input('per_page', 15);
+
+        $employees = $this->employeeService->listEmployees($perPage, $filters);
+
+        return $this->successResponse(
+            EmployeeResource::collection($employees)->response()->getData(true),
+            'Employees retrieved'
+        );
+    }
+
+    /**
+     * @group Employee
+     * @subgroup Management
+     * 
+     * Create a new employee.
+     */
+    public function store(StoreEmployeeRequest $request): JsonResponse
+    {
+        $employee = $this->employeeService->createEmployee($request->validated());
+
+        return $this->successResponse(
+            new EmployeeResource($employee),
+            'Employee created successfully',
+            201
+        );
+    }
+
+    /**
+     * @group Employee
+     * @subgroup Management
+     * 
+     * Get employee details.
+     */
+    public function show(int $id): JsonResponse
+    {
+        $employee = $this->employeeService->getEmployee($id);
+
+        return $this->successResponse(
+            new EmployeeResource($employee),
+            'Employee retrieved'
+        );
+    }
+
+    /**
+     * @group Employee
+     * @subgroup Management
+     * 
+     * Update employee details.
+     */
+    public function update(UpdateEmployeeRequest $request, int $id): JsonResponse
+    {
+        $employee = $this->employeeService->updateEmployee($id, $request->validated());
+
+        return $this->successResponse(
+            new EmployeeResource($employee),
+            'Employee updated successfully'
+        );
+    }
+
+    /**
+     * @group Employee
+     * @subgroup Management
+     * 
+     * Delete an employee.
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        $this->employeeService->deleteEmployee($id);
+
+        return $this->successResponse(
+            null,
+            'Employee deleted successfully'
+        );
+    }
+}

@@ -17,6 +17,11 @@ class UnpaidLeaveTypeResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'background_color' => $this->background_color,
+            'border_color' => $this->border_color,
+            'text_color' => $this->text_color,
+            'limit' => $this->limit,
+            'is_annual_leave_deduction' => $this->is_annual_leave_deduction,
         ];
     }
 }

@@ -6,10 +6,13 @@ use App\Modules\Employee\Models\Employee;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\Approvable;
+use App\Modules\ApprovalWorkflow\Traits\HasApprovalStatus;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Overtime extends Model
 {
+    use Approvable;
     use SoftDeletes;
 
     protected $table = 'overtimes';
@@ -61,31 +64,19 @@ class Overtime extends Model
             return 'Settled';
         }
 
-        // Prioritize Rejected status
-        $rejection = $this->overtime_approvals()
-            ->where('status', 'Rejected')
-            ->first();
-
-        if ($rejection) {
-            return "Rejected";
+        $request = $this->approvalRequest;
+        
+        if (!$request) {
+            return 'Pending';
         }
 
-        $status = 'Pending';
-
-        // Check for specific approval record matching the basic status
-        $approval = $this->overtime_approvals()
-            ->where('status', $status)
-            ->first();
-
-        // If not found, get the most recent approval
-        if (!$approval) {
-            $approval = $this->overtime_approvals()
-                ->orderByDesc('updated_at')
-                ->first();
-        } else {
-            return "Pending";
+        // Map internal status to display status
+            return match ($request->status) {
+                'pending' => 'Pending',
+                'approved' => 'Approved',
+                'rejected' => 'Rejected',
+                'cancelled' => 'Cancelled',
+                default => 'Pending',
+            };
         }
-
-        return $status;
-    }
 }

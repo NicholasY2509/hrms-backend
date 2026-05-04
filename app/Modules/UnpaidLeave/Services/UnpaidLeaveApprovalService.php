@@ -2,7 +2,7 @@
 
 namespace App\Modules\UnpaidLeave\Services;
 
-use App\Models\User;
+use App\Modules\User\Models\User;
 use App\Modules\Employee\Models\Employee;
 use App\Modules\UnpaidLeave\Models\UnpaidLeave;
 use App\Modules\UnpaidLeave\Repositories\UnpaidLeaveApprovalRepository;

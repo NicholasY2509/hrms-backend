@@ -16,7 +16,7 @@ class StoreOvertimeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'employee_id' => 'required|exists:employees,id',
+            'employee_id' => 'nullable|exists:employees,id',
             'date' => 'required|date',
             'type' => 'required|in:' . Overtime::TYPE_GENERAL . ',' . Overtime::TYPE_DAC . ',' . Overtime::TYPE_HOLIDAY,
             'overtime_type_id' => 'nullable|exists:overtime_types,id',

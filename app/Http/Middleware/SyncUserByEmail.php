@@ -24,23 +24,39 @@ class SyncUserByEmail
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Check both Header and Query Parameter
+        $userId = $request->header('X-Test-As') ?? $request->query('test_as');
+
+        if (app()->environment('local') && $userId) {
+            \Illuminate\Support\Facades\Log::info("Impersonating User ID: {$userId}");
+            
+            $user = \App\Modules\User\Models\User::find($userId);
+            if ($user) {
+                Auth::setUser($user);
+                Auth::guard('api')->setUser($user);
+                $request->setUserResolver(fn() => $user);
+                return $next($request);
+            }
+        }
+
         $token = $request->bearerToken();
 
         if ($token) {
-            // We use the sync service to find or create the user via the remote profile endpoint
-            // This happens even if Auth::user() is null because the sub ID might not match.
             $user = $this->authSyncService->syncUserByToken($token);
 
             if ($user) {
                 Auth::login($user);
                 return $next($request);
             }
+
+            return response()->json([
+                'status' => 'Error',
+                'message' => 'User Sync Failed with provided token',
+                'data' => null
+            ], 401);
         }
 
-        return response()->json([
-            'status' => 'Error',
-            'message' => 'Unauthenticated or User Sync Failed',
-            'data' => null
-        ], 401);
+        // No token provided, let next middleware try (e.g., Legacy Auth)
+        return $next($request);
     }
 }

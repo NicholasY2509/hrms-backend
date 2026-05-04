@@ -29,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
+
         $this->configureRateLimiting();
     }
 

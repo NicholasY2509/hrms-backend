@@ -24,7 +24,7 @@ class FaceVerifyRequest extends FormRequest
         return [
             'image' => 'required|file|image|max:10240', // Max 10MB as per guide
             'stored_embedding' => 'nullable|array', // Allow passing embedding if needed
-            'threshold' => 'nullable|numeric|min:0.8|max:1',
+            'threshold' => 'nullable|numeric|min:0.7|max:1',
         ];
     }
 }

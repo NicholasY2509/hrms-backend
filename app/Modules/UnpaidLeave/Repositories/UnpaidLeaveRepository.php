@@ -8,6 +8,18 @@ use Illuminate\Database\Eloquent\Collection;
 class UnpaidLeaveRepository
 {
     /**
+     * Get paginated unpaid leaves with optional filters.
+     */
+    public function paginate(array $filters = [], int $perPage = 15)
+    {
+        return UnpaidLeave::with(['unpaid_leave_type', 'employee.department', 'employee.position', 'approvalRequest.steps.actor', 'approvalRequest.steps.approver', 'approvalRequest.steps.group.employees'])
+            ->filter($filters)
+            ->orderByDesc('start_date')
+            ->orderByDesc('id')
+            ->paginate($perPage);
+    }
+
+    /**
      * Get all unpaid leaves for a specific employee.
      *
      * @param int $employeeId
@@ -15,10 +27,7 @@ class UnpaidLeaveRepository
      */
     public function getByEmployeeId(int $employeeId, int $perPage = 15)
     {
-        return UnpaidLeave::with(['unpaid_leave_type', 'unpaid_leave_approvals.employee'])
-            ->where('employee_id', $employeeId)
-            ->orderByDesc('start_date')
-            ->paginate($perPage);
+        return $this->paginate(['employee_id' => $employeeId], $perPage);
     }
 
     /**
@@ -40,7 +49,19 @@ class UnpaidLeaveRepository
      */
     public function find(int $id): ?UnpaidLeave
     {
-        return UnpaidLeave::with(['unpaid_leave_type', 'employee', 'unpaid_leave_approvals.employee'])
+        return UnpaidLeave::with(['unpaid_leave_type', 'employee', 'approvalRequest.steps.actor', 'approvalRequest.steps.approver', 'approvalRequest.steps.group.employees'])
             ->find($id);
+    }
+
+    /**
+     * Update an unpaid leave record.
+     */
+    public function update(int $id, array $data): bool
+    {
+        $leave = UnpaidLeave::find($id);
+        if (!$leave) {
+            return false;
+        }
+        return $leave->update($data);
     }
 }
