@@ -157,16 +157,19 @@ trait Approvable
 
     /**
      * Logic to find the Department Head's User ID.
+     * Resolves via the department_heads pivot table using the applicant's work location.
      */
     protected function resolveDeptHeadId(): ?int
     {
         $employee = $this->employee ?? $this->user->employee ?? null;
         
-        // Using the new dept_head_id from the Departments table
-        if ($employee && $employee->department_id && $employee->department) {
-            return $employee->department->dept_head_id;
+        if (!$employee || !$employee->department_id || !$employee->work_location_id) {
+            return null;
         }
-        
-        return null;
+
+        // Look up the department head for this specific work location
+        $departmentHead = $employee->department?->headAt($employee->work_location_id);
+
+        return $departmentHead?->employee_id;
     }
 }

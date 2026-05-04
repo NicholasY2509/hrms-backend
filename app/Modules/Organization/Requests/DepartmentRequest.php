@@ -6,7 +6,9 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * @bodyParam name string required The name of the department. Example: Engineering
- * @bodyParam dept_head_id integer The ID of the employee who heads the department. Example: 1
+ * @bodyParam heads array optional Array of department head assignments per work location.
+ * @bodyParam heads.*.work_location_id integer required The work location ID. Example: 1
+ * @bodyParam heads.*.employee_id integer required The employee ID to assign as head. Example: 5
  */
 class DepartmentRequest extends FormRequest
 {
@@ -19,7 +21,9 @@ class DepartmentRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'dept_head_id' => ['nullable', 'integer', 'exists:employees,id'],
+            'heads' => ['nullable', 'array'],
+            'heads.*.work_location_id' => ['required_with:heads', 'integer', 'exists:work_locations,id'],
+            'heads.*.employee_id' => ['required_with:heads', 'integer', 'exists:employees,id'],
         ];
     }
 }

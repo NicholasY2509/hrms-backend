@@ -11,7 +11,7 @@ class DepartmentRepository
     public function getPaginated(array $filters, int $perPage = 15): LengthAwarePaginator
     {
         return Department::query()
-            ->with(['head'])
+            ->with(['heads.employee', 'heads.workLocation'])
             ->withCount(['employees'])
             ->filter($filters)
             ->orderBy('name')
@@ -28,6 +28,6 @@ class DepartmentRepository
 
     public function findById(int $id): ?Department
     {
-        return Department::query()->with(['head', 'employees'])->find($id);
+        return Department::query()->with(['heads.employee', 'heads.workLocation', 'employees'])->find($id);
     }
 }

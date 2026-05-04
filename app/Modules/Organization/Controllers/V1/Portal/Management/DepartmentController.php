@@ -72,7 +72,7 @@ class DepartmentController extends Controller
     public function show(Department $department): JsonResponse
     {
         return $this->successResponse(
-            new DepartmentResource($department->load(['head'])),
+            new DepartmentResource($department->load(['heads.employee', 'heads.workLocation'])),
             'Department details retrieved'
         );
     }

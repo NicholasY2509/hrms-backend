@@ -4,7 +4,6 @@ namespace App\Modules\Organization\Models;
 
 use App\Modules\Employee\Models\Employee;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -25,9 +24,20 @@ class Department extends Model
         });
     }
 
-    public function head(): BelongsTo
+    /**
+     * Get all department head assignments (per work location).
+     */
+    public function heads(): HasMany
     {
-        return $this->belongsTo(Employee::class, 'dept_head_id', 'id');
+        return $this->hasMany(DepartmentHead::class, 'department_id', 'id');
+    }
+
+    /**
+     * Get the department head for a specific work location.
+     */
+    public function headAt(int $workLocationId): ?DepartmentHead
+    {
+        return $this->heads()->where('work_location_id', $workLocationId)->first();
     }
 
     public function employees(): HasMany
