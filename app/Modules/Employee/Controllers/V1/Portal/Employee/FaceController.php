@@ -120,7 +120,7 @@ class FaceController extends Controller
             $result = $this->faceService->verify(
                 $userId,
                 $request->file('image'),
-                max($data['threshold'] ?? 0.8, 0.8)
+                max($data['threshold'] ?? 0.7, 0.7)
             );
 
             if ($result['success'] && ($result['matched'] ?? false)) {
