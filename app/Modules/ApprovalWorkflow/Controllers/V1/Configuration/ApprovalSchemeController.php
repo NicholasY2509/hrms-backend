@@ -49,7 +49,7 @@ class ApprovalSchemeController extends Controller
         if (!$scheme) return $this->errorResponse('Scheme not found', 404);
         
         return $this->successResponse(
-            new ApprovalSchemeResource($scheme->load('rules.steps', 'position_rules.steps', 'department_rules.steps')), 
+            new ApprovalSchemeResource($scheme), 
             'Scheme details retrieved'
         );
     }
