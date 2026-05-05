@@ -36,12 +36,7 @@ class ApprovalActionService
     public function approve(int $requestId, ?string $notes = null, ?UploadedFile $attachment = null)
     {
         return DB::transaction(function () use ($requestId, $notes, $attachment) {
-            $employeeId = Auth::user()->employee->id;
-            $step = $this->repository->findStepForAction($requestId, $employeeId);
-
-            if (!$step) {
-                throw new \Exception(Auth::user()->employee->full_name . " Tidak Memiliki Otoritas");
-            }
+            $step = $this->validateAuthority($requestId, 'approve');
 
             $attachmentPath = $attachment 
                 ? StorageService::store($attachment, 'approvals') 
@@ -79,12 +74,7 @@ class ApprovalActionService
     public function reject(int $requestId, string $notes, ?UploadedFile $attachment = null)
     {
         return DB::transaction(function () use ($requestId, $notes, $attachment) {
-            $employeeId = Auth::user()->employee->id;
-            $step = $this->repository->findStepForAction($requestId, $employeeId);
-
-            if (!$step) {
-                throw new \Exception("Anda tidak memiliki otoritas untuk menolak pengajuan ini.");
-            }
+            $step = $this->validateAuthority($requestId, 'reject');
 
             $attachmentPath = $attachment 
                 ? StorageService::store($attachment, 'approvals') 
@@ -108,6 +98,56 @@ class ApprovalActionService
 
             return $request;
         });
+    }
+
+    /**
+     * Validates if the user has authority to act on a request.
+     * Throws specific exceptions for better user feedback.
+     */
+    protected function validateAuthority(int $requestId, string $action): ApprovalRequestStep
+    {
+        $employeeId = Auth::user()->employee->id;
+        
+        $userSteps = ApprovalRequestStep::where('approval_request_id', $requestId)
+            ->where(function ($query) use ($employeeId) {
+                $employee = \App\Modules\Employee\Models\Employee::find($employeeId);
+                $workPositionId = $employee->work_position_id ?? null;
+                $groupIds = DB::table('approval_group_employees')
+                    ->where('employee_id', $employeeId)
+                    ->pluck('approval_group_id')
+                    ->toArray();
+                
+                $query->where(function ($q) use ($employeeId) {
+                    $q->whereIn('approver_type', ['user', 'employee', 'supervisor', 'dept_head'])
+                      ->where('approver_id', $employeeId);
+                })
+                ->orWhere(function ($q) use ($groupIds) {
+                    $q->where('approver_type', 'group')
+                      ->whereIn('approver_id', $groupIds);
+                })
+                ->when($workPositionId, function ($q) use ($workPositionId) {
+                    $q->orWhere(function ($inner) use ($workPositionId) {
+                        $inner->where('approver_type', 'work_position')
+                              ->where('approver_id', $workPositionId);
+                    });
+                });
+            })->get();
+
+        $actionText = $action === 'approve' ? 'menyetujui' : 'menolak';
+
+        if ($userSteps->isEmpty()) {
+            throw new \Exception("Anda tidak memiliki otoritas untuk {$actionText} pengajuan ini.");
+        }
+
+        $step = $userSteps->where('sequence', ApprovalRequest::find($requestId)?->current_step_sequence)
+            ->where('status', 'pending')
+            ->first();
+
+        if (!$step) {
+            throw new \Exception("Belum giliran Anda untuk {$actionText} pengajuan ini. Tunggu persetujuan sebelumnya diselesaikan.");
+        }
+
+        return $step;
     }
 
     /**

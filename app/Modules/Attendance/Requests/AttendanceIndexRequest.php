@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * @queryParam employee_id integer Filter by employee ID. Example: 1
+ * @queryParam department_id integer Filter by department ID. Example: 1
+ * @queryParam work_location_id integer Filter by work location ID. Example: 1
  * @queryParam start_date string Filter by start date (YYYY-MM-DD). Example: 2024-05-01
  * @queryParam end_date string Filter by end date (YYYY-MM-DD). Example: 2024-05-31
  * @queryParam attendance_status_id integer Filter by attendance status ID. Example: 1
@@ -23,6 +25,8 @@ class AttendanceIndexRequest extends FormRequest
     {
         return [
             'employee_id' => ['nullable', 'integer', 'exists:employees,id'],
+            'department_id' => ['nullable', 'integer', 'exists:departments,id'],
+            'work_location_id' => ['nullable', 'integer', 'exists:work_locations,id'],
             'start_date' => ['nullable', 'date', 'date_format:Y-m-d'],
             'end_date' => ['nullable', 'date', 'date_format:Y-m-d', 'after_or_equal:start_date'],
             'attendance_status_id' => ['nullable', 'integer', 'exists:attendance_statuses,id'],

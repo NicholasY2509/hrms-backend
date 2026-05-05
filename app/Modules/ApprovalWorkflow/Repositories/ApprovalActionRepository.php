@@ -7,6 +7,7 @@ use App\Modules\ApprovalWorkflow\Models\ApprovalRequestStep;
 use App\Modules\Career\Models\Career;
 use App\Modules\Disciplinary\Models\WarningLetter;
 use App\Modules\Employee\Models\CertificateOfEmployment;
+use App\Modules\Employee\Models\Employee;
 use App\Modules\Leave\Models\PaidLeaveReversal;
 use App\Modules\Overtime\Models\Overtime;
 use App\Modules\UnpaidLeave\Models\UnpaidLeave;
@@ -27,19 +28,29 @@ class ApprovalActionRepository
             ->pluck('approval_group_id')
             ->toArray();
 
+        $employee = \App\Modules\Employee\Models\Employee::find($employeeId);
+        $workPositionId = $employee->work_position_id ?? null;
+
         return ApprovalRequest::query()
             ->where('status', 'pending')
             ->whereHas('approvable')
-            ->whereHas('steps', function ($query) use ($employeeId, $groupIds) {
+            ->whereHas('steps', function ($query) use ($employeeId, $groupIds, $workPositionId) {
                 $query->where('status', 'pending')
-                    ->where(function ($q) use ($employeeId, $groupIds) {
+                    ->whereColumn('sequence', 'approval_requests.current_step_sequence')
+                    ->where(function ($q) use ($employeeId, $groupIds, $workPositionId) {
                         $q->where(function ($inner) use ($employeeId) {
-                            $inner->whereIn('approver_type', ['user', 'supervisor', 'dept_head'])
+                            $inner->whereIn('approver_type', ['user', 'employee', 'supervisor', 'dept_head'])
                                 ->where('approver_id', $employeeId);
                         })
                         ->orWhere(function ($inner) use ($groupIds) {
                             $inner->where('approver_type', 'group')
                                 ->whereIn('approver_id', $groupIds);
+                        })
+                        ->when($workPositionId, function ($inner) use ($workPositionId) {
+                            $inner->orWhere(function ($q) use ($workPositionId) {
+                                $q->where('approver_type', 'work_position')
+                                    ->where('approver_id', $workPositionId);
+                            });
                         });
                     });
             })
@@ -65,51 +76,20 @@ class ApprovalActionRepository
     }
 
     /**
-     * Find a specific step by request and employee.
-     * Supports both Request ID and Step ID.
-     */
-    public function findStepForAction(int $id, int $employeeId): ?ApprovalRequestStep
-    {
-        $groupIds = DB::table('approval_group_employees')
-            ->where('employee_id', $employeeId)
-            ->pluck('approval_group_id')
-            ->toArray();
-
-        $step = ApprovalRequestStep::find($id);
-        if ($step && $step->status === 'pending') {
-            $isAuthorized = $this->isAuthorized($step, $employeeId, $groupIds);
-            $isCurrentSequence = $step->sequence == $step->request->current_step_sequence;
-
-            if ($isAuthorized && $isCurrentSequence) {
-                return $step;
-            }
-        }
-
-        $request = ApprovalRequest::find($id);
-        if ($request && $request->status === 'pending') {
-            return ApprovalRequestStep::where('approval_request_id', $request->id)
-                ->where('status', 'pending')
-                ->where('sequence', $request->current_step_sequence)
-                ->where(function ($query) use ($employeeId, $groupIds) {
-                    $this->applyAuthorizerFilter($query, $employeeId, $groupIds);
-                })
-                ->first();
-        }
-
-        return null;
-    }
-
-    /**
      * Helper to check if employee is authorized for a specific step.
      */
-    protected function isAuthorized(ApprovalRequestStep $step, int $employeeId, array $groupIds): bool
+    protected function isAuthorized(ApprovalRequestStep $step, int $employeeId, array $groupIds, ?int $workPositionId = null): bool
     {
-        if (in_array($step->approver_type, ['user', 'supervisor', 'dept_head'])) {
+        if (in_array($step->approver_type, ['user', 'employee', 'supervisor', 'dept_head'])) {
             return $step->approver_id == $employeeId;
         }
 
         if ($step->approver_type === 'group') {
             return in_array($step->approver_id, $groupIds);
+        }
+
+        if ($step->approver_type === 'work_position') {
+            return $step->approver_id == $workPositionId;
         }
 
         return false;
@@ -118,15 +98,21 @@ class ApprovalActionRepository
     /**
      * Helper to apply authorizer filter to a query.
      */
-    protected function applyAuthorizerFilter($query, int $employeeId, array $groupIds)
+    protected function applyAuthorizerFilter($query, int $employeeId, array $groupIds, ?int $workPositionId = null)
     {
         $query->where(function ($q) use ($employeeId) {
-            $q->whereIn('approver_type', ['user', 'supervisor', 'dept_head'])
+            $q->whereIn('approver_type', ['user', 'employee', 'supervisor', 'dept_head'])
               ->where('approver_id', $employeeId);
         })
         ->orWhere(function ($q) use ($groupIds) {
             $q->where('approver_type', 'group')
               ->whereIn('approver_id', $groupIds);
+        })
+        ->when($workPositionId, function ($q) use ($workPositionId) {
+            $q->orWhere(function ($inner) use ($workPositionId) {
+                $inner->where('approver_type', 'work_position')
+                      ->where('approver_id', $workPositionId);
+            });
         });
     }
 }

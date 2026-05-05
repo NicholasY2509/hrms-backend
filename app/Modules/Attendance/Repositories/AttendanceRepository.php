@@ -136,10 +136,11 @@ class AttendanceRepository
             ->select('attendance_statuses.name', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
             ->groupBy('attendance_statuses.name')
             ->get();
+    }
+
     /**
      * Get paginated attendances for management.
      */
-        }
     public function getPaginated(array $filters, int $perPage = 15)
     {
         $query = Attendance::query()
@@ -163,6 +164,18 @@ class AttendanceRepository
                 $q->where('employee_id', $filters['employee_id']);
             }
             
+            if (!empty($filters['department_id'])) {
+                $q->whereHas('employee', function ($eq) use ($filters) {
+                    $eq->where('department_id', $filters['department_id']);
+                });
+            }
+
+            if (!empty($filters['work_location_id'])) {
+                $q->whereHas('employee', function ($eq) use ($filters) {
+                    $eq->where('work_location_id', $filters['work_location_id']);
+                });
+            }
+            
             // Search by employee name or NIK
             if (!empty($filters['search'])) {
                 $q->whereHas('employee', function ($eq) use ($filters) {
@@ -177,6 +190,14 @@ class AttendanceRepository
         }
 
         return $query->latest('id')->paginate($perPage);
+    }
+
+    /**
+     * Get all attendance statuses.
+     */
+    public function getAllStatuses(): \Illuminate\Database\Eloquent\Collection
+    {
+        return \App\Modules\Attendance\Models\AttendanceStatus::all();
     }
 }
 

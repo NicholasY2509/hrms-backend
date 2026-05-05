@@ -3,7 +3,6 @@
 namespace App\Modules\Attendance\Controllers\V1\Portal\Management;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Attendance\Repositories\AttendanceRepository;
 use App\Modules\Attendance\Requests\AttendanceIndexRequest;
 use App\Modules\Attendance\Resources\AttendanceManagementResource;
 use App\Traits\ApiResponses;
@@ -18,7 +17,7 @@ class AttendanceManagementController extends Controller
     use ApiResponses;
 
     public function __construct(
-        protected AttendanceRepository $repository
+        protected \App\Modules\Attendance\Services\AttendanceService $service
     ) {}
 
     /**
@@ -62,7 +61,7 @@ class AttendanceManagementController extends Controller
      */
     public function index(AttendanceIndexRequest $request): JsonResponse
     {
-        $attendances = $this->repository->getPaginated(
+        $attendances = $this->service->getPaginated(
             $request->validated(),
             $request->input('per_page', 15)
         );

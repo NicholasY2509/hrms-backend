@@ -24,6 +24,7 @@ Route::middleware(['api.auth'])->group(function () {
         Route::prefix('configuration')->group(function () {
             Route::get('/settings', [AttendanceSettingController::class, 'index']);
             Route::put('/settings', [AttendanceSettingController::class, 'update']);
+            Route::get('/statuses', [\App\Modules\Attendance\Controllers\V1\Configuration\AttendanceStatusController::class, 'index']);
         });
         
     });

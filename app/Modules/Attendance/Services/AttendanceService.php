@@ -10,6 +10,7 @@ use App\Modules\Employee\Models\UserFaceProfile;
 use App\Services\StorageService;
 use App\Modules\Attendance\Models\AttendanceLocation;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 use App\Modules\Attendance\Models\AttendanceSetting;
 
@@ -431,6 +432,22 @@ class AttendanceService
         }
         
         return false;
+    }
+
+    /**
+     * Get paginated attendances for management.
+     */
+    public function getPaginated(array $filters, int $perPage = 15)
+    {
+        return $this->attendanceRepository->getPaginated($filters, $perPage);
+    }
+
+    /**
+     * Get all attendance statuses.
+     */
+    public function getAllStatuses(): Collection
+    {
+        return $this->attendanceRepository->getAllStatuses();
     }
 }
 

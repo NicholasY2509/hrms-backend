@@ -27,9 +27,7 @@ class UnifiedApiAuth
     public function handle(Request $request, Closure $next): Response
     {
         // Try Passport/SyncEmail first
-        // Note: SyncUserByEmail was already modified to 'pass through' if no token
         return $this->passportAuth->handle($request, function ($request) use ($next) {
-            // If Passport didn't set a user, try Legacy Signature
             if (!auth()->check()) {
                 return $this->legacyAuth->handle($request, $next);
             }

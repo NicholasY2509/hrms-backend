@@ -2,10 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Modules\User\Models\User;
 use App\Services\AuthSyncService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class SyncUserByEmail
@@ -24,13 +26,12 @@ class SyncUserByEmail
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Check both Header and Query Parameter
         $userId = $request->header('X-Test-As') ?? $request->query('test_as');
 
         if (app()->environment('local') && $userId) {
-            \Illuminate\Support\Facades\Log::info("Impersonating User ID: {$userId}");
+            Log::info("Impersonating User ID: {$userId}");
             
-            $user = \App\Modules\User\Models\User::find($userId);
+            $user = User::find($userId);
             if ($user) {
                 Auth::setUser($user);
                 $request->setUserResolver(fn() => $user);
