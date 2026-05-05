@@ -85,38 +85,10 @@ class UnpaidLeaveManagementController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($leave) {
-                $now = Carbon::now();
-                $annualLeaveAt = $leave->start_date;
-
-                if ($leave->unpaid_leave_type?->is_annual_leave_deduction) {
-                    $employee = $leave->employee;
-                    
-                    $deduction = $this->annualLeaveService->deduct($employee, $leave->total, $now);
-                    $employee = $deduction['employee'];
-                    $deductionDetails = $deduction['deduction_details'];
-
-                    $employee->save();
-
-                    $this->annualLeaveRepository->create([
-                        'employee_id' => $employee->id,
-                        'total' => $leave->total,
-                        'annual_leave_year' => $now->format('Y'),
-                        'annual_leave_at' => $annualLeaveAt,
-                        'status' => 'Potong',
-                        'keterangan' => $leave->note . " ({$leave->start_date} to {$leave->end_date})",
-                        'deduction_details' => $deductionDetails,
-                    ]);
-
-                    $leave->cutted_at = $annualLeaveAt;
-                }
-
-                $leave->settled_at = $now->format('Y-m-d');
-                $leave->save();
-            });
+            $leave = app(\App\Modules\UnpaidLeave\Services\UnpaidLeaveService::class)->settle($leave);
 
             return $this->successResponse(
-                new UnpaidLeaveResource($leave->fresh()),
+                new UnpaidLeaveResource($leave),
                 'Unpaid leave request settled successfully.'
             );
 

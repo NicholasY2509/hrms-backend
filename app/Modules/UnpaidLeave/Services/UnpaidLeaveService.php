@@ -10,14 +10,24 @@ use Illuminate\Support\Facades\DB;
 use App\Services\StorageService;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
+use App\Modules\Leave\Services\AnnualLeaveService;
+use App\Modules\Leave\Repositories\AnnualLeaveRepository;
+use App\Modules\UnpaidLeave\Models\UnpaidLeave;
 
 class UnpaidLeaveService
 {
     protected UnpaidLeaveRepository $repository;
+    protected AnnualLeaveService $annualLeaveService;
+    protected AnnualLeaveRepository $annualLeaveRepository;
+
     public function __construct(
-        UnpaidLeaveRepository $repository
+        UnpaidLeaveRepository $repository,
+        AnnualLeaveService $annualLeaveService,
+        AnnualLeaveRepository $annualLeaveRepository
     ) {
         $this->repository = $repository;
+        $this->annualLeaveService = $annualLeaveService;
+        $this->annualLeaveRepository = $annualLeaveRepository;
     }
 
     /**
@@ -142,5 +152,51 @@ class UnpaidLeaveService
             ->orderBy('date', 'asc')
             ->limit($limit)
             ->get();
+    }
+
+    /**
+     * Settle an unpaid leave request.
+     * Includes annual leave deduction logic if required by the leave type.
+     *
+     * @param UnpaidLeave $leave
+     * @return UnpaidLeave
+     */
+    public function settle(UnpaidLeave $leave): UnpaidLeave
+    {
+        if ($leave->settled_at) {
+            return $leave;
+        }
+
+        return DB::transaction(function () use ($leave) {
+            $now = Carbon::now();
+            $annualLeaveAt = $leave->start_date;
+
+            if ($leave->unpaid_leave_type?->is_annual_leave_deduction) {
+                $employee = $leave->employee;
+                
+                $deduction = $this->annualLeaveService->deduct($employee, $leave->total, $now);
+                $employee = $deduction['employee'];
+                $deductionDetails = $deduction['deduction_details'];
+
+                $employee->save();
+
+                $this->annualLeaveRepository->create([
+                    'employee_id' => $employee->id,
+                    'total' => $leave->total,
+                    'annual_leave_year' => $now->format('Y'),
+                    'annual_leave_at' => $annualLeaveAt,
+                    'status' => 'Potong',
+                    'keterangan' => $leave->note . " ({$leave->start_date} to {$leave->end_date})",
+                    'deduction_details' => $deductionDetails,
+                ]);
+
+                $leave->cutted_at = $annualLeaveAt;
+            }
+
+            $leave->settled_at = $now->format('Y-m-d');
+            $leave->save();
+
+            return $leave->fresh();
+        });
     }
 }

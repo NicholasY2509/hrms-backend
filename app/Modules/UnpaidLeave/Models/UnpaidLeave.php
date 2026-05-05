@@ -4,6 +4,7 @@ namespace App\Modules\UnpaidLeave\Models;
 
 use App\Modules\Employee\Models\Employee;
 use App\Modules\ApprovalWorkflow\Traits\HasApprovalStatus;
+use App\Modules\UnpaidLeave\Services\UnpaidLeaveService;
 use App\Traits\Approvable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -120,5 +121,16 @@ class UnpaidLeave extends Model
             'cancelled' => 'Cancelled',
             default => 'Pending',
         };
+    }
+
+    /**
+     * Sync the approval status with the model's native fields.
+     * Overrides the default trait behavior to include complex settlement logic.
+     */
+    public function syncApprovalStatus(string $status): void
+    {
+        if ($status === 'approved') {
+            app(UnpaidLeaveService::class)->settle($this);
+        }
     }
 }
