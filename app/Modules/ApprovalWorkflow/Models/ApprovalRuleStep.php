@@ -34,4 +34,12 @@ class ApprovalRuleStep extends Model
     {
         return $this->belongsTo(Employee::class, 'target_id');
     }
+
+    /**
+     * Relationship to Work Position (if type is 'work_position').
+     */
+    public function workPosition(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\Organization\Models\WorkPosition::class, 'target_id');
+    }
 }

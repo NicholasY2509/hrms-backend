@@ -37,6 +37,12 @@ class ApprovalStepTypeSeeder extends Seeder
                 'needs_target' => true,
                 'description' => 'Requires selecting a specific employee by name/NIK.'
             ],
+            [
+                'slug' => 'work_position',
+                'name' => 'Work Position',
+                'needs_target' => true,
+                'description' => 'Automatically resolves to the employee(s) holding the selected position.'
+            ],
         ];
 
         foreach ($types as $type) {

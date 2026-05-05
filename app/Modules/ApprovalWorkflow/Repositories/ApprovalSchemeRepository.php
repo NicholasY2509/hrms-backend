@@ -31,6 +31,7 @@ class ApprovalSchemeRepository
         return ApprovalScheme::with([
             'rules.steps.group', 
             'rules.steps.employee',
+            'rules.steps.workPosition',
             'rules.workPosition',
             'rules.workLocation',
             'rules.department',

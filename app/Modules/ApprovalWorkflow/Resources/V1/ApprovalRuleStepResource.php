@@ -14,13 +14,14 @@ class ApprovalRuleStepResource extends JsonResource
             'type_slug' => $this->type_slug,
             'sequence' => $this->sequence,
             'target_id' => $this->target_id,
-            'target_name' => $this->when($this->type_slug === 'group', function () {
-                return $this->group?->name;
-            }, function () {
-                return $this->when($this->type_slug === 'user', function () {
-                    return $this->employee?->full_name;
-                });
-            }),
+            'target_name' => match ($this->type_slug) {
+                'supervisor'        => 'Direct Supervisor',
+                'dept_head'         => 'Department Head',
+                'group'             => $this->group?->name,
+                'user', 'employee'  => $this->employee?->full_name,
+                'work_position'     => $this->workPosition?->name,
+                default             => $this->type_slug,
+            },
         ];
     }
 }

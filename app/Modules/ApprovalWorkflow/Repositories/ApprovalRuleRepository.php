@@ -23,7 +23,7 @@ class ApprovalRuleRepository
                 $this->syncSteps($rule, $steps);
             }
 
-            return $rule->load(['steps.group', 'steps.employee', 'workPosition', 'workLocation', 'department']);
+            return $rule->load(['steps.group', 'steps.employee', 'steps.workPosition', 'workPosition', 'workLocation', 'department']);
         });
     }
 
@@ -45,7 +45,7 @@ class ApprovalRuleRepository
                 $this->syncSteps($rule, $steps);
             }
 
-            return $rule->load(['steps.group', 'steps.employee', 'workPosition', 'workLocation', 'department']);
+            return $rule->load(['steps.group', 'steps.employee', 'steps.workPosition', 'workPosition', 'workLocation', 'department']);
         });
     }
 
@@ -65,7 +65,7 @@ class ApprovalRuleRepository
         ?int $workLocationId = null,
         ?int $departmentId = null
     ): ?ApprovalRule {
-        $eagerLoad = ['steps.group', 'steps.employee'];
+        $eagerLoad = ['steps.group', 'steps.employee', 'steps.workPosition'];
 
         // 1. Try specific position AND specific location
         if ($workPositionId && $workLocationId) {

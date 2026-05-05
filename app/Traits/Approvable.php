@@ -145,6 +145,8 @@ trait Approvable
     protected function resolveStepApproverId($step): ?int
     {
         switch ($step->type_slug) {
+            case 'work_position':
+            case 'employee':
             case 'user':
             case 'group':
                 return $step->target_id;

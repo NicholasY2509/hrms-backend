@@ -50,12 +50,19 @@ class ApprovalRequestStep extends Model
 
     /**
      * Resolve the approver ID(s).
-     * Returns an array of employee IDs for groups, or a single ID for individuals.
+     * Returns an array of employee IDs for groups/positions, or a single ID for individuals.
      */
     public function getResolvedApproverIds()
     {
         if ($this->approver_type === 'group') {
             return $this->group?->employees->pluck('id')->toArray() ?? [];
+        }
+
+        if ($this->approver_type === 'work_position') {
+            return Employee::where('work_position_id', $this->approver_id)
+                ->where('work_employee_status_id', 1)
+                ->pluck('id')
+                ->toArray();
         }
 
         return $this->approver_id;
