@@ -12,7 +12,7 @@ class ApprovalSchemeRepository
      */
     public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = ApprovalScheme::query()->withCount(['rules', 'positionRules']);
+        $query = ApprovalScheme::query()->withCount(['rules', 'positionRules', 'departmentRules']);
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];
@@ -33,6 +33,7 @@ class ApprovalSchemeRepository
             'rules.steps.employee',
             'rules.workPosition',
             'rules.workLocation',
+            'rules.department',
         ])->find($id);
     }
 

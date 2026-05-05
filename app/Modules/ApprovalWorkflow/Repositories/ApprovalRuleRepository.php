@@ -23,7 +23,7 @@ class ApprovalRuleRepository
                 $this->syncSteps($rule, $steps);
             }
 
-            return $rule->load(['steps.group', 'steps.employee']);
+            return $rule->load(['steps.group', 'steps.employee', 'workPosition', 'workLocation', 'department']);
         });
     }
 
@@ -45,22 +45,35 @@ class ApprovalRuleRepository
                 $this->syncSteps($rule, $steps);
             }
 
-            return $rule->load(['steps.group', 'steps.employee']);
+            return $rule->load(['steps.group', 'steps.employee', 'workPosition', 'workLocation', 'department']);
         });
     }
 
     /**
-     * Find the best matching rule for a scheme and work position.
+     * Find the best matching rule for a scheme based on the applicant's context.
+     * 
+     * Resolution order:
+     * 1. Position + Location (most specific)
+     * 2. Position only (global for that position)
+     * 3. Department + Location
+     * 4. Department only (global for that department)
+     * 5. Default rule (fallback)
      */
-    public function findBestMatch(int $schemeId, ?int $workPositionId = null, ?int $workLocationId = null): ?ApprovalRule
-    {
+    public function findBestMatch(
+        int $schemeId, 
+        ?int $workPositionId = null, 
+        ?int $workLocationId = null,
+        ?int $departmentId = null
+    ): ?ApprovalRule {
+        $eagerLoad = ['steps.group', 'steps.employee'];
+
         // 1. Try specific position AND specific location
         if ($workPositionId && $workLocationId) {
             $rule = ApprovalRule::where('approval_scheme_id', $schemeId)
                 ->where('work_position_id', $workPositionId)
                 ->where('work_location_id', $workLocationId)
                 ->where('is_active', true)
-                ->with(['steps.group', 'steps.employee'])
+                ->with($eagerLoad)
                 ->first();
                 
             if ($rule) return $rule;
@@ -72,17 +85,43 @@ class ApprovalRuleRepository
                 ->where('work_position_id', $workPositionId)
                 ->whereNull('work_location_id')
                 ->where('is_active', true)
-                ->with(['steps.group', 'steps.employee'])
+                ->with($eagerLoad)
                 ->first();
                 
             if ($rule) return $rule;
         }
 
-        // 3. Try global default for the scheme
+        // 3. Try specific department AND specific location
+        if ($departmentId && $workLocationId) {
+            $rule = ApprovalRule::where('approval_scheme_id', $schemeId)
+                ->where('department_id', $departmentId)
+                ->where('work_location_id', $workLocationId)
+                ->whereNull('work_position_id')
+                ->where('is_active', true)
+                ->with($eagerLoad)
+                ->first();
+                
+            if ($rule) return $rule;
+        }
+
+        // 4. Try specific department only (global for that department)
+        if ($departmentId) {
+            $rule = ApprovalRule::where('approval_scheme_id', $schemeId)
+                ->where('department_id', $departmentId)
+                ->whereNull('work_position_id')
+                ->whereNull('work_location_id')
+                ->where('is_active', true)
+                ->with($eagerLoad)
+                ->first();
+                
+            if ($rule) return $rule;
+        }
+
+        // 5. Try global default for the scheme
         return ApprovalRule::where('approval_scheme_id', $schemeId)
             ->where('is_default', true)
             ->where('is_active', true)
-            ->with(['steps.group', 'steps.employee'])
+            ->with($eagerLoad)
             ->first();
     }
 

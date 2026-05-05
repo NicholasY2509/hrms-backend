@@ -2,6 +2,7 @@
 
 namespace App\Modules\ApprovalWorkflow\Resources\V1;
 
+use App\Modules\Organization\Resources\DepartmentResource;
 use App\Modules\Organization\Resources\WorkPositionResource;
 use App\Modules\Organization\Resources\WorkLocationResource;
 use Illuminate\Http\Request;
@@ -18,6 +19,8 @@ class ApprovalRuleResource extends JsonResource
             'work_position' => new WorkPositionResource($this->whenLoaded('workPosition')),
             'work_location_id' => $this->work_location_id,
             'work_location' => new WorkLocationResource($this->whenLoaded('workLocation')),
+            'department_id' => $this->department_id,
+            'department' => new DepartmentResource($this->whenLoaded('department')),
             'is_default' => (bool) $this->is_default,
             'is_active' => (bool) $this->is_active,
             'steps' => ApprovalRuleStepResource::collection($this->whenLoaded('steps')),

@@ -16,6 +16,7 @@ class UpdateApprovalRuleRequest extends FormRequest
         return [
             'work_position_id' => 'nullable|exists:work_positions,id',
             'work_location_id' => 'nullable|exists:work_locations,id',
+            'department_id' => 'nullable|exists:departments,id',
             'is_active' => 'boolean',
             'is_default' => 'boolean',
             'steps' => 'nullable|array',

@@ -28,10 +28,23 @@ class ApprovalScheme extends Model
     }
 
     /**
-     * Position-specific rules.
+     * Position-specific rules (work_position_id is set).
      */
     public function positionRules(): HasMany
     {
-        return $this->hasMany(ApprovalRule::class, 'approval_scheme_id')->where('is_default', false);
+        return $this->hasMany(ApprovalRule::class, 'approval_scheme_id')
+            ->whereNotNull('work_position_id')
+            ->where('is_default', false);
+    }
+
+    /**
+     * Department-specific rules (department_id is set, no work_position_id).
+     */
+    public function departmentRules(): HasMany
+    {
+        return $this->hasMany(ApprovalRule::class, 'approval_scheme_id')
+            ->whereNotNull('department_id')
+            ->whereNull('work_position_id')
+            ->where('is_default', false);
     }
 }

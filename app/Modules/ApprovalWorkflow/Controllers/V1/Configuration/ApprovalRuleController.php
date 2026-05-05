@@ -28,6 +28,7 @@ class ApprovalRuleController extends Controller
      * @bodyParam approval_scheme_id integer required The ID of the approval scheme.
      * @bodyParam work_position_id integer optional The ID of the work position this rule applies to.
      * @bodyParam work_location_id integer optional The ID of the work location this rule applies to.
+     * @bodyParam department_id integer optional The ID of the department this rule applies to.
      * @bodyParam is_default boolean optional Whether this is the default rule for the scheme.
      * @bodyParam is_active boolean optional Whether the rule is active.
      * @bodyParam steps array optional The steps for this rule.
@@ -48,6 +49,7 @@ class ApprovalRuleController extends Controller
      * 
      * @bodyParam work_position_id integer optional The ID of the work position.
      * @bodyParam work_location_id integer optional The ID of the work location.
+     * @bodyParam department_id integer optional The ID of the department.
      * @bodyParam is_active boolean optional Whether the rule is active.
      * @bodyParam steps array optional The steps for this rule.
      */

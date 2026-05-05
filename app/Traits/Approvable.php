@@ -43,16 +43,18 @@ trait Approvable
                 return;
             }
 
-            // 2. Determine Applicant's Work Position & Location
+            // 2. Determine Applicant's Work Position, Location & Department
             $workPositionId = $this->resolveApplicantWorkPositionId();
             $workLocationId = $this->resolveApplicantWorkLocationId();
+            $departmentId = $this->resolveApplicantDepartmentId();
 
-            // 3. Find the Best Matching Rule (Specific Position + Location -> Specific Position -> Global Default)
+            // 3. Find the Best Matching Rule
+            //    Priority: Position+Location -> Position -> Department+Location -> Department -> Default
             $repository = app(ApprovalRuleRepository::class);
-            $rule = $repository->findBestMatch($scheme->id, $workPositionId, $workLocationId);
+            $rule = $repository->findBestMatch($scheme->id, $workPositionId, $workLocationId, $departmentId);
 
             if (!$rule) {
-                Log::warning("No matching approval rule found for scheme {$scheme->id}, position {$workPositionId}, and location {$workLocationId}");
+                Log::warning("No matching approval rule found for scheme {$scheme->id}, position {$workPositionId}, location {$workLocationId}, department {$departmentId}");
                 return;
             }
 
@@ -114,6 +116,24 @@ trait Approvable
         // Try through user relationship
         if (isset($this->user->employee) && $this->user->employee->work_location_id) {
             return $this->user->employee->work_location_id;
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve the applicant's department from the model.
+     */
+    protected function resolveApplicantDepartmentId(): ?int
+    {
+        // Try direct relationship
+        if (isset($this->employee) && $this->employee->department_id) {
+            return $this->employee->department_id;
+        }
+
+        // Try through user relationship
+        if (isset($this->user->employee) && $this->user->employee->department_id) {
+            return $this->user->employee->department_id;
         }
 
         return null;

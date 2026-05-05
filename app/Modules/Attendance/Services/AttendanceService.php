@@ -48,10 +48,8 @@ class AttendanceService
         $startMinutes = AttendanceSetting::getValue('attendance_clock_in_start_minutes', 60);
         $endMinutes = AttendanceSetting::getValue('attendance_clock_in_end_minutes', 60);
 
-        // Enforce early clock-in limit
         $scheduledStart = Carbon::parse($workingHour->attendance_at . ' ' . $workingHour->working_hour->clock_in);
         $clockInWindowStart = (clone $scheduledStart)->subMinutes($startMinutes);
-        // Keep window open until $endMinutes before shift end
         $scheduledEnd = Carbon::parse($workingHour->attendance_at . ' ' . $workingHour->working_hour->clock_out);
         if ($scheduledEnd->lessThan($scheduledStart)) {
             $scheduledEnd->addDay();
