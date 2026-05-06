@@ -85,6 +85,7 @@ class ApprovalRequestStep extends Model
         if ($this->approver_type === 'work_position') {
             return Employee::where('work_position_id', $this->approver_id)
                 ->where('work_employee_status_id', 1)
+                ->get()
                 ->pluck('full_name')
                 ->join(', ') ?: 'No members';
         }

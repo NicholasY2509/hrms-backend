@@ -34,7 +34,7 @@ class UnpaidLeaveResource extends JsonResource
                 'id' => $this->unpaid_leave_type_id,
                 'name' => $this->unpaid_leave_type?->name,
             ],
-            'date' => $this->created_at->format('Y-m-d'),
+            'date' => $this->created_at,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
             'total_days' => $this->total,
