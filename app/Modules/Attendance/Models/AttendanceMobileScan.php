@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Modules\Attendance\Models;
+
+use App\Modules\Employee\Models\Employee;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class AttendanceMobileScan extends Model
+{
+    use SoftDeletes;
+
+    protected $table = 'attendance_mobile_scans';
+    protected $guarded = ['id'];
+    protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
+
+    /**
+     * Get the attendance record this mobile scan belongs to.
+     */
+    public function attendance(): BelongsTo
+    {
+        return $this->belongsTo(Attendance::class, 'attendance_id', 'id');
+    }
+
+    /**
+     * Get the employee that performed the scan.
+     */
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'employee_id', 'id');
+    }
+
+    /**
+     * Get the location where the scan was performed.
+     */
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(AttendanceLocation::class, 'location_id', 'id');
+    }
+}

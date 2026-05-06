@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 use App\Modules\Attendance\Models\AttendanceSetting;
+use App\Modules\Attendance\Models\AttendanceMobileScan;
 
 class AttendanceService
 {
@@ -120,6 +121,19 @@ class AttendanceService
 
         $this->attendanceRepository->save($attendance);
 
+        // Record in the new attendance_mobile_scans table
+        AttendanceMobileScan::create([
+            'attendance_id' => $attendance->id,
+            'employee_id' => $workingHour->employee_id,
+            'scan_type' => 'in',
+            'scan_time' => $time,
+            'latitude' => $data['latitude'],
+            'longitude' => $data['longitude'],
+            'location_id' => $location->id,
+            'photo' => $photoPath,
+            'device_id' => $data['device_id'] ?? null,
+        ]);
+
         return $attendance->load(['attendance_status', 'attendance_working_hour.working_hour']);
     }
 
@@ -128,7 +142,6 @@ class AttendanceService
      */
     public function clockOut(int $userId, array $data): Attendance
     {
-        // Face Verification (Mandatory)
         $faceProfile = UserFaceProfile::where('user_id', $userId)->first();
         if (!$faceProfile) {
             throw new ApplicationException('Anda belum mendaftarkan wajah! Silahkan daftar di menu Profil.', 400);
@@ -199,6 +212,18 @@ class AttendanceService
         }
 
         $this->attendanceRepository->save($attendance);
+
+        AttendanceMobileScan::create([
+            'attendance_id' => $attendance->id,
+            'employee_id' => $workingHour->employee_id,
+            'scan_type' => 'out',
+            'scan_time' => $time,
+            'latitude' => $data['latitude'],
+            'longitude' => $data['longitude'],
+            'location_id' => $location->id,
+            'photo' => $photoPath,
+            'device_id' => $data['device_id'] ?? null,
+        ]);
 
         return $attendance->load(['attendance_status', 'attendance_working_hour.working_hour']);
     }

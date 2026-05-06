@@ -49,5 +49,13 @@ class Attendance extends Model
     {
         return $this->belongsTo(AttendanceLocation::class, 'outgoing_location_id', 'id');
     }
+
+    /**
+     * Get the mobile scan records for this attendance.
+     */
+    public function mobile_scan_records(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AttendanceMobileScan::class, 'attendance_id', 'id');
+    }
 }
 
