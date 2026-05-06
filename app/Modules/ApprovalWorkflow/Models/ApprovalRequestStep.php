@@ -67,4 +67,28 @@ class ApprovalRequestStep extends Model
 
         return $this->approver_id;
     }
+
+    /**
+     * Resolve the approver name(s).
+     * Returns a string of employee names for groups/positions, or a single name for individuals.
+     */
+    public function getResolvedApproverNames(): ?string
+    {
+        if ($this->actioned_by) {
+            return $this->actor?->name;
+        }
+
+        if ($this->approver_type === 'group') {
+            return $this->group?->employees->pluck('full_name')->join(', ') ?: 'No members';
+        }
+
+        if ($this->approver_type === 'work_position') {
+            return Employee::where('work_position_id', $this->approver_id)
+                ->where('work_employee_status_id', 1)
+                ->pluck('full_name')
+                ->join(', ') ?: 'No members';
+        }
+
+        return $this->approver?->full_name;
+    }
 }

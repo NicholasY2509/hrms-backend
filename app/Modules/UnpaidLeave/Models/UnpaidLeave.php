@@ -113,7 +113,6 @@ class UnpaidLeave extends Model
             return $this->confirmed_at ? 'Pending' : 'Draft';
         }
 
-        // Map internal status to display status
         return match ($request->status) {
             'pending' => 'Pending',
             'approved' => 'Approved',

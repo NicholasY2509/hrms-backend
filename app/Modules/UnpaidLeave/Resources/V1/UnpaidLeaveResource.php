@@ -46,9 +46,7 @@ class UnpaidLeaveResource extends JsonResource
             'approvals' => $this->approvalRequest?->steps->map(function ($step) {
                 return [
                     'id' => $step->id,
-                    'approver_name' => $step->actor?->name ?? ($step->approver_type === 'group'
-                        ? $step->group?->employees->pluck('full_name')->join(', ') ?: 'No members'
-                        : $step->approver?->full_name),
+                    'approver_name' => $step->getResolvedApproverNames(),
                     'approver_id' => $step->getResolvedApproverIds(),
                     'role' => $step->approver_type,
                     'status' => $step->status,

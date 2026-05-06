@@ -2,6 +2,7 @@
 
 namespace App\Modules\Attendance\Services;
 
+use App\Modules\Attendance\Models\AttendanceWorkingHour;
 use App\Modules\Attendance\Repositories\AttendanceRepository;
 use App\Modules\Attendance\Models\Attendance;
 
@@ -473,6 +474,54 @@ class AttendanceService
     public function getAllStatuses(): Collection
     {
         return $this->attendanceRepository->getAllStatuses();
+    }
+
+    /**
+     * Get paginated mobile scans with filters.
+     */
+    public function getMobileScansPaginated(array $filters, int $perPage = 15)
+    {
+        $query = AttendanceMobileScan::with(['employee', 'location', 'attendance.attendance_working_hour']);
+
+        if (!empty($filters['employee_id'])) {
+            $query->where('employee_id', $filters['employee_id']);
+        }
+
+        if (!empty($filters['start_date'])) {
+            $query->whereDate('created_at', '>=', $filters['start_date']);
+        }
+
+        if (!empty($filters['end_date'])) {
+            $query->whereDate('created_at', '<=', $filters['end_date']);
+        }
+
+        if (!empty($filters['scan_type'])) {
+            $query->where('scan_type', $filters['scan_type']);
+        }
+
+        return $query->latest()->paginate($perPage);
+    }
+
+    /**
+     * Get paginated attendance working hours (schedules) with filters.
+     */
+    public function getWorkingHoursPaginated(array $filters, int $perPage = 15)
+    {
+        $query = AttendanceWorkingHour::with(['employee', 'working_hour', 'attendance']);
+
+        if (!empty($filters['employee_id'])) {
+            $query->where('employee_id', $filters['employee_id']);
+        }
+
+        if (!empty($filters['start_date'])) {
+            $query->whereDate('attendance_at', '>=', $filters['start_date']);
+        }
+
+        if (!empty($filters['end_date'])) {
+            $query->whereDate('attendance_at', '<=', $filters['end_date']);
+        }
+
+        return $query->orderBy('attendance_at', 'desc')->paginate($perPage);
     }
 }
 
