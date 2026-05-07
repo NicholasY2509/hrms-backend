@@ -38,6 +38,30 @@ class EmployeeRepository
     }
 
     /**
+     * Get employee counts summary grouped by work status.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function getSummary()
+    {
+        $counts = Employee::query()
+            ->select('work_employee_status_id', \DB::raw('count(*) as total'))
+            ->groupBy('work_employee_status_id')
+            ->get();
+
+        $statuses = \DB::table('work_employee_statuses')->get();
+
+        return $statuses->map(function ($status) use ($counts) {
+            $count = $counts->where('work_employee_status_id', $status->id)->first();
+            return [
+                'id' => $status->id,
+                'name' => $status->name,
+                'count' => $count ? $count->total : 0
+            ];
+        });
+    }
+
+    /**
      * Find employee by ID.
      *
      * @param int $id

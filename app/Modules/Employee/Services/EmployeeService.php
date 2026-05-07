@@ -38,6 +38,16 @@ class EmployeeService
     }
 
     /**
+     * Get summary of employees by status.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function getEmployeeSummary()
+    {
+        return $this->employeeRepository->getSummary();
+    }
+
+    /**
      * Get an employee by ID.
      *
      * @param int $id

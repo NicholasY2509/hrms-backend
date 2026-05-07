@@ -37,12 +37,18 @@ class EmployeeManagementController extends Controller
     public function index(ListEmployeeRequest $request): JsonResponse
     {
         $filters = $request->validated();
+        $filters['work_employee_status_id'] = $request->input('work_employee_status_id', 1);
         $perPage = $request->input('per_page', 15);
 
         $employees = $this->employeeService->listEmployees($perPage, $filters);
+        $summary = $this->employeeService->getEmployeeSummary();
+
+        $resource = EmployeeResource::collection($employees);
+        $data = $resource->response()->getData(true);
+        $data['summary'] = $summary;
 
         return $this->successResponse(
-            EmployeeResource::collection($employees)->response()->getData(true),
+            $data,
             'Employees retrieved'
         );
     }

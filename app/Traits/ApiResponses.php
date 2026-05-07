@@ -22,9 +22,7 @@ trait ApiResponses
         ];
 
         if (is_array($data) && isset($data['data']) && (isset($data['links']) || isset($data['meta']))) {
-            $response['data'] = $data['data'];
-            if (isset($data['links'])) $response['links'] = $data['links'];
-            if (isset($data['meta'])) $response['meta'] = $data['meta'];
+            $response = array_merge($response, $data);
         } else {
             $response['data'] = $data;
         }

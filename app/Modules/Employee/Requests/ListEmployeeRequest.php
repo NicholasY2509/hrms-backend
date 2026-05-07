@@ -10,7 +10,7 @@ use Illuminate\Foundation\Http\FormRequest;
  * @queryParam team_id integer Filter by team ID. Example: 1
  * @queryParam department_id integer Filter by department ID. Example: 1
  * @queryParam work_location_id integer Filter by work location ID. Example: 1
- * @queryParam work_employee_status_id integer Filter by work employee status ID. Example: 1
+ * @queryParam work_employee_status_id integer Filter by work employee status ID. Default: 1. Example: 1
  * @queryParam per_page integer Number of items per page. Default: 15. Example: 20
  */
 class ListEmployeeRequest extends FormRequest
@@ -36,7 +36,7 @@ class ListEmployeeRequest extends FormRequest
             'team_id' => ['nullable', 'integer', 'exists:teams,id'],
             'department_id' => ['nullable', 'integer', 'exists:departments,id'],
             'work_location_id' => ['nullable', 'integer', 'exists:work_locations,id'],
-            'work_employee_status_id' => ['nullable', 'integer'],
+            'work_employee_status_id' => ['nullable', 'integer', 'exists:work_employee_statuses,id'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];
     }
