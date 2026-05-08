@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\RequireRole;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SyncUserByEmail;
 use App\Http\Middleware\UnifiedApiAuth;
@@ -28,11 +29,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(SecurityHeaders::class);
         $middleware->throttleApi('api');
         
-        // Specific rate limiting for authentication endpoints
         $middleware->alias([
             'throttle.auth' => ThrottleRequests::class . ':auth',
             'api.auth' => UnifiedApiAuth::class,
             'legacy.auth' => VerifyLegacySignature::class,
+            'role' => RequireRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

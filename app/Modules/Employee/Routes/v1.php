@@ -27,18 +27,22 @@ Route::middleware(['api.auth'])->group(function () {
         });
 
         // Management Context
-        Route::prefix('management')->group(function () {
-            Route::get('/search', EmployeeSearchController::class);
-            Route::apiResource('employees', EmployeeManagementController::class);
-            Route::apiResource('supervisors', SupervisorManagementController::class);
-            Route::apiResource('certificate-of-employments', CertificateOfEmploymentController::class);
-            Route::apiResource('resignations', ResignationController::class);
-        });
+        Route::prefix('management')
+            ->middleware('role:Admin HRD')
+            ->group(function () {
+                Route::get('/search', EmployeeSearchController::class);
+                Route::apiResource('employees', EmployeeManagementController::class);
+                Route::apiResource('supervisors', SupervisorManagementController::class);
+                Route::apiResource('certificate-of-employments', CertificateOfEmploymentController::class);
+                Route::apiResource('resignations', ResignationController::class);
+            });
 
         // Configuration Context
-        Route::prefix('configuration')->group(function () {
-            Route::apiResource('employee-statuses', EmployeeStatusController::class);
-        });
+        Route::prefix('configuration')
+            ->middleware('role:admin')
+            ->group(function () {
+                Route::apiResource('employee-statuses', EmployeeStatusController::class);
+            });
 
     });
 

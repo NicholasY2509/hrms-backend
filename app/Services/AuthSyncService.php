@@ -10,6 +10,9 @@ use Illuminate\Support\Str;
 
 class AuthSyncService
 {
+    /**
+     * Sync user by token. Tries JWT decode first, falls back to HTTP profile call.
+     */
     public function syncUserByToken(string $token): ?User
     {
         $tokenHash = md5($token);
@@ -20,45 +23,65 @@ class AuthSyncService
         if ($cachedUserInfo) {
             $user = User::where('email', $cachedUserInfo['email'])->first();
             if ($user) {
-                $user->setAttribute('remote_profile', $cachedUserInfo['profile']);
+                $user->setAttribute('remote_roles', $cachedUserInfo['roles'] ?? []);
                 return $user;
             }
         }
 
-        $remoteData = $this->fetchRemoteUserProfile($token);
+        $claims = $this->decodeJwtPayload($token);
 
-        if (!$remoteData || !isset($remoteData['data']['email'])) {
-            return null;
+        Log::info('AuthSyncService: Decoded JWT Claims', [
+            'claims' => $claims
+        ]);
+
+        $email = $claims['email'] ?? null;
+        $roles = $claims['roles'] ?? [];
+
+        // 3. If JWT doesn't have email, fall back to HTTP profile call
+        if (!$email) {
+            Log::info('AuthSyncService: No email in JWT, falling back to HTTP profile call.');
+            $remoteData = $this->fetchRemoteUserProfile($token);
+
+            if (!$remoteData || !isset($remoteData['data']['email'])) {
+                return null;
+            }
+
+            $email = $remoteData['data']['email'];
+
+            // Extract roles from remote profile if available
+            if (empty($roles) && isset($remoteData['data']['roles'])) {
+                $roles = collect($remoteData['data']['roles'])
+                    ->pluck('name')
+                    ->values()
+                    ->toArray();
+            }
         }
 
-        $email = $remoteData['data']['email'];
-        
+        // 4. Find or create the local User record by email
         $user = User::where('email', $email)->first();
 
         if (!$user) {
             $user = User::create([
                 'email' => $email,
                 'password' => bcrypt(Str::random(16)),
-                'name' => $remoteData['data']['name'] ?? 'Remote User',
+                'name' => $claims['name'] ?? $remoteData['data']['name'] ?? 'Remote User',
             ]);
         }
+
         if ($user) {
             Cache::put($cacheKey, [
                 'email' => $email,
-                'profile' => $remoteData
+                'roles' => $roles,
             ], $cacheDuration);
-            
-            $user->setAttribute('remote_profile', $remoteData);
+
+            $user->setAttribute('remote_roles', $roles);
         }
 
         return $user;
     }
 
     /**
-     * Fetch user profile from the Auth Server.
-     *
-     * @param string $token
-     * @return array|null
+     * Fetch user profile from the Auth Server (fallback for old tokens).
      */
     protected function fetchRemoteUserProfile(string $token): ?array
     {
@@ -73,11 +96,27 @@ class AuthSyncService
                 return $response->json();
             }
 
-            Log::error("AuthSyncService: Failed to fetch remote user profile. Status: {$response->status()} - Body: {$response->body()}");
+            Log::error("AuthSyncService: Failed to fetch remote profile. Status: {$response->status()}");
         } catch (\Exception $e) {
-            Log::error("AuthSyncService: Exception during remote fetch. Message: {$e->getMessage()}");
+            Log::error("AuthSyncService: Exception during remote fetch: {$e->getMessage()}");
         }
 
         return null;
+    }
+
+    /**
+     * Decode the base64url JWT payload section.
+     */
+    private function decodeJwtPayload(string $token): ?array
+    {
+        $parts = explode('.', $token);
+
+        if (count($parts) !== 3) {
+            return null;
+        }
+
+        $payload = base64_decode(strtr($parts[1], '-_', '+/'));
+
+        return json_decode($payload, true) ?: null;
     }
 }

@@ -47,6 +47,7 @@ class SyncUserByEmail
             if ($user) {
                 Auth::setUser($user);
                 $request->setUserResolver(fn() => $user);
+                
                 return $next($request);
             }
 
@@ -57,7 +58,6 @@ class SyncUserByEmail
             ], 401);
         }
 
-        // No token provided, let next middleware try (e.g., Legacy Auth)
         return $next($request);
     }
 }

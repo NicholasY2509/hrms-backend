@@ -3,9 +3,14 @@
 use App\Modules\Attendance\Controllers\V1\Configuration\AttendanceSettingController;
 use App\Modules\Attendance\Controllers\V1\Configuration\AttendanceStatusController;
 use App\Modules\Attendance\Controllers\V1\Portal\Employee\MyAttendanceController;
+use App\Modules\Attendance\Controllers\V1\Portal\Management\AttendanceLocationManagementController;
 use App\Modules\Attendance\Controllers\V1\Portal\Management\AttendanceManagementController;
+use App\Modules\Attendance\Controllers\V1\Portal\Management\AttendanceUserManagementController;
 use App\Modules\Attendance\Controllers\V1\Portal\Management\AttendanceWorkingHourManagementController;
 use App\Modules\Attendance\Controllers\V1\Portal\Management\MobileScanManagementController;
+use App\Modules\Attendance\Controllers\V1\Portal\Management\ZktecoAttendanceManagementController;
+use App\Modules\Attendance\Controllers\V1\Portal\Management\ZktecoMachineManagementController;
+use App\Modules\Attendance\Controllers\V1\Portal\Management\ZktecoUserManagementController;
 use App\Modules\Attendance\Controllers\V1\Portal\Management\WorkingHourManagementController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,24 +27,28 @@ Route::middleware(['api.auth'])->group(function () {
             Route::post('/check-location', [MyAttendanceController::class, 'checkLocation']);
         });
 
-        Route::prefix('management')->group(function () {
-            Route::get('/attendances', [AttendanceManagementController::class, 'index']);
-            Route::get('/mobile-scans', [MobileScanManagementController::class, 'index']);
-            Route::get('/attendance-working-hours', [AttendanceWorkingHourManagementController::class, 'index']);
-            
-            Route::apiResource('working-hours', WorkingHourManagementController::class);
-            Route::apiResource('attendance-locations', \App\Modules\Attendance\Controllers\V1\Portal\Management\AttendanceLocationManagementController::class);
-            Route::apiResource('attendance-users', \App\Modules\Attendance\Controllers\V1\Portal\Management\AttendanceUserManagementController::class);
-            Route::apiResource('zkteco-machines', \App\Modules\Attendance\Controllers\V1\Portal\Management\ZktecoMachineManagementController::class);
-            Route::get('/zkteco-attendances', [\App\Modules\Attendance\Controllers\V1\Portal\Management\ZktecoAttendanceManagementController::class, 'index']);
-            Route::get('/zkteco-users', [\App\Modules\Attendance\Controllers\V1\Portal\Management\ZktecoUserManagementController::class, 'index']);
-        });
-
-        Route::prefix('configuration')->group(function () {
-            Route::get('/settings', [AttendanceSettingController::class, 'index']);
-            Route::put('/settings', [AttendanceSettingController::class, 'update']);
-            Route::get('/statuses', [AttendanceStatusController::class, 'index']);
-        });
+        Route::prefix('management')
+            ->middleware('role:admin,hr-manager,manager')
+            ->group(function () {
+                Route::get('/attendances', [AttendanceManagementController::class, 'index']);
+                Route::get('/mobile-scans', [MobileScanManagementController::class, 'index']);
+                Route::get('/attendance-working-hours', [AttendanceWorkingHourManagementController::class, 'index']);
+                
+                Route::apiResource('working-hours', WorkingHourManagementController::class);
+                Route::apiResource('attendance-locations', AttendanceLocationManagementController::class);
+                Route::apiResource('attendance-users', AttendanceUserManagementController::class);
+                Route::apiResource('zkteco-machines', ZktecoMachineManagementController::class);
+                Route::get('/zkteco-attendances', [ZktecoAttendanceManagementController::class, 'index']);
+                Route::get('/zkteco-users', [ZktecoUserManagementController::class, 'index']);
+            });
+        
+        Route::prefix('configuration')
+            ->middleware('role:admin')
+            ->group(function () {
+                Route::get('/settings', [AttendanceSettingController::class, 'index']);
+                Route::put('/settings', [AttendanceSettingController::class, 'update']);
+                Route::get('/statuses', [AttendanceStatusController::class, 'index']);
+            });
         
     });
 });
