@@ -130,16 +130,20 @@ class MyAttendanceController extends Controller
             'longitude' => 'required|numeric',
         ]);
 
-        $isValid = $this->attendanceService->checkUserLocation(
-            Auth::id(),
-            $request->latitude,
-            $request->longitude
-        );
+        try {
+            $isValid = $this->attendanceService->checkUserLocation(
+                Auth::id(),
+                $request->latitude,
+                $request->longitude
+            );
 
-        if ($isValid) {
-            return $this->successResponse([
-                'is_valid' => true,
-            ], 'Location is valid for attendance');
+            if ($isValid) {
+                return $this->successResponse([
+                    'is_valid' => true,
+                ], 'Location is valid for attendance');
+            }
+        } catch (\App\Exceptions\ApplicationException $e) {
+            return $this->errorResponse($e->getMessage(), 422);
         }
 
         return $this->errorResponse('Anda berada di luar area absensi yang valid!', 422);

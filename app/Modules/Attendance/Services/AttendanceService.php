@@ -106,7 +106,8 @@ class AttendanceService
             'latitude' => $data['latitude'],
             'longitude' => $data['longitude'],
             'location_id' => $location->id,
-            'photo' => $photoPath
+            'photo' => $photoPath,
+            'device_name' => $data['device_name'] ?? null,
         ];
         $attendance->mobile_scans = $mobileScans;
 
@@ -122,7 +123,6 @@ class AttendanceService
 
         $this->attendanceRepository->save($attendance);
 
-        // Record in the new attendance_mobile_scans table
         AttendanceMobileScan::create([
             'attendance_id' => $attendance->id,
             'employee_id' => $workingHour->employee_id,
@@ -132,7 +132,7 @@ class AttendanceService
             'longitude' => $data['longitude'],
             'location_id' => $location->id,
             'photo' => $photoPath,
-            'device_id' => $data['device_id'] ?? null,
+            'device_id' => $data['device_name'] ?? null,
         ]);
 
         return $attendance->load(['attendance_status', 'attendance_working_hour.working_hour']);
@@ -223,7 +223,7 @@ class AttendanceService
             'longitude' => $data['longitude'],
             'location_id' => $location->id,
             'photo' => $photoPath,
-            'device_id' => $data['device_id'] ?? null,
+            'device_id' => $data['device_name'] ?? $data['device_id'] ?? null,
         ]);
 
         return $attendance->load(['attendance_status', 'attendance_working_hour.working_hour']);
@@ -234,16 +234,38 @@ class AttendanceService
      */
     protected function validateLocation(int $userId, float $lat, float $lon): ?AttendanceLocation
     {
+        $employee = \App\Modules\Employee\Models\UserEmployee::where('user_id', $userId)->first()?->employee;
+        
+        if (!$employee) {
+            return null;
+        }
+
         $locations = $this->attendanceRepository->getValidLocationsByUserId($userId);
+        $nearbyLocation = null;
 
         foreach ($locations as $location) {
             $distance = $this->calculateDistance($location->latitude, $location->longitude, $lat, $lon);
             if ($distance <= $location->distance) {
-                return $location;
+                $nearbyLocation = $location;
+                break;
             }
         }
 
-        return null;
+        if (!$nearbyLocation) {
+            return null;
+        }
+
+        // Team-based restriction
+        if ($employee->team_id) {
+            $team = $employee->team;
+            if ($team && $team->work_location_id) {
+                if ($nearbyLocation->work_location_id != $team->work_location_id) {
+                    throw new ApplicationException('Anda harus melakukan absensi sesuai lokasi tim anda', 400);
+                }
+            }
+        }
+
+        return $nearbyLocation;
     }
 
     /**

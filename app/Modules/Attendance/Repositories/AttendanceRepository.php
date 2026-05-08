@@ -58,16 +58,7 @@ class AttendanceRepository
 
         $employee = $userEmployee->employee;
 
-        // Legacy logic for department 7
-        $workLocationId = $employee->department_id == 7 ? $employee->work_location_id : false;
-
-        $query = \App\Modules\Attendance\Models\AttendanceLocation::query();
-        
-        if ($workLocationId) {
-            $query->where('work_location_id', $workLocationId);
-        }
-
-        return $query->get();
+        return \App\Modules\Attendance\Models\AttendanceLocation::get();
     }
 
     /**
