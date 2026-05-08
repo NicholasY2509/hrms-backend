@@ -36,6 +36,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RequireRole::class,
         ]);
     })
+    ->withSchedule(function ($schedule) {
+        $schedule->command('activitylog:clean')->daily();
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
