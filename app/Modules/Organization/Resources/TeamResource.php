@@ -18,7 +18,9 @@ class TeamResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'work_location_id' => $this->work_location_id,
             'team_head_id' => $this->team_head_id,
+            'work_location' => new WorkLocationResource($this->whenLoaded('workLocation')),
             'head' => new EmployeeResource($this->whenLoaded('head')),
             'employees_count' => $this->whenCounted('employees'),
         ];
