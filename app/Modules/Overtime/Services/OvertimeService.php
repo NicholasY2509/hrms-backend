@@ -8,7 +8,9 @@ use App\Modules\Overtime\Models\OvertimeAttachment;
 use App\Modules\Overtime\Models\OvertimeType;
 use App\Modules\Overtime\Repositories\OvertimeRepository;
 use App\Modules\Employee\Models\Employee;
+use App\Services\StorageService;
 use Carbon\Carbon;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -66,7 +68,7 @@ class OvertimeService
 
             $totalMinutesRounded = floor($totalMinutes / 60) * 60;
             $hours = floor($totalMinutesRounded / 60);
-            $minutes = 0; // Always 0 as per "round below" rule
+            $minutes = 0; 
             $totalTimeStr = sprintf('%02d:%02d', $hours, $minutes);
 
             $codeType = $type === Overtime::TYPE_HOLIDAY ? 'NTN' : ($type === Overtime::TYPE_DAC ? 'DAC' : 'UMUM');
@@ -87,11 +89,10 @@ class OvertimeService
                 // 'real_overtime_price' => $data['estimated_cost'] ?? 0,
             ]);
 
-            // Handle Attachments
             if (!empty($data['attachments'])) {
                 foreach ($data['attachments'] as $file) {
-                    $path = $file instanceof \Illuminate\Http\UploadedFile 
-                        ? \App\Services\StorageService::store($file, 'overtimes')
+                    $path = $file instanceof UploadedFile 
+                        ? StorageService::store($file, 'overtimes')
                         : $file;
 
                     OvertimeAttachment::create([
