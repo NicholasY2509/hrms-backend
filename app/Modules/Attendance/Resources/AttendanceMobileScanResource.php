@@ -20,7 +20,7 @@ class AttendanceMobileScanResource extends JsonResource
             'attendance_id' => $this->attendance_id,
             'employee' => [
                 'id' => $this->employee_id,
-                'name' => $this->employee?->name,
+                'name' => $this->employee?->full_name,
                 'nik' => $this->employee?->nik,
             ],
             'scan_type' => $this->scan_type,
