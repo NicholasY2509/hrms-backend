@@ -22,6 +22,13 @@ Route::middleware(['api.auth'])->group(function () {
         Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
     });
 
+    // Report Routes
+    Route::prefix('reports')->group(function () {
+        Route::get('/', [\App\Modules\System\Controllers\V1\ReportController::class, 'index']);
+        Route::post('/', [\App\Modules\System\Controllers\V1\ReportController::class, 'store']);
+        Route::get('/{report}', [\App\Modules\System\Controllers\V1\ReportController::class, 'show']);
+    });
+
     Route::prefix('portal/management')
         ->middleware('role:admin,Admin HRD')
         ->group(function () {
