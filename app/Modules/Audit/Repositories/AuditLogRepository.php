@@ -7,44 +7,38 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class AuditLogRepository
 {
-    /**
-     * Get paginated activity logs with filters.
-     *
-     * @param array $filters
-     * @param int $perPage
-     * @return LengthAwarePaginator
-     */
-    public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    public function getLogs(array $filters): LengthAwarePaginator
     {
-        $query = Activity::with(['causer', 'subject'])
-            ->latest();
+        $query = Activity::with(['causer', 'subject'])->latest();
 
-        if (!empty($filters['log_name'])) {
-            $query->where('log_name', $filters['log_name']);
-        }
+        $query->when($filters['log_name'] ?? null, function ($q, $logName) {
+            $q->where('log_name', $logName);
+        });
 
-        if (!empty($filters['causer_id'])) {
-            $query->where('causer_id', $filters['causer_id']);
-        }
+        $query->when($filters['event'] ?? null, function ($q, $event) {
+            $q->where('event', $event);
+        });
 
-        if (!empty($filters['subject_type'])) {
-            $query->where('subject_type', $filters['subject_type']);
-        }
+        $query->when($filters['causer_id'] ?? null, function ($q, $causerId) {
+            $q->where('causer_id', $causerId);
+        });
 
-        if (!empty($filters['event'])) {
-            $query->where('event', $filters['event']);
-        }
+        $query->when($filters['subject_type'] ?? null, function ($q, $type) {
+            $q->where('subject_type', 'like', "%{$type}%");
+        });
 
-        return $query->paginate($perPage);
+        $query->when($filters['start_date'] ?? null, function ($q, $date) {
+            $q->whereDate('created_at', '>=', $date);
+        });
+
+        $query->when($filters['end_date'] ?? null, function ($q, $date) {
+            $q->whereDate('created_at', '<=', $date);
+        });
+
+        return $query->paginate($filters['per_page'] ?? 15);
     }
 
-    /**
-     * Get a single activity log.
-     *
-     * @param int $id
-     * @return Activity|null
-     */
-    public function find(int $id): ?Activity
+    public function findById(int $id): ?Activity
     {
         return Activity::with(['causer', 'subject'])->find($id);
     }

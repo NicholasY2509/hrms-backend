@@ -19,15 +19,18 @@ class UnpaidLeaveService
     protected UnpaidLeaveRepository $repository;
     protected AnnualLeaveService $annualLeaveService;
     protected AnnualLeaveRepository $annualLeaveRepository;
+    protected UnpaidLeaveApprovalService $approvalService;
 
     public function __construct(
         UnpaidLeaveRepository $repository,
         AnnualLeaveService $annualLeaveService,
-        AnnualLeaveRepository $annualLeaveRepository
+        AnnualLeaveRepository $annualLeaveRepository,
+        UnpaidLeaveApprovalService $approvalService
     ) {
         $this->repository = $repository;
         $this->annualLeaveService = $annualLeaveService;
         $this->annualLeaveRepository = $annualLeaveRepository;
+        $this->approvalService = $approvalService;
     }
 
     /**
@@ -66,6 +69,8 @@ class UnpaidLeaveService
             $data['confirmed_at'] = Carbon::now()->toDateString();
 
             $leave = $this->repository->create($data);
+
+            $this->approvalService->generateInitialApprovals($leave);
 
             return $leave;
         });

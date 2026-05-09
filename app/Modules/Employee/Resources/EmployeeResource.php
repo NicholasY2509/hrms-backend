@@ -2,6 +2,9 @@
 
 namespace App\Modules\Employee\Resources;
 
+use App\Modules\Organization\Resources\DepartmentResource;
+use App\Modules\Organization\Resources\WorkLocationResource;
+use App\Modules\Organization\Resources\WorkPositionResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -26,9 +29,9 @@ class EmployeeResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'initial_name' => $this->initial_name,
-            'job_title' => $this->position?->name ?? 'N/A',
-            'department' => $this->department?->name ?? 'N/A',
-            'work_location' => $this->work_location?->name ?? 'N/A',
+            'job_title' => $this->position ? new WorkPositionResource($this->position) : null,
+            'department' => $this->department ? new DepartmentResource($this->department) : null,
+            'work_location' => $this->work_location ? new WorkLocationResource($this->work_location) : null,
             'email' => $user?->email ?? $this->company_email,
             'company_email' => $this->company_email,
             'photo_url' => $this->profile_url,

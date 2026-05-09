@@ -8,6 +8,8 @@ use App\Modules\Organization\Models\Department;
 use App\Modules\Organization\Models\Team;
 use App\Modules\Organization\Models\WorkLocation;
 use App\Modules\Organization\Models\WorkPosition;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,7 +19,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['*'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
 
     protected $table = 'employees';
     protected $guarded = ['id'];

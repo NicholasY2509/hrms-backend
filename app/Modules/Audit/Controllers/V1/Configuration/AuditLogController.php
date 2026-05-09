@@ -5,9 +5,9 @@ namespace App\Modules\Audit\Controllers\V1\Configuration;
 use App\Http\Controllers\Controller;
 use App\Modules\Audit\Services\AuditLogService;
 use App\Modules\Audit\Resources\AuditLogResource;
+use App\Modules\Audit\Requests\GetAuditLogsRequest;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 /**
  * @group Configuration
@@ -21,18 +21,9 @@ class AuditLogController extends Controller
         protected AuditLogService $auditLogService
     ) {}
 
-    /**
-     * List Activity Logs
-     * 
-     * Get a paginated list of all system activities.
-     * 
-     * @queryParam log_name string Filter by log category (e.g. default, auth). Example: default
-     * @queryParam event string Filter by event type (created, updated, deleted). Example: updated
-     * @queryParam per_page int Results per page. Example: 15
-     */
-    public function index(Request $request): JsonResponse
+    public function index(GetAuditLogsRequest $request): JsonResponse
     {
-        $logs = $this->auditLogService->getLogs($request->all());
+        $logs = $this->auditLogService->getLogs($request->validated());
         
         return $this->successResponse(
             AuditLogResource::collection($logs)->response()->getData(true),

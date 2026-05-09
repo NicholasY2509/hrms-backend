@@ -28,7 +28,7 @@ class ApprovalActionRepository
             ->pluck('approval_group_id')
             ->toArray();
 
-        $employee = \App\Modules\Employee\Models\Employee::find($employeeId);
+        $employee = Employee::find($employeeId);
         $workPositionId = $employee->work_position_id ?? null;
 
         return ApprovalRequest::query()

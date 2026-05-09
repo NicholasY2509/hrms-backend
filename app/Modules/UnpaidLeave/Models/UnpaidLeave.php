@@ -6,13 +6,23 @@ use App\Modules\Employee\Models\Employee;
 use App\Modules\ApprovalWorkflow\Traits\HasApprovalStatus;
 use App\Modules\UnpaidLeave\Services\UnpaidLeaveService;
 use App\Traits\Approvable;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UnpaidLeave extends Model
 {
-    use SoftDeletes, Approvable;
+    use SoftDeletes, Approvable, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['*'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
 
     protected $table = 'unpaid_leaves';
     protected $guarded = ['id'];
@@ -113,8 +123,14 @@ class UnpaidLeave extends Model
             return $this->confirmed_at ? 'Pending' : 'Draft';
         }
 
+        if ($request->status === 'pending') {
+            $currentStep = $request->currentStep();
+            $approverNames = $currentStep ? $currentStep->getResolvedApproverNames() : null;
+            
+            return $approverNames ? "Pending by {$approverNames}" : 'Pending';
+        }
+
         return match ($request->status) {
-            'pending' => 'Pending',
             'approved' => 'Approved',
             'rejected' => 'Rejected',
             'cancelled' => 'Cancelled',

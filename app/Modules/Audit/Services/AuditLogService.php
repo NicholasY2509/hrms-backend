@@ -17,7 +17,7 @@ class AuditLogService
      */
     public function getLogs(array $filters): LengthAwarePaginator
     {
-        return $this->auditLogRepository->paginate($filters, $filters['per_page'] ?? 15);
+        return $this->auditLogRepository->getLogs($filters);
     }
 
     /**

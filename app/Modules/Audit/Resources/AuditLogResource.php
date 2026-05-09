@@ -14,6 +14,14 @@ class AuditLogResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $causerName = 'System';
+
+        if ($this->causer) {
+            $causerName = $this->causer->name 
+                ?? $this->causer->user_employee->employee->full_name 
+                ?? 'User #' . $this->causer_id;
+        }
+
         return [
             'id' => $this->id,
             'log_name' => $this->log_name,
@@ -23,10 +31,11 @@ class AuditLogResource extends JsonResource
             'event' => $this->event,
             'causer' => [
                 'id' => $this->causer_id,
-                'name' => $this->causer->name ?? 'System',
+                'name' => $causerName,
                 'type' => $this->causer_type,
             ],
             'properties' => $this->properties,
+            'attribute_changes' => $this->attribute_changes,
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'human_time' => $this->created_at->diffForHumans(),
         ];

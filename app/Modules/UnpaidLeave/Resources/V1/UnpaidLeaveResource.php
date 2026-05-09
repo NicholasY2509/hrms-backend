@@ -2,6 +2,7 @@
 
 namespace App\Modules\UnpaidLeave\Resources\V1;
 
+use App\Modules\Employee\Resources\EmployeeResource;
 use App\Services\StorageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -17,19 +18,7 @@ class UnpaidLeaveResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'employee' => [
-                'id' => $this->employee_id,
-                'employee_id_number' => $this->employee->employee_id_number,
-                'full_name' => $this->employee?->full_name,
-                'department' => [
-                    'id' => $this->employee?->department_id,
-                    'name' => $this->employee?->department?->name,
-                ],
-                'position' => [
-                    'id' => $this->employee?->position_id,
-                    'name' => $this->employee?->position?->name,
-                ],
-            ],
+            'employee' => new EmployeeResource($this->employee),
             'type' => [
                 'id' => $this->unpaid_leave_type_id,
                 'name' => $this->unpaid_leave_type?->name,

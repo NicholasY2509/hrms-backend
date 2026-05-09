@@ -3,14 +3,11 @@
 namespace App\Modules\UnpaidLeave\Notifications;
 
 use Carbon\Carbon;
-use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class UnpaidLeaveApprovalNotification extends Notification implements ShouldQueue
+class UnpaidLeaveApprovalNotification extends Notification
 {
-    use Queueable;
 
     protected $unpaidLeave;
 
@@ -21,7 +18,7 @@ class UnpaidLeaveApprovalNotification extends Notification implements ShouldQueu
 
     public function via($notifiable)
     {
-        return ['mail', 'database']; 
+        return ['database']; 
     }
 
     public function toMail($notifiable)
@@ -39,17 +36,15 @@ class UnpaidLeaveApprovalNotification extends Notification implements ShouldQueu
     }
 
     /**
-     * Send notification via database (app)
+     * The payload consumed by the Frontend.
      */
     public function toArray($notifiable): array
     {
-        $frontendUrl = config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:8000'));
-        $detailUrl = $frontendUrl . '/unpaid_leaves/' . $this->unpaidLeave->id;
-
         return [
             'message' => "Anda memiliki permintaan persetujuan untuk cuti karyawan atas nama " . $this->unpaidLeave->employee->full_name,
-            'action_url' => $detailUrl,
-            'unpaid_leave_id' => $this->unpaidLeave->id,
+            'action_url' => "/management/unpaid-leave/{$this->unpaidLeave->id}", // Frontend route
+            'id' => $this->unpaidLeave->id,
+            'type' => 'UnpaidLeaveApproval',
         ];
     }
 }

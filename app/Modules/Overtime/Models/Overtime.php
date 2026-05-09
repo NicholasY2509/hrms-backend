@@ -7,12 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Traits\Approvable;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use App\Modules\ApprovalWorkflow\Traits\HasApprovalStatus;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Overtime extends Model
 {
-    use Approvable;
+    use Approvable, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['*'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
+
     use SoftDeletes;
 
     protected $table = 'overtimes';
