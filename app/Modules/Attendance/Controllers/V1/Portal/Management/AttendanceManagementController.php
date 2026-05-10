@@ -3,8 +3,11 @@
 namespace App\Modules\Attendance\Controllers\V1\Portal\Management;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Attendance\Requests\AttendanceCalculateRequest;
 use App\Modules\Attendance\Requests\AttendanceIndexRequest;
 use App\Modules\Attendance\Resources\AttendanceManagementResource;
+use App\Modules\System\Models\Task;
+use App\Modules\Attendance\Jobs\ProcessAttendanceCalculationJob;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 
@@ -17,7 +20,8 @@ class AttendanceManagementController extends Controller
     use ApiResponses;
 
     public function __construct(
-        protected \App\Modules\Attendance\Services\AttendanceService $service
+        protected \App\Modules\Attendance\Services\AttendanceService $service,
+        protected \App\Modules\Attendance\Services\AttendanceCalculationService $calculationService
     ) {}
 
     /**
@@ -70,5 +74,45 @@ class AttendanceManagementController extends Controller
             AttendanceManagementResource::collection($attendances)->response()->getData(true),
             'Attendances retrieved successfully'
         );
+    }
+
+    /**
+     * Calculate Attendance
+     * 
+     * Starts an asynchronous job to calculate attendance records for a given date range.
+     * Returns a task ID that can be used to track progress.
+     * 
+     * @bodyParam start_date date required The start date. Example: 2024-05-01
+     * @bodyParam end_date date required The end date. Example: 2024-05-31
+     * 
+     * @response {
+     *  "success": true,
+     *  "message": "Attendance calculation started",
+     *  "data": {
+     *    "task_id": 1,
+     *    "status": "pending"
+     *  }
+     * }
+     */
+    public function calculate(AttendanceCalculateRequest $request): JsonResponse
+    {
+        $task = Task::create([
+            'user_id' => auth()->id(),
+            'type' => 'attendance_calculation',
+            'status' => 'pending',
+            'payload' => $request->validated(),
+            'message' => 'Waiting for background process...',
+        ]);
+
+        ProcessAttendanceCalculationJob::dispatch(
+            $task,
+            $request->input('start_date'),
+            $request->input('end_date')
+        );
+
+        return $this->successResponse([
+            'task_id' => $task->id,
+            'status' => $task->status,
+        ], 'Attendance calculation started');
     }
 }

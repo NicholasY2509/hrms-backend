@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Attendance\Controllers\V1\Configuration\AttendanceCalculationSettingController;
 use App\Modules\Attendance\Controllers\V1\Configuration\AttendanceSettingController;
 use App\Modules\Attendance\Controllers\V1\Configuration\AttendanceStatusController;
 use App\Modules\Attendance\Controllers\V1\Portal\Employee\MyAttendanceController;
@@ -31,6 +32,7 @@ Route::middleware(['api.auth'])->group(function () {
             ->middleware('role:admin,hr-manager,manager')
             ->group(function () {
                 Route::get('/attendances', [AttendanceManagementController::class, 'index']);
+                Route::post('/attendances/calculate', [AttendanceManagementController::class, 'calculate']);
                 Route::get('/mobile-scans', [MobileScanManagementController::class, 'index']);
                 Route::get('/attendance-working-hours', [AttendanceWorkingHourManagementController::class, 'index']);
                 
@@ -47,6 +49,8 @@ Route::middleware(['api.auth'])->group(function () {
             ->group(function () {
                 Route::get('/settings', [AttendanceSettingController::class, 'index']);
                 Route::put('/settings', [AttendanceSettingController::class, 'update']);
+                Route::get('/calculation-settings', [AttendanceCalculationSettingController::class, 'index']);
+                Route::put('/calculation-settings', [AttendanceCalculationSettingController::class, 'update']);
                 Route::get('/statuses', [AttendanceStatusController::class, 'index']);
             });
         

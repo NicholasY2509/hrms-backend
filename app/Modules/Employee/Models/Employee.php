@@ -3,6 +3,7 @@
 namespace App\Modules\Employee\Models;
 
 use App\Modules\Attendance\Models\AttendanceWorkingHour;
+use App\Modules\Attendance\Models\AttendanceUser;
 use App\Modules\User\Models\User;
 use App\Modules\Organization\Models\Department;
 use App\Modules\Organization\Models\Team;
@@ -87,6 +88,14 @@ class Employee extends Model
     public function attendance_working_hours(): HasMany
     {
         return $this->hasMany(AttendanceWorkingHour::class, 'employee_id', 'id');
+    }
+
+    /**
+     * Get the attendance machine UID records for the Employee.
+     */
+    public function attendance_users(): HasMany
+    {
+        return $this->hasMany(AttendanceUser::class, 'employee_id', 'id');
     }
 
     public function team(): BelongsTo

@@ -15,7 +15,7 @@ class ZktecoAttendance extends Model
     /**
      * Get the machine that generated this attendance log.
      */
-    public function machine(): BelongsTo
+    public function zkteco_machine(): BelongsTo
     {
         return $this->belongsTo(ZktecoMachine::class, 'zkteco_machine_id', 'id');
     }

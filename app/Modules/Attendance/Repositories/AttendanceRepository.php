@@ -4,7 +4,10 @@ namespace App\Modules\Attendance\Repositories;
 
 use App\Modules\Attendance\Models\Attendance;
 use App\Modules\Attendance\Models\AttendanceWorkingHour;
+use App\Modules\Attendance\Models\ZktecoAttendance;
+use App\Modules\Employee\Models\Employee;
 use App\Modules\Employee\Models\UserEmployee;
+use App\Modules\UnpaidLeave\Models\UnpaidLeave;
 use Carbon\Carbon;
 
 class AttendanceRepository
@@ -56,16 +59,7 @@ class AttendanceRepository
             return new \Illuminate\Database\Eloquent\Collection();
         }
 
-        $employee = $userEmployee->employee;
-
-        // Legacy logic for department 7
-        $workLocationId = $employee->department_id == 7 ? $employee->work_location_id : false;
-
         $query = \App\Modules\Attendance\Models\AttendanceLocation::query();
-        
-        if ($workLocationId) {
-            $query->where('work_location_id', $workLocationId);
-        }
 
         return $query->get();
     }
@@ -198,6 +192,78 @@ class AttendanceRepository
     public function getAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return \App\Modules\Attendance\Models\AttendanceStatus::all();
+    }
+
+    /**
+     * Get active employees with their attendance machine UIDs.
+     */
+    public function getEmployeesForCalculation()
+    {
+        return Employee::query()
+            ->with(['attendance_users'])
+            ->where('work_location_id', '!=', 3) // Exclude Suryaraya / Vendor
+            ->whereNull('resign_date')
+            ->get();
+    }
+
+    /**
+     * Get machine attendance logs for a set of UIDs and date range.
+     */
+    public function getZktecoAttendancesInRange(array $uids, string $startDate, string $endDate)
+    {
+        return ZktecoAttendance::query()
+            ->whereIn('uid', $uids)
+            ->whereBetween('attendance_at', [$startDate, $endDate])
+            ->with(['zkteco_machine'])
+            ->get();
+    }
+
+    /**
+     * Get earliest attendance dates for UIDs (used for registration mapping).
+     */
+    public function getEarliestAttendances(array $uids)
+    {
+        return ZktecoAttendance::query()
+            ->whereIn('uid', $uids)
+            ->selectRaw('uid, MIN(created_at) as min_created, MIN(updated_at) as min_updated')
+            ->groupBy('uid')
+            ->get()
+            ->keyBy('uid');
+    }
+
+    /**
+     * Get settled leave records for employees in date range.
+     */
+    public function getLeavesInRange(array $employeeIds, string $startDate, string $endDate)
+    {
+        return UnpaidLeave::query()
+            ->whereIn('employee_id', $employeeIds)
+            ->where('start_date', '<=', $endDate)
+            ->where('end_date', '>=', $startDate)
+            ->whereNotNull('settled_at')
+            ->get();
+    }
+
+    /**
+     * Get scheduled working hours for employees in date range.
+     */
+    public function getWorkingHoursInRange(array $employeeIds, string $startDate, string $endDate)
+    {
+        return AttendanceWorkingHour::query()
+            ->whereIn('employee_id', $employeeIds)
+            ->whereBetween('attendance_at', [$startDate, $endDate])
+            ->with(['working_hour'])
+            ->get();
+    }
+
+    /**
+     * Get existing attendance records for specific working hour IDs.
+     */
+    public function getAttendancesByWorkingHourIds(array $workingHourIds)
+    {
+        return Attendance::query()
+            ->whereIn('attendance_working_hour_id', $workingHourIds)
+            ->get();
     }
 }
 

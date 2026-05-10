@@ -4,73 +4,79 @@ namespace App\Modules\System\Controllers\V1;
 
 use App\Http\Controllers\Controller;
 use App\Modules\System\Models\Report;
-use App\Modules\System\Jobs\ProcessExportJob;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Modules\System\Requests\V1\ReportStoreRequest;
+use App\Modules\System\Resources\V1\ReportResource;
+use App\Modules\System\Services\ReportService;
+use App\Traits\ApiResponses;
+use Illuminate\Http\JsonResponse;
 
+/**
+ * @group System Configuration
+ *
+ * API for managing system-generated reports and exports.
+ */
 class ReportController extends Controller
 {
-    public function index()
-    {
-        $reports = Report::with('user')
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+    use ApiResponses;
 
-        return response()->json([
-            'data' => $reports->items(),
-            'meta' => [
-                'current_page' => $reports->currentPage(),
-                'last_page' => $reports->lastPage(),
-                'total' => $reports->total(),
-            ]
-        ]);
+    protected ReportService $service;
+
+    public function __construct(ReportService $service)
+    {
+        $this->service = $service;
     }
 
-    public function store(Request $request)
+    /**
+     * List Reports
+     *
+     * Get a paginated list of all export requests.
+     *
+     * @return JsonResponse
+     */
+    public function index(): JsonResponse
     {
-        $request->validate([
-            'name' => 'required|string',
-            'type' => 'required|string',
-            'format' => 'required|in:excel,pdf,csv,txt',
-            'filters' => 'nullable|array'
-        ]);
+        $reports = $this->service->getPaginatedReports();
 
-        $report = Report::create([
-            'user_id' => auth()->id() ?? 1,
-            'name' => $request->name,
-            'type' => $request->type,
-            'format' => $request->format,
-            'filters' => $request->filters,
-            'status' => 'pending'
-        ]);
-
-        ProcessExportJob::dispatch($report);
-
-        return response()->json([
-            'message' => 'Export request submitted successfully',
-            'data' => $report
-        ], 202);
+        return $this->successResponse(
+            ReportResource::collection($reports)->response()->getData(true),
+            'Reports retrieved successfully'
+        );
     }
 
-    public function show(Report $report)
+    /**
+     * Request Report
+     *
+     * Create a new report export request.
+     *
+     * @param ReportStoreRequest $request
+     * @return JsonResponse
+     */
+    public function store(ReportStoreRequest $request): JsonResponse
     {
-        $data = $report->toArray();
-        
-        if ($report->status === 'completed' && $report->file_path) {
-            $diskName = config('filesystems.default') === 'local' ? 'local' : 'gcs';
-            $disk = Storage::disk($diskName);
-            
-            try {
-                $data['download_url'] = $disk->temporaryUrl(
-                    $report->file_path, 
-                    now()->addHours(1)
-                );
-            } catch (\RuntimeException $e) {
-                // Fallback for disks that don't support temporary URLs (like local)
-                $data['download_url'] = url('/storage/' . $report->file_path);
-            }
-        }
+        $report = $this->service->requestReport($request->validated());
 
-        return response()->json(['data' => $data]);
+        return $this->successResponse(
+            new ReportResource($report),
+            'Export request submitted successfully',
+            202
+        );
+    }
+
+    /**
+     * Show Report
+     *
+     * Get details of a specific report, including download URL if completed.
+     *
+     * @param Report $report
+     * @return JsonResponse
+     */
+    public function show(Report $report): JsonResponse
+    {
+        $data = $this->service->getReportDetail($report);
+
+        return $this->successResponse(
+            new ReportResource($data),
+            'Report details retrieved successfully'
+        );
     }
 }

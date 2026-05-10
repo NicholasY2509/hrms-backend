@@ -3,17 +3,17 @@
 namespace App\Modules\System\Models;
 
 use App\Modules\User\Models\User;
-use App\Modules\System\Models\Task;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Report extends Model
+class Task extends Model
 {
-    protected $table = 'reports';
+    protected $table = 'tasks';
     protected $guarded = ['id'];
 
     protected $casts = [
-        'filters' => 'array',
+        'payload' => 'array',
+        'metadata' => 'array',
         'completed_at' => 'datetime',
     ];
 
@@ -21,9 +21,14 @@ class Report extends Model
     {
         return $this->belongsTo(User::class);
     }
-
-    public function task(): BelongsTo
+    
+    public function isCompleted(): bool
     {
-        return $this->belongsTo(Task::class);
+        return $this->status === 'completed';
+    }
+    
+    public function isFailed(): bool
+    {
+        return $this->status === 'failed';
     }
 }

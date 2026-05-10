@@ -3,6 +3,8 @@
 namespace App\Modules\System\Jobs;
 
 use App\Modules\System\Models\Report;
+use App\Modules\System\Models\Task;
+use App\Modules\System\Traits\HasTaskProgress;
 use App\Modules\Employee\Exports\EmployeeExport;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,29 +14,18 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
-use App\Modules\System\Events\ReportProgressUpdated;
 
 class ProcessExportJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, HasTaskProgress;
 
     public $report;
     public $timeout = 600; // 10 minutes timeout for heavy exports
 
-    public function __construct(Report $report)
+    public function __construct(Report $report, Task $task = null)
     {
         $this->report = $report;
-    }
-
-    public function updateProgress($progress, $message = null, $status = 'processing')
-    {
-        $this->report->update([
-            'status' => $status,
-            'progress' => $progress,
-            'current_message' => $message ?? $this->report->current_message
-        ]);
-
-        broadcast(new ReportProgressUpdated($this->report));
+        $this->task = $task;
     }
 
     /**
@@ -47,14 +38,37 @@ class ProcessExportJob implements ShouldQueue
                 'status' => 'failed',
                 'current_message' => 'Export gagal: ' . $exception->getMessage()
             ]);
-
-            broadcast(new ReportProgressUpdated($this->report));
         }
+
+        $this->failTask('Export gagal: ' . $exception->getMessage());
     }
 
     public function handle()
     {
+        // Increase memory limit for heavy exports
+        ini_set('memory_limit', '1024M');
+
         $this->updateProgress(10, 'Memulai proses export...');
+        
+        // Register shutdown function to catch process timeouts or fatal errors
+        register_shutdown_function(function() {
+            if ($this->task) {
+                $this->task->refresh();
+                if ($this->task->status === 'processing') {
+                    $error = error_get_last();
+                    $message = 'Export terhenti tiba-tiba (kemungkinan kehabisan memori).';
+                    
+                    if ($error && str_contains($error['message'], 'Allowed memory size')) {
+                        $message = 'Export gagal karena file terlalu besar untuk diproses (Memory Exhausted).';
+                    } elseif ($error) {
+                        $message .= ' Error: ' . $error['message'];
+                    }
+                    
+                    $this->failTask($message);
+                }
+            }
+        });
+
         sleep(2); // SIMULATED DELAY
 
         try {
@@ -143,10 +157,11 @@ class ProcessExportJob implements ShouldQueue
                 'completed_at' => now()
             ]);
 
-            broadcast(new ReportProgressUpdated($this->report));
+            $this->completeTask('Export selesai', ['file_path' => $fullPath]);
 
         } catch (\Exception $e) {
-            $this->updateProgress(0, 'Error: ' . $e->getMessage(), 'failed');
+            $this->report->update(['status' => 'failed']);
+            $this->failTask('Error: ' . $e->getMessage());
             throw $e;
         }
     }

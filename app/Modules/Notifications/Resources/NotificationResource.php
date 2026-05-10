@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\System\Resources;
+namespace App\Modules\Notifications\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -21,7 +21,7 @@ class NotificationResource extends JsonResource
             'data' => $this->data,
             'read_at' => $this->read_at,
             'created_at' => $this->created_at,
-            'created_at_human' => Carbon::parse($this->created_at)->diffForHumans(),
+            'created_at_human' => $this->created_at ? Carbon::parse($this->created_at)->diffForHumans() : null,
         ];
     }
 }
