@@ -45,12 +45,9 @@ class ProcessExportJob implements ShouldQueue
 
     public function handle()
     {
-        // Increase memory limit for heavy exports
         ini_set('memory_limit', '1024M');
 
         $this->updateProgress(10, 'Memulai proses export...');
-        
-        // Register shutdown function to catch process timeouts or fatal errors
         register_shutdown_function(function() {
             if ($this->task) {
                 $this->task->refresh();
@@ -69,8 +66,6 @@ class ProcessExportJob implements ShouldQueue
             }
         });
 
-        sleep(2); // SIMULATED DELAY
-
         try {
             $format = strtolower($this->report->format);
             $fileName = 'exports/' . $this->report->type . '_' . $this->report->id . '_' . time();
@@ -86,9 +81,7 @@ class ProcessExportJob implements ShouldQueue
             $fullPath = $fileName . '.' . $ext;
 
             $this->updateProgress(30, 'Mengambil data dari database...');
-            sleep(2); // SIMULATED DELAY
 
-            // Lookup the export configuration from the registry
             $config = config("reports.map.{$this->report->type}");
 
             if (!$config) {
@@ -106,44 +99,55 @@ class ProcessExportJob implements ShouldQueue
 
             if ($format === 'pdf') {
                 $this->updateProgress(40, 'Merender file PDF...');
-                // PDF might run out of memory for huge records, chunking might be needed for view generation too, 
-                // but DOMPDF usually loads it all into one view.
                 $data = $query->get();
-                $pdf = Pdf::loadView($viewName, ['data' => $data]);
+                $pdf = Pdf::loadView($viewName, [
+                    'data' => $data,
+                    'report' => $this->report,
+                    'filters' => $this->report->filters ?? []
+                ]);
                 Storage::disk($disk)->put($fullPath, $pdf->output());
                 
             } elseif ($format === 'txt') {
                 $this->updateProgress(40, 'Mulai menulis file teks...');
                 
-                $headers = implode(" | ", $exportClass->headings()) . "\n" . str_repeat("-", 80) . "\n";
-                Storage::disk($disk)->put($fullPath, $headers);
-                
-                $processed = 0;
-                $chunkSize = 1000;
-                
-                $query->chunk($chunkSize, function ($records) use (&$processed, $totalRecords, $exportClass, $disk, $fullPath) {
-                    $txtContent = "";
-                    foreach($records as $row) {
-                        $mapped = $exportClass->map($row);
-                        $txtContent .= implode(" | ", $mapped) . "\n";
-                    }
-                    Storage::disk($disk)->append($fullPath, $txtContent);
+                if (isset($config['txt_view'])) {
+                    $data = $query->get();
+                    $viewData = [
+                        'data' => $data,
+                        'report' => $this->report,
+                        'filters' => $this->report->filters ?? []
+                    ];
+                    $txtContent = view($config['txt_view'], $viewData)->render();
+                    Storage::disk($disk)->put($fullPath, $txtContent);
+                } else {
+                    $headers = implode(" | ", $exportClass->headings()) . "\n" . str_repeat("-", 80) . "\n";
+                    Storage::disk($disk)->put($fullPath, $headers);
                     
-                    $processed += $records->count();
-                    $percent = 40 + round(($processed / max(1, $totalRecords)) * 50); // Scale from 40% to 90%
+                    $processed = 0;
+                    $chunkSize = 1000;
                     
-                    $this->updateProgress($percent, "Menulis baris $processed dari $totalRecords...");
-                });
+                    $query->chunk($chunkSize, function ($records) use (&$processed, $totalRecords, $exportClass, $disk, $fullPath) {
+                        $txtContent = "";
+                        foreach($records as $row) {
+                            $mapped = $exportClass->map($row);
+                            $txtContent .= implode(" | ", $mapped) . "\n";
+                        }
+                        Storage::disk($disk)->append($fullPath, $txtContent);
+                        
+                        $processed += $records->count();
+                        $percent = 40 + round(($processed / max(1, $totalRecords)) * 50); // Scale from 40% to 90%
+                        
+                        $this->updateProgress($percent, "Menulis baris $processed dari $totalRecords...");
+                    });
+                }
                 
             } else {
                 $this->updateProgress(40, 'Menghasilkan file ' . strtoupper($format) . ' (Excel/CSV)...');
                 
-                // Pass job to exporter for real-time progress if supported
                 if (method_exists($exportClass, 'setJob')) {
                     $exportClass->setJob($this, $totalRecords);
                 }
                 
-                // Excel and CSV chunk automatically via FromQuery
                 Excel::store($exportClass, $fullPath, $disk);
             }
 

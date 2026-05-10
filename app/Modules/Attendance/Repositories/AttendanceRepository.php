@@ -133,21 +133,24 @@ class AttendanceRepository
     }
 
     /**
-     * Get paginated attendances for management.
+     * Get query for export/reports.
      */
-    public function getPaginated(array $filters, int $perPage = 15)
+    public function getExportQuery(array $filters)
     {
         $query = Attendance::query()
             ->with([
                 'attendance_status',
-                'attendance_working_hour.employee',
+                'attendance_working_hour.employee.department',
+                'attendance_working_hour.employee.position',
+                'attendance_working_hour.employee.team',
                 'attendance_working_hour.working_hour',
                 'incoming_location',
                 'outgoing_location'
             ]);
 
-        // Filter by Date Range (using attendance_working_hours.attendance_at)
+        \Log::info('Attendance Export Filters:', $filters);
         $query->whereHas('attendance_working_hour', function ($q) use ($filters) {
+            \Log::info('Inside whereHas closure', ['filters' => $filters]);
             if (!empty($filters['start_date'])) {
                 $q->where('attendance_at', '>=', $filters['start_date']);
             }
@@ -159,28 +162,48 @@ class AttendanceRepository
             }
             
             if (!empty($filters['department_id'])) {
+                \Log::info('Applying department filter', ['ids' => $filters['department_id']]);
                 $q->whereHas('employee', function ($eq) use ($filters) {
-                    $eq->where('department_id', $filters['department_id']);
+                    $eq->whereIn('department_id', $filters['department_id']);
                 });
             }
 
-            if (!empty($filters['work_location_id'])) {
+            if (!empty($filters['team_id'])) {
+                \Log::info('Applying team filter', ['ids' => $filters['team_id']]);
                 $q->whereHas('employee', function ($eq) use ($filters) {
-                    $eq->where('work_location_id', $filters['work_location_id']);
+                    $eq->whereIn('team_id', $filters['team_id']);
                 });
             }
-            
-            // Search by employee name or NIK
-            if (!empty($filters['search'])) {
+
+            if (!empty($filters['work_position_id'])) {
+                \Log::info('Applying work_position filter', ['ids' => $filters['work_position_id']]);
                 $q->whereHas('employee', function ($eq) use ($filters) {
-                    $eq->where('full_name', 'like', '%' . $filters['search'] . '%')
-                       ->orWhere('employee_id_number', 'like', '%' . $filters['search'] . '%');
+                    $eq->whereIn('work_position_id', $filters['work_position_id']);
                 });
             }
         });
 
         if (!empty($filters['attendance_status_id'])) {
-            $query->where('attendance_status_id', $filters['attendance_status_id']);
+            $query->whereIn('attendance_status_id', $filters['attendance_status_id']);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Get paginated attendances for management.
+     */
+    public function getPaginated(array $filters, int $perPage = 15)
+    {
+        $query = $this->getExportQuery($filters);
+
+        // Search by employee name or NIK (additional filter for UI)
+        if (!empty($filters['search'])) {
+            $query->whereHas('attendance_working_hour.employee', function ($eq) use ($filters) {
+                $eq->where('first_name', 'like', '%' . $filters['search'] . '%')
+                   ->orWhere('last_name', 'like', '%' . $filters['search'] . '%')
+                   ->orWhere('employee_id_number', 'like', '%' . $filters['search'] . '%');
+            });
         }
 
         return $query->latest('id')->paginate($perPage);

@@ -23,6 +23,10 @@ class AttendanceUser extends Model
         return $this->belongsTo(Employee::class, 'employee_id', 'id');
     }
 
+    public function zkteco_machine(){
+        return $this->belongsTo(ZktecoMachine::class, 'zkteco_machine_id', 'id');
+    }
+
     /**
      * Scope for filtering attendance users.
      */

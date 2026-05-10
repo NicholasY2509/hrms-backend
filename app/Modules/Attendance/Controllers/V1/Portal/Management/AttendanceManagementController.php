@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Modules\Attendance\Requests\AttendanceCalculateRequest;
 use App\Modules\Attendance\Requests\AttendanceIndexRequest;
 use App\Modules\Attendance\Resources\AttendanceManagementResource;
-use App\Modules\System\Models\Task;
-use App\Modules\Attendance\Jobs\ProcessAttendanceCalculationJob;
+use App\Modules\Attendance\Services\AttendanceCalculationService;
+use App\Modules\Attendance\Services\AttendanceService;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 
@@ -20,8 +20,8 @@ class AttendanceManagementController extends Controller
     use ApiResponses;
 
     public function __construct(
-        protected \App\Modules\Attendance\Services\AttendanceService $service,
-        protected \App\Modules\Attendance\Services\AttendanceCalculationService $calculationService
+        protected AttendanceService $service,
+        protected AttendanceCalculationService $calculationService
     ) {}
 
     /**
@@ -96,18 +96,10 @@ class AttendanceManagementController extends Controller
      */
     public function calculate(AttendanceCalculateRequest $request): JsonResponse
     {
-        $task = Task::create([
-            'user_id' => auth()->id(),
-            'type' => 'attendance_calculation',
-            'status' => 'pending',
-            'payload' => $request->validated(),
-            'message' => 'Waiting for background process...',
-        ]);
-
-        ProcessAttendanceCalculationJob::dispatch(
-            $task,
+        $task = $this->calculationService->initiateCalculation(
             $request->input('start_date'),
-            $request->input('end_date')
+            $request->input('end_date'),
+            $request->validated()
         );
 
         return $this->successResponse([

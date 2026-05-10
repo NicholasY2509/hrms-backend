@@ -4,6 +4,7 @@ use App\Modules\Attendance\Controllers\V1\Configuration\AttendanceCalculationSet
 use App\Modules\Attendance\Controllers\V1\Configuration\AttendanceSettingController;
 use App\Modules\Attendance\Controllers\V1\Configuration\AttendanceStatusController;
 use App\Modules\Attendance\Controllers\V1\Portal\Employee\MyAttendanceController;
+use App\Modules\Attendance\Controllers\V1\Portal\Management\AttendanceExportController;
 use App\Modules\Attendance\Controllers\V1\Portal\Management\AttendanceLocationManagementController;
 use App\Modules\Attendance\Controllers\V1\Portal\Management\AttendanceManagementController;
 use App\Modules\Attendance\Controllers\V1\Portal\Management\AttendanceUserManagementController;
@@ -33,6 +34,7 @@ Route::middleware(['api.auth'])->group(function () {
             ->group(function () {
                 Route::get('/attendances', [AttendanceManagementController::class, 'index']);
                 Route::post('/attendances/calculate', [AttendanceManagementController::class, 'calculate']);
+                Route::post('/attendances/export', [AttendanceExportController::class, 'export']);
                 Route::get('/mobile-scans', [MobileScanManagementController::class, 'index']);
                 Route::get('/attendance-working-hours', [AttendanceWorkingHourManagementController::class, 'index']);
                 
@@ -42,6 +44,7 @@ Route::middleware(['api.auth'])->group(function () {
                 Route::apiResource('zkteco-machines', ZktecoMachineManagementController::class);
                 Route::get('/zkteco-attendances', [ZktecoAttendanceManagementController::class, 'index']);
                 Route::get('/zkteco-users', [ZktecoUserManagementController::class, 'index']);
+                Route::post('/zkteco-users/sync', [ZktecoUserManagementController::class, 'sync']);
             });
         
         Route::prefix('configuration')

@@ -21,6 +21,7 @@ class AttendanceUserResource extends JsonResource
             'employee' => new EmployeeResource($this->whenLoaded('employee')),
             'uid' => $this->uid,
             'zkteco_machine_id' => $this->zkteco_machine_id,
+            'zkteco_machine' => new ZktecoMachineResource($this->whenLoaded('zkteco_machine')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

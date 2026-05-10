@@ -8,6 +8,7 @@ use App\Modules\Attendance\Requests\AttendanceUserIndexRequest;
 use App\Modules\Attendance\Requests\StoreAttendanceUserRequest;
 use App\Modules\Attendance\Requests\UpdateAttendanceUserRequest;
 use App\Modules\Attendance\Resources\AttendanceUserResource;
+use App\Modules\Attendance\Services\AttendanceUserService;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 
@@ -20,15 +21,22 @@ class AttendanceUserManagementController extends Controller
 {
     use ApiResponses;
 
+    protected $service;
+
+    public function __construct(AttendanceUserService $service)
+    {
+        $this->service = $service;
+    }
+
     /**
      * List all attendance user mappings.
      */
     public function index(AttendanceUserIndexRequest $request): JsonResponse
     {
-        $mappings = AttendanceUser::with('employee')
-            ->filter($request->validated())
-            ->latest()
-            ->paginate($request->input('per_page', 15));
+        $mappings = $this->service->getPaginated(
+            $request->validated(),
+            $request->input('per_page', 15)
+        );
 
         return $this->successResponse(
             AttendanceUserResource::collection($mappings)->response()->getData(true),
@@ -41,7 +49,7 @@ class AttendanceUserManagementController extends Controller
      */
     public function store(StoreAttendanceUserRequest $request): JsonResponse
     {
-        $mapping = AttendanceUser::create($request->validated());
+        $mapping = $this->service->createMapping($request->validated());
 
         return $this->successResponse(
             new AttendanceUserResource($mapping->load('employee')),
@@ -56,7 +64,7 @@ class AttendanceUserManagementController extends Controller
     public function show(AttendanceUser $attendanceUser): JsonResponse
     {
         return $this->successResponse(
-            new AttendanceUserResource($attendanceUser->load('employee')),
+            new AttendanceUserResource($attendanceUser->load(['employee', 'zktecoMachine'])),
             'Detail pemetaan user absensi berhasil diambil.'
         );
     }
@@ -66,10 +74,10 @@ class AttendanceUserManagementController extends Controller
      */
     public function update(UpdateAttendanceUserRequest $request, AttendanceUser $attendanceUser): JsonResponse
     {
-        $attendanceUser->update($request->validated());
+        $mapping = $this->service->updateMapping($attendanceUser, $request->validated());
 
         return $this->successResponse(
-            new AttendanceUserResource($attendanceUser->load('employee')),
+            new AttendanceUserResource($mapping),
             'Pemetaan user absensi berhasil diperbarui.'
         );
     }
@@ -79,7 +87,7 @@ class AttendanceUserManagementController extends Controller
      */
     public function destroy(AttendanceUser $attendanceUser): JsonResponse
     {
-        $attendanceUser->delete();
+        $this->service->deleteMapping($attendanceUser);
 
         return $this->successResponse(
             null,

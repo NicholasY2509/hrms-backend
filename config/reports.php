@@ -14,11 +14,20 @@ return [
     'map' => [
         'employee_list' => [
             'class' => \App\Modules\Employee\Exports\EmployeeExport::class,
-            'view' => 'exports.employee_pdf',
+            'view' => 'exports.employee.employee_pdf',
         ],
-        'attendance_report' => [
-            'class' => \App\Modules\Attendance\Exports\AttendanceExport::class,
-            'view' => 'exports.attendance_pdf',
+        'daily_report' => [
+            'class' => \App\Modules\Attendance\Exports\DailyAttendanceExport::class,
+            'view' => 'exports.attendance.daily_report_pdf',
+        ],
+        'personal_report' => [
+            'class' => \App\Modules\Attendance\Exports\PersonalAttendanceExport::class,
+            'view' => 'exports.attendance.personal_report_pdf',
+        ],
+        'team_report' => [
+            'class' => \App\Modules\Attendance\Exports\TeamAttendanceExport::class,
+            'view' => 'exports.attendance.team_report_pdf',
+            'txt_view' => 'exports.attendance.team_report_txt',
         ],
     ]
 ];

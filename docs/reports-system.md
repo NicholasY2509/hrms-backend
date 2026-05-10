@@ -1,77 +1,77 @@
 # Asynchronous Report Export System
 
-This document outlines the architecture and implementation details of the HRMS asynchronous report generation system. This system allows users to generate large reports (thousands of rows) in the background without blocking the UI, providing real-time progress updates via WebSockets.
+This document outlines the architecture and implementation details of the HRMS asynchronous report generation system. This system allows users to generate large reports in the background with real-time feedback via WebSockets.
+
+---
 
 ## 🏗️ Architecture Overview
 
-1.  **Trigger**: User initiates an export via the Frontend UI.
-2.  **API**: `POST /api/v1/system/reports` creates a record in the `reports` table with status `pending`.
-3.  **Background Job**: `ProcessExportJob` is dispatched to the queue.
-4.  **Broadcasting**: The Job uses **Laravel Reverb** to broadcast progress updates (percentage and status messages) to a private user channel (`reports.{user_id}`).
-5.  **Real-time UI**: A global `ReportProgressContainer` on the frontend listens for these events and shows an animated progress tracker.
-6.  **Completion**: Once finished, the status changes to `completed`, and the frontend reveals a download button.
+1.  **Request Layer**: User submits parameters (start_date, department_id, etc.) to a module-specific Controller.
+2.  **Service Layer**: The Controller calls a specialized Export Service (e.g., `AttendanceExportService`). This service **normalizes** parameters into a standardized `filters` payload.
+3.  **System Layer**: The `ReportService` creates a `Task` (for UI tracking) and a `Report` record, then dispatches `ProcessExportJob`.
+4.  **Execution Layer**: `ProcessExportJob` dynamically resolves the Export Class and View from `config/reports.php`.
+5.  **Feedback**: The Job broadcasts progress (0-100%) and messages to the user via **Laravel Reverb**.
 
 ---
 
 ## 🛠️ Components
 
-### 1. The Engine: `ProcessExportJob.php`
-The core logic that handles different formats (Excel, CSV, PDF, TXT). It is designed to be **format-agnostic** and **type-agnostic**.
-
-### 2. The Registry: `config/reports.php`
-Instead of a giant switch-case, all report types are registered here.
+### 1. The Registry: `config/reports.php`
+Every report must be registered here to be "discoverable" by the background job.
 ```php
 'map' => [
-    'attendance_report' => [
-        'class' => \App\Modules\Attendance\Exports\AttendanceExport::class,
-        'view' => 'exports.attendance_pdf',
+    'team_report' => [
+        'class' => \App\Modules\Attendance\Exports\TeamAttendanceExport::class,
+        'view' => 'exports.attendance.team_report_pdf', // For PDF
+        'txt_view' => 'exports.attendance.team_report_txt', // Optional: For custom TXT layouts
     ],
 ]
 ```
 
+### 2. The Engine: `ProcessExportJob.php`
+Handles formatting logic:
+- **PDF**: Renders a Blade view to a string and saves it.
+- **TXT**: If `txt_view` is defined, it renders a Blade view as plain text. Otherwise, it falls back to a standard tabular format.
+- **Excel/CSV**: Uses `Maatwebsite/Excel` to process the data in chunks.
+
 ---
 
-## 🚀 How to Add a New Report Type
+## 🚀 Adding a New Report: Step-by-Step
 
-Follow these steps to add a new report (e.g., "Payroll Report"):
+### 1. The Export Class
+Create a class in `app/Modules/[Module]/Exports/`.
+- **Query**: Use `FromQuery` for large datasets. **Always** specify an `orderBy` clause (required for chunking).
+- **Filters**: Access input parameters via `$this->filters`.
+- **Progress**: Call `$this->job->updateProgress($percentage, $message)` inside `map()` or events.
 
-### 1. Create the Export Class
-Create a class in your module's `Exports` folder. It **must** implement `WithMapping` and `WithEvents`.
-
-**CRITICAL: Real-time Progress Tracking**
-To show granular progress for Excel/CSV, update the progress inside the `map()` function:
-
+### 2. The Filter Pattern (Crucial)
+To maintain consistency with the `Repository` and `whereIn` queries, the `ExportService` should map incoming params to **singular array keys**:
 ```php
-public function map($row): array
-{
-    $this->processedCount++;
-    if ($this->processedCount % 500 === 0 && $this->job) {
-        $percent = 40 + round(($this->processedCount / $this->totalRecords) * 50);
-        $this->job->updateProgress($percent, "Processing row {$this->processedCount}...");
-    }
-    return [ /* your columns */ ];
+'filters' => [
+    'department_id' => isset($params['department_id']) ? [$params['department_id']] : [],
+    'team_id' => isset($params['team_id']) ? [$params['team_id']] : [],
+]
+```
+The Repository then uses these keys:
+```php
+if (!empty($filters['department_id'])) {
+    $query->whereIn('department_id', $filters['department_id']);
 }
 ```
 
-### 2. Create the PDF Template
-Create a Blade view in `resources/views/exports/`.
-
-### 3. Register the Report
-Add your new type to `config/reports.php`.
-
-### 4. Add the Frontend Button
-Use or duplicate the `ExportAttendanceDialog` component to trigger the `POST /v1/system/reports` request.
+### 3. Custom Layouts (PDF/TXT)
+Create your templates in `resources/views/exports/`.
+- **PDF**: Standard HTML/CSS (styled for DOMPDF).
+- **TXT**: Plain text with Blade tags. Use `str_pad()` or fixed-width spacing for alignment.
 
 ---
 
-## 💡 Best Practices & Performance
+## 📡 WebSocket Integration
+The frontend listens on `private-reports.{user_id}` for progress updates.
+- **Event**: `ReportProgressUpdated`
+- **Payload**: Contains `progress` (int), `status` (string), and `download_url` (string).
 
-*   **Eager Loading**: Always use `->with([...])` in your Export's `query()` method. Mapping thousands of rows will trigger N+1 query death if relationships aren't eager-loaded.
-*   **Progress Trickle**: The frontend has a built-in "trickle" effect that slowly creeps the bar forward while waiting for the backend.
-*   **Timeouts**: The Job has a default timeout of 10 minutes (`$timeout = 600`). If a report is extremely large, consider using CSV as it is significantly faster and uses less memory than Excel or PDF.
-*   **Memory Limit**: For massive PDF exports, ensure your server has enough RAM allocated to PHP, as DOMPDF is memory-intensive.
-
-## 📡 WebSocket Events
-*   **Event**: `App\Modules\System\Events\ReportProgressUpdated`
-*   **Channel**: `private-reports.{user_id}`
-*   **Payload**: `id`, `status`, `progress`, `current_message`, `download_url`.
+## 💡 Best Practices
+- **Memory**: For summary reports (Team/Dept), use a single query that aggregates in the database (`groupBy`, `COUNT`, `UNION`).
+- **N+1**: Always eager load relationships in the `query()` method.
+- **Stable Sort**: Every export query **must** have an `orderBy` to prevent data duplication across chunks.

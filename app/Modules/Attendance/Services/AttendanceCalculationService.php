@@ -5,6 +5,9 @@ namespace App\Modules\Attendance\Services;
 use App\Modules\Attendance\Models\Attendance;
 use App\Modules\Attendance\Models\AttendanceSetting;
 use App\Modules\Attendance\Repositories\AttendanceRepository;
+use App\Modules\Attendance\Jobs\ProcessAttendanceCalculationJob;
+use App\Modules\System\Models\Task;
+use App\Modules\System\Services\TaskService;
 use App\Modules\System\Traits\HasTaskProgress;
 use App\Modules\UnpaidLeave\Models\Holiday;
 use Carbon\Carbon;
@@ -19,10 +22,37 @@ class AttendanceCalculationService
     use HasTaskProgress;
 
     protected AttendanceRepository $attendanceRepository;
+    protected TaskService $taskService;
 
-    public function __construct(AttendanceRepository $attendanceRepository)
+    public function __construct(AttendanceRepository $attendanceRepository, TaskService $taskService)
     {
         $this->attendanceRepository = $attendanceRepository;
+        $this->taskService = $taskService;
+    }
+
+    /**
+     * Initiate a background attendance calculation.
+     *
+     * @param string $startDate
+     * @param string $endDate
+     * @param array $payload
+     * @return Task
+     */
+    public function initiateCalculation(string $startDate, string $endDate, array $payload = []): Task
+    {
+        $task = $this->taskService->createTask(
+            'attendance_calculation',
+            'Waiting for background process...',
+            $payload
+        );
+
+        ProcessAttendanceCalculationJob::dispatch(
+            $task,
+            $startDate,
+            $endDate
+        );
+
+        return $task;
     }
 
     /**
