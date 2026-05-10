@@ -60,7 +60,6 @@ class AttendanceCalculationService
      */
     public function calculate(string $startDate, string $endDate): void
     {
-        // Increase memory limit for large batch calculations
         ini_set('memory_limit', '1024M');
 
         DB::beginTransaction();

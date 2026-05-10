@@ -27,13 +27,10 @@ class WarningLetterTypeRepository
      */
     public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = WarningLetterType::query();
-
-        if (!empty($filters['search'])) {
-            $query->where('name', 'like', '%' . $filters['search'] . '%');
-        }
-
-        return $query->orderBy('id', 'desc')->paginate($perPage);
+        return WarningLetterType::query()
+            ->filter($filters)
+            ->orderBy('id', 'desc')
+            ->paginate($perPage);
     }
 
     /**

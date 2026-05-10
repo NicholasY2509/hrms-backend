@@ -3,6 +3,7 @@
 namespace App\Modules\Attendance\Controllers\V1\Portal\Management;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Attendance\Requests\AttendanceWorkingHourImportRequest;
 use App\Modules\Attendance\Resources\AttendanceWorkingHourResource;
 use App\Modules\Attendance\Services\AttendanceService;
 use App\Modules\Attendance\Requests\AttendanceWorkingHourIndexRequest;
@@ -38,6 +39,24 @@ class AttendanceWorkingHourManagementController extends Controller
         return $this->successResponse(
             AttendanceWorkingHourResource::collection($schedules)->response()->getData(true),
             'Daftar jadwal kerja berhasil diambil.'
+        );
+    }
+
+    /**
+     * Import attendance working hours (schedules) from Excel.
+     */
+    public function import(AttendanceWorkingHourImportRequest $request): JsonResponse
+    {
+        $task = $this->attendanceService->importWorkingHours(
+            $request->validated(),
+            auth()->id()
+        );
+
+        return $this->successResponse([
+                'task_id' => $task->id,
+                'status' => $task->status
+            ],
+            'Proses import jadwal kerja telah dimulai di latar belakang.'
         );
     }
 }

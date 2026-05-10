@@ -21,41 +21,72 @@ Route::middleware(['api.auth'])->group(function () {
     Route::prefix('portal')->group(function () {
         
         Route::prefix('employee')->group(function () {
-            Route::get('/', [MyAttendanceController::class, 'index']);
-            Route::get('/status', [MyAttendanceController::class, 'status']);
-            Route::get('/working-hour', [MyAttendanceController::class, 'workingHour']);
-            Route::post('/clock-in', [MyAttendanceController::class, 'clockIn']);
-            Route::post('/clock-out', [MyAttendanceController::class, 'clockOut']);
-            Route::post('/check-location', [MyAttendanceController::class, 'checkLocation']);
+
+            Route::controller(MyAttendanceController::class)->group(function () {
+                Route::get('/', 'index');
+                Route::get('/status', 'status');
+                Route::get('/working-hour', 'workingHour');
+                Route::post('/clock-in', 'clockIn');
+                Route::post('/clock-out', 'clockOut');
+                Route::post('/check-location', 'checkLocation');
+            });
+
         });
 
-        Route::prefix('management')
-            ->middleware('role:admin,hr-manager,manager')
-            ->group(function () {
-                Route::get('/attendances', [AttendanceManagementController::class, 'index']);
-                Route::post('/attendances/calculate', [AttendanceManagementController::class, 'calculate']);
-                Route::post('/attendances/export', [AttendanceExportController::class, 'export']);
-                Route::get('/mobile-scans', [MobileScanManagementController::class, 'index']);
-                Route::get('/attendance-working-hours', [AttendanceWorkingHourManagementController::class, 'index']);
-                
-                Route::apiResource('working-hours', WorkingHourManagementController::class);
-                Route::apiResource('attendance-locations', AttendanceLocationManagementController::class);
-                Route::apiResource('attendance-users', AttendanceUserManagementController::class);
-                Route::apiResource('zkteco-machines', ZktecoMachineManagementController::class);
-                Route::get('/zkteco-attendances', [ZktecoAttendanceManagementController::class, 'index']);
-                Route::get('/zkteco-users', [ZktecoUserManagementController::class, 'index']);
-                Route::post('/zkteco-users/sync', [ZktecoUserManagementController::class, 'sync']);
+        Route::prefix('management')->middleware('role:admin,hr-manager,manager')->group(function () {
+
+            Route::controller(AttendanceManagementController::class)->group(function () {
+                Route::get('/attendances', 'index');
+                Route::post('/attendances/calculate', 'calculate');
             });
+
+            Route::controller(AttendanceExportController::class)->group(function () {
+                Route::post('/attendances/export', 'export'); 
+            });
+
+            Route::controller(MobileScanManagementController::class)->group(function () {
+                Route::get('/mobile-scans', 'index');
+            });
+
+            Route::controller(AttendanceWorkingHourManagementController::class)->group(function () {
+                Route::get('/attendance-working-hours', 'index');
+                Route::post('/attendance-working-hours/import', 'import');
+            });
+
+            Route::apiResource('working-hours', WorkingHourManagementController::class);
+
+            Route::apiResource('attendance-locations', AttendanceLocationManagementController::class);
+
+            Route::apiResource('attendance-users', AttendanceUserManagementController::class);
+
+            Route::apiResource('zkteco-machines', ZktecoMachineManagementController::class);
+
+            Route::controller(ZktecoAttendanceManagementController::class)->group(function () {
+                Route::get('/zkteco-attendances', 'index');
+            });
+
+            Route::controller(ZktecoUserManagementController::class)->group(function () {
+                Route::get('/zkteco-users', 'index');
+                Route::post('/zkteco-users/sync', 'sync');
+            });
+        });
         
-        Route::prefix('configuration')
-            ->middleware('role:admin')
-            ->group(function () {
-                Route::get('/settings', [AttendanceSettingController::class, 'index']);
-                Route::put('/settings', [AttendanceSettingController::class, 'update']);
-                Route::get('/calculation-settings', [AttendanceCalculationSettingController::class, 'index']);
-                Route::put('/calculation-settings', [AttendanceCalculationSettingController::class, 'update']);
-                Route::get('/statuses', [AttendanceStatusController::class, 'index']);
+        Route::prefix('configuration')->middleware('role:admin')->group(function () {
+            
+            Route::controller(AttendanceSettingController::class)->group(function () {
+                Route::get('/settings', 'index');
+                Route::put('/settings', 'update');
             });
+
+            Route::controller(AttendanceCalculationSettingController::class)->group(function () {
+                Route::get('/calculation-settings', 'index');
+                Route::put('/calculation-settings', 'update');
+            });
+
+            Route::controller(AttendanceStatusController::class)->group(function () {
+                Route::get('/statuses', 'index');
+            });
+        });
         
     });
 });

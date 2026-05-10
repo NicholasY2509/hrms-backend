@@ -82,12 +82,52 @@ class Overtime extends Model
         }
 
         // Map internal status to display status
-            return match ($request->status) {
-                'pending' => 'Pending',
-                'approved' => 'Approved',
-                'rejected' => 'Rejected',
-                'cancelled' => 'Cancelled',
-                default => 'Pending',
-            };
+        return match ($request->status) {
+            'pending' => 'Pending',
+            'approved' => 'Approved',
+            'rejected' => 'Rejected',
+            'cancelled' => 'Cancelled',
+            default => 'Pending',
+        };
+    }
+
+    /**
+     * Scope a query to apply filters.
+     */
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['employee_id'] ?? null, function ($q, $employeeId) {
+            $q->where('employee_id', $employeeId);
+        });
+
+        $query->when($filters['type'] ?? null, function ($q, $type) {
+            $q->where('type', $type);
+        });
+
+        $query->when($filters['start_date'] ?? null, function ($q, $startDate) use ($filters) {
+            if (!empty($filters['end_date'])) {
+                $q->whereBetween('date', [$startDate, $filters['end_date']]);
+            } else {
+                $q->whereDate('date', '>=', $startDate);
+            }
+        });
+
+        $query->when($filters['end_date'] ?? null, function ($q, $endDate) use ($filters) {
+            if (empty($filters['start_date'])) {
+                $q->whereDate('date', '<=', $endDate);
+            }
+        });
+
+        if (isset($filters['is_settled'])) {
+            $filters['is_settled'] ? $query->whereNotNull('settled_at') : $query->whereNull('settled_at');
         }
+
+        $query->when($filters['search'] ?? null, function ($q, $search) {
+            $q->whereHas('employee', function ($sq) use ($search) {
+                $sq->filter(['search' => $search]);
+            });
+        });
+
+        return $query;
+    }
 }

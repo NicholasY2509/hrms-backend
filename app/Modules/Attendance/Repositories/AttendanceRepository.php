@@ -137,7 +137,7 @@ class AttendanceRepository
      */
     public function getExportQuery(array $filters)
     {
-        $query = Attendance::query()
+        return Attendance::query()
             ->with([
                 'attendance_status',
                 'attendance_working_hour.employee.department',
@@ -146,48 +146,8 @@ class AttendanceRepository
                 'attendance_working_hour.working_hour',
                 'incoming_location',
                 'outgoing_location'
-            ]);
-
-        \Log::info('Attendance Export Filters:', $filters);
-        $query->whereHas('attendance_working_hour', function ($q) use ($filters) {
-            \Log::info('Inside whereHas closure', ['filters' => $filters]);
-            if (!empty($filters['start_date'])) {
-                $q->where('attendance_at', '>=', $filters['start_date']);
-            }
-            if (!empty($filters['end_date'])) {
-                $q->where('attendance_at', '<=', $filters['end_date']);
-            }
-            if (!empty($filters['employee_id'])) {
-                $q->where('employee_id', $filters['employee_id']);
-            }
-            
-            if (!empty($filters['department_id'])) {
-                \Log::info('Applying department filter', ['ids' => $filters['department_id']]);
-                $q->whereHas('employee', function ($eq) use ($filters) {
-                    $eq->whereIn('department_id', $filters['department_id']);
-                });
-            }
-
-            if (!empty($filters['team_id'])) {
-                \Log::info('Applying team filter', ['ids' => $filters['team_id']]);
-                $q->whereHas('employee', function ($eq) use ($filters) {
-                    $eq->whereIn('team_id', $filters['team_id']);
-                });
-            }
-
-            if (!empty($filters['work_position_id'])) {
-                \Log::info('Applying work_position filter', ['ids' => $filters['work_position_id']]);
-                $q->whereHas('employee', function ($eq) use ($filters) {
-                    $eq->whereIn('work_position_id', $filters['work_position_id']);
-                });
-            }
-        });
-
-        if (!empty($filters['attendance_status_id'])) {
-            $query->whereIn('attendance_status_id', $filters['attendance_status_id']);
-        }
-
-        return $query;
+            ])
+            ->filter($filters);
     }
 
     /**
@@ -195,18 +155,9 @@ class AttendanceRepository
      */
     public function getPaginated(array $filters, int $perPage = 15)
     {
-        $query = $this->getExportQuery($filters);
-
-        // Search by employee name or NIK (additional filter for UI)
-        if (!empty($filters['search'])) {
-            $query->whereHas('attendance_working_hour.employee', function ($eq) use ($filters) {
-                $eq->where('first_name', 'like', '%' . $filters['search'] . '%')
-                   ->orWhere('last_name', 'like', '%' . $filters['search'] . '%')
-                   ->orWhere('employee_id_number', 'like', '%' . $filters['search'] . '%');
-            });
-        }
-
-        return $query->latest('id')->paginate($perPage);
+        return $this->getExportQuery($filters)
+            ->latest('id')
+            ->paginate($perPage);
     }
 
     /**

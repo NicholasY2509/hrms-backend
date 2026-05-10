@@ -40,11 +40,11 @@ class AttendanceUser extends Model
         });
 
         $query->when($search, function ($query, $search) {
-            $query->whereHas('employee', function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('employee_id_number', 'like', "%{$search}%");
-            })->orWhere('uid', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->whereHas('employee', function ($sq) use ($search) {
+                    $sq->filter(['search' => $search]);
+                })->orWhere('uid', 'like', "%{$search}%");
+            });
         });
     }
 }

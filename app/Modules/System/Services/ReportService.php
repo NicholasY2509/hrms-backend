@@ -51,7 +51,7 @@ class ReportService
         ]);
 
         $data['task_id'] = $task->id;
-        $data['name'] = ucwords(str_replace('_', ' ', $data['type']));
+        $data['name'] = $this->generateReportName($data);
         $report = $this->repository->create($data);
         
         $this->taskRepository->update($task->id, ['metadata' => ['report_id' => $report->id]]);
@@ -59,6 +59,40 @@ class ReportService
         ProcessExportJob::dispatch($report, $task);
 
         return $report;
+    }
+
+    /**
+     * Generate a detailed report name based on the request data.
+     *
+     * @param array $data
+     * @return string
+     */
+    private function generateReportName(array $data): string
+    {
+        $baseName = !empty($data['name']) ? $data['name'] : ucwords(str_replace('_', ' ', $data['type']));
+        $filters = $data['filters'] ?? [];
+        $parts = [];
+
+        // Add date range if available
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $parts[] = date('d M Y', strtotime($filters['start_date'])) . ' - ' . date('d M Y', strtotime($filters['end_date']));
+        } elseif (!empty($filters['start_date'])) {
+            $parts[] = 'From ' . date('d M Y', strtotime($filters['start_date']));
+        } elseif (!empty($filters['month']) && !empty($filters['year'])) {
+            $monthName = date('F', mktime(0, 0, 0, (int)$filters['month'], 10));
+            $parts[] = $monthName . ' ' . $filters['year'];
+        }
+
+        $format = strtoupper($data['format'] ?? 'PDF');
+        
+        $fullName = $baseName;
+        if (!empty($parts)) {
+            $fullName .= ' (' . implode(', ', $parts) . ')';
+        }
+        
+        $fullName .= ' - ' . $format;
+
+        return $fullName;
     }
 
     /**

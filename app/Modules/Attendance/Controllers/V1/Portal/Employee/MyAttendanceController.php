@@ -7,7 +7,7 @@ use App\Modules\Attendance\Requests\ClockInRequest;
 use App\Modules\Attendance\Requests\ClockOutRequest;
 use App\Modules\Attendance\Requests\GetAttendanceHistoryRequest;
 use App\Modules\Attendance\Resources\AttendanceResource;
-use App\Modules\Attendance\Services\AttendanceService;
+use App\Modules\Attendance\Services\MobileAttendanceService;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -22,11 +22,11 @@ class MyAttendanceController extends Controller
 {
     use ApiResponses;
 
-    protected AttendanceService $attendanceService;
+    protected MobileAttendanceService $mobileAttendanceService;
 
-    public function __construct(AttendanceService $attendanceService)
+    public function __construct(MobileAttendanceService $mobileAttendanceService)
     {
-        $this->attendanceService = $attendanceService;
+        $this->mobileAttendanceService = $mobileAttendanceService;
     }
 
     /**
@@ -46,7 +46,7 @@ class MyAttendanceController extends Controller
      */
     public function index(GetAttendanceHistoryRequest $request): JsonResponse
     {
-        $data = $this->attendanceService->getHistoryWithSummary(Auth::id(), $request->validated());
+        $data = $this->mobileAttendanceService->getHistoryWithSummary(Auth::id(), $request->validated());
 
         return $this->successResponse([
             'records' => AttendanceResource::collection($data['records']),
@@ -75,7 +75,7 @@ class MyAttendanceController extends Controller
     public function status(): JsonResponse
     {
         $userId = Auth::id();
-        $attendance = $this->attendanceService->getUserStatus($userId);
+        $attendance = $this->mobileAttendanceService->getUserStatus($userId);
 
         if (!$attendance) {
             return $this->successResponse(null, 'No attendance record found for today');
@@ -105,7 +105,7 @@ class MyAttendanceController extends Controller
         $userId = Auth::id();
         $date = $request->query('date', \Carbon\Carbon::now()->format('Y-m-d'));
 
-        $workingHour = $this->attendanceService->getWorkingHourByDate($userId, $date);
+        $workingHour = $this->mobileAttendanceService->getWorkingHourByDate($userId, $date);
 
         if (!$workingHour) {
             return $this->errorResponse('Data Jam Kerja tidak ditemukan untuk tanggal tersebut!', 404);
@@ -130,7 +130,7 @@ class MyAttendanceController extends Controller
             'longitude' => 'required|numeric',
         ]);
 
-        $isValid = $this->attendanceService->checkUserLocation(
+        $isValid = $this->mobileAttendanceService->checkUserLocation(
             Auth::id(),
             $request->latitude,
             $request->longitude
@@ -160,7 +160,7 @@ class MyAttendanceController extends Controller
      */
     public function clockIn(ClockInRequest $request): JsonResponse
     {
-        $attendance = $this->attendanceService->clockIn(Auth::id(), $request->validated());
+        $attendance = $this->mobileAttendanceService->clockIn(Auth::id(), $request->validated());
 
         return $this->successResponse(new AttendanceResource($attendance), 'Berhasil melakukan absensi masuk!');
     }
@@ -180,7 +180,7 @@ class MyAttendanceController extends Controller
      */
     public function clockOut(ClockOutRequest $request): JsonResponse
     {
-        $attendance = $this->attendanceService->clockOut(Auth::id(), $request->validated());
+        $attendance = $this->mobileAttendanceService->clockOut(Auth::id(), $request->validated());
 
         return $this->successResponse(new AttendanceResource($attendance), 'Berhasil melakukan absensi pulang!');
     }

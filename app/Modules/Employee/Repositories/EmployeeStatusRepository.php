@@ -21,13 +21,10 @@ class EmployeeStatusRepository
      */
     public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = EmployeeStatus::query();
-
-        if (!empty($filters['search'])) {
-            $query->where('name', 'like', '%' . $filters['search'] . '%');
-        }
-
-        return $query->orderBy('id', 'desc')->paginate($perPage);
+        return EmployeeStatus::query()
+            ->filter($filters)
+            ->orderBy('id', 'desc')
+            ->paginate($perPage);
     }
 
     /**

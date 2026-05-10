@@ -23,7 +23,7 @@ class ZktecoAttendanceManagementController extends Controller
      */
     public function index(ZktecoAttendanceIndexRequest $request): JsonResponse
     {
-        $logs = ZktecoAttendance::with(['machine', 'attendance_user.employee'])
+        $logs = ZktecoAttendance::with(['zkteco_machine', 'attendance_user.employee'])
             ->filter($request->validated())
             ->orderBy('attendance_at', 'desc')
             ->orderBy('timestamp', 'desc')

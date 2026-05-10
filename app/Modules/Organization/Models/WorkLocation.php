@@ -19,4 +19,14 @@ class WorkLocation extends Model
     {
         return $this->hasMany(Employee::class, 'work_location_id', 'id');
     }
+
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($q, $search) {
+            $search = preg_replace('/\s+/', ' ', trim($search));
+            $q->where('name', 'like', '%' . $search . '%');
+        });
+
+        return $query;
+    }
 }

@@ -21,16 +21,16 @@
 
     <style>
         :root {
-            --brand-primary: #f53003;
-            --brand-dark: #0a0a0a;
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --brand-primary: oklch(0.3803 0.1386 258.03);
+            --brand-dark: #ffffff;
+            --glass-bg: rgba(0, 0, 0, 0.03);
+            --glass-border: rgba(0, 0, 0, 0.1);
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--brand-dark);
-            color: #ffffff;
+            color: #0a0a0a;
             overflow: hidden;
         }
 
@@ -42,8 +42,8 @@
             height: 100%;
             z-index: -1;
             background:
-                radial-gradient(circle at 20% 30%, rgba(245, 48, 3, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 80% 70%, rgba(245, 48, 3, 0.1) 0%, transparent 40%);
+                radial-gradient(circle at 20% 30%, oklch(0.3803 0.1386 258.03 / 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, oklch(0.3803 0.1386 258.03 / 0.1) 0%, transparent 40%);
             filter: blur(80px);
         }
 
@@ -52,12 +52,12 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease, border-color 0.3s ease;
         }
 
         .glass-card:hover {
-            border-color: rgba(245, 48, 3, 0.3);
+            border-color: oklch(0.3803 0.1386 258.03 / 0.3);
         }
 
         .btn-glow {
@@ -67,14 +67,26 @@
         }
 
         .btn-glow:hover {
-            box-shadow: 0 0 20px rgba(245, 48, 3, 0.4);
+            box-shadow: 0 0 20px oklch(0.3803 0.1386 258.03 / 0.4);
             transform: translateY(-2px);
         }
 
         .restricted-badge {
-            background: rgba(245, 48, 3, 0.1);
+            background: oklch(0.3803 0.1386 258.03 / 0.1);
             color: var(--brand-primary);
-            border: 1px solid rgba(245, 48, 3, 0.2);
+            border: 1px solid oklch(0.3803 0.1386 258.03 / 0.2);
+        }
+
+        .text-gradient-primary {
+            background: linear-gradient(to right, var(--brand-primary), oklch(0.5 0.13 258));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .bg-gradient-primary {
+            background: linear-gradient(to right, var(--brand-primary), oklch(0.5 0.13 258));
         }
 
         .animate-float {
@@ -127,22 +139,22 @@
     </style>
 </head>
 
-<body class="antialiased selection:bg-red-500 selection:text-white">
+<body class="antialiased selection:bg-[oklch(0.3803_0.1386_258.03)] selection:text-white">
     <div class="mesh-background"></div>
 
     <div class="relative flex flex-col items-center justify-center min-h-screen p-6 overflow-hidden">
 
         <!-- Floating Decorative Elements -->
-        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-red-600/10 rounded-full blur-3xl animate-float"
+        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-[oklch(0.3803_0.1386_258.03)]/10 rounded-full blur-3xl animate-float"
             style="animation-delay: 0s;"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-900/10 rounded-full blur-3xl animate-float"
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[oklch(0.3803_0.1386_258.03)]/10 rounded-full blur-3xl animate-float"
             style="animation-delay: -2s;"></div>
 
         <main class="relative z-10 w-full max-w-2xl text-center">
             <!-- Branding -->
             <div class="mb-8 flex justify-center">
-                <div class="p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-                    <svg class="w-12 h-12 text-[#F53003]" viewBox="0 0 438 104" fill="none"
+                <div class="p-3 rounded-2xl bg-black/5 border border-black/10 backdrop-blur-md">
+                    <svg class="w-12 h-12 text-[oklch(0.3803_0.1386_258.03)]" viewBox="0 0 438 104" fill="none"
                         xmlns="http://www.w3.org/2000/svg">
                         <path d="M17.2036 -3H0V102.197H49.5189V86.7187H17.2036V-3Z" fill="currentColor" />
                         <path
@@ -153,7 +165,7 @@
             </div>
 
             <!-- Main Card -->
-            <div class="glass-card rounded-3xl p-10 lg:p-16 mb-8 text-center border border-white/10">
+            <div class="glass-card rounded-3xl p-10 lg:p-16 mb-8 text-center border border-black/10">
                 <div
                     class="inline-flex items-center px-4 py-1.5 rounded-full restricted-badge text-xs font-semibold uppercase tracking-widest mb-6">
                     <svg class="w-3.5 h-3.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +178,7 @@
 
                 <h1 class="text-4xl lg:text-5xl font-bold mb-6 tracking-tight leading-tight">
                     Deltamas HRMS <br />
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">API
+                    <span class="text-gradient-primary">API
                         Gateway</span>
                 </h1>
 
@@ -177,7 +189,7 @@
 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <a href="/docs/api"
-                        class="btn-glow shimmer w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#F53003] to-[#ff6a00] rounded-xl text-white font-bold text-lg inline-flex items-center justify-center">
+                        class="btn-glow shimmer w-full sm:w-auto px-8 py-4 bg-gradient-primary rounded-xl text-white font-bold text-lg inline-flex items-center justify-center">
                         Explore API Docs
                         <svg class="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24">
@@ -193,17 +205,17 @@
             </div>
 
             <!-- Footer Info -->
-            <footer class="text-gray-600 text-sm flex flex-col items-center gap-4">
+            <footer class="text-gray-500 text-sm flex flex-col items-center gap-4">
                 <p>© {{ date('Y') }} Deltamas HRMS Engineering. All rights reserved.</p>
                 <div class="flex items-center gap-6">
-                    <a href="#" class="hover:text-red-500 transition-colors">Privacy Policy</a>
-                    <span class="w-1 h-1 bg-gray-800 rounded-full"></span>
-                    <a href="#" class="hover:text-red-500 transition-colors">Security Audit</a>
-                    <span class="w-1 h-1 bg-gray-800 rounded-full"></span>
-                    <a href="#" class="hover:text-red-500 transition-colors">System Status</a>
+                    <a href="#" class="hover:text-[oklch(0.3803_0.1386_258.03)] transition-colors">Privacy Policy</a>
+                    <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                    <a href="#" class="hover:text-[oklch(0.3803_0.1386_258.03)] transition-colors">Security Audit</a>
+                    <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                    <a href="#" class="hover:text-[oklch(0.3803_0.1386_258.03)] transition-colors">System Status</a>
                 </div>
                 <div
-                    class="mt-4 px-3 py-1 rounded-lg bg-white/5 border border-white/5 text-[10px] uppercase tracking-widest text-gray-700">
+                    class="mt-4 px-3 py-1 rounded-lg bg-black/5 border border-black/5 text-[10px] uppercase tracking-widest text-gray-500">
                     Version {{ app()->version() }} Build {{ date('Ymd') }}
                 </div>
             </footer>

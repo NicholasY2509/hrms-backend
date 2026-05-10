@@ -40,8 +40,8 @@ class TaskProgressUpdated implements ShouldBroadcastNow
             'type' => $this->task->type,
             'status' => $this->task->status,
             'progress' => $this->task->progress,
-            'message' => $this->task->message,
-            'metadata' => $this->task->metadata,
+            'message' => mb_strimwidth($this->task->message, 0, 1000, '...'),
+            'metadata' => $this->task->metadata ? array_slice($this->task->metadata, 0, 50) : null,
         ];
     }
 }

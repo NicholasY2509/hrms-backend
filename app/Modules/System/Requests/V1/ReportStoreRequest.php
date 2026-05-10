@@ -22,7 +22,7 @@ class ReportStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string',
+            'name' => 'nullable|string',
             'type' => 'required|string',
             'format' => 'required|in:excel,pdf,csv,txt',
             'filters' => 'nullable|array'

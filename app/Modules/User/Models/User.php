@@ -70,6 +70,7 @@ class User extends Authenticatable
         $search = $filters['search'] ?? false;
 
         $query->when($search, function ($query, $search) {
+            $search = preg_replace('/\s+/', ' ', trim($search));
             $query->where(function ($query) use ($search) {
                 $query->where('email', 'like', "%$search%");
             });

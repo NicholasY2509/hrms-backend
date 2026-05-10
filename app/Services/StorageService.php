@@ -64,10 +64,14 @@ class StorageService
             return $path;
         }
 
-        // Prioritize GCS temporary URLs if configured (helps in production even if FILESYSTEM_DISK is local/public)
-        if (config('filesystems.disks.gcs.bucket') && config('filesystems.disks.gcs.driver') === 'gcs') {
+        // Prioritize GCS temporary URLs if configured
+        $gcsConfig = config('filesystems.disks.gcs');
+        if (!empty($gcsConfig['bucket']) && ($gcsConfig['driver'] ?? '') === 'gcs' && !empty($gcsConfig['keyFile'])) {
             try {
-                return Storage::disk('gcs')->temporaryUrl($path, now()->addMinutes(60));
+                // Only attempt if keyFile is an array (decoded JSON) or a valid existing file path
+                if (is_array($gcsConfig['keyFile']) || (is_string($gcsConfig['keyFile']) && file_exists($gcsConfig['keyFile']))) {
+                    return Storage::disk('gcs')->temporaryUrl($path, now()->addMinutes(60));
+                }
             } catch (\Throwable $e) {
                 // Fallback to default behavior if GCS fails
                 Log::warning('GCS temporary URL generation failed: ' . $e->getMessage());

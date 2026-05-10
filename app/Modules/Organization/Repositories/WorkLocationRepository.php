@@ -12,13 +12,9 @@ class WorkLocationRepository
      */
     public function getPaginated(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = WorkLocation::query();
-
-        if (!empty($filters['search'])) {
-            $query->where('name', 'like', '%' . $filters['search'] . '%');
-        }
-
-        return $query->paginate($perPage);
+        return WorkLocation::query()
+            ->filter($filters)
+            ->paginate($perPage);
     }
 
     /**

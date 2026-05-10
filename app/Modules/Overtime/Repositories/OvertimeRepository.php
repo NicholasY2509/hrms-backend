@@ -15,27 +15,12 @@ class OvertimeRepository
      */
     public function paginate(array $filters = [], int $perPage = 15)
     {
-        $query = Overtime::with(['employee', 'overtime_type', 'approvalRequest.steps.actor', 'approvalRequest.steps.approver', 'approvalRequest.steps.group.employees', 'overtime_attachments'])
+        return Overtime::query()
+            ->with(['employee', 'overtime_type', 'approvalRequest.steps.actor', 'approvalRequest.steps.approver', 'approvalRequest.steps.group.employees', 'overtime_attachments'])
+            ->filter($filters)
             ->orderByDesc('date')
-            ->orderByDesc('id');
-
-        if (!empty($filters['employee_id'])) {
-            $query->where('employee_id', $filters['employee_id']);
-        }
-
-        if (!empty($filters['type'])) {
-            $query->where('type', $filters['type']);
-        }
-
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-            $query->whereBetween('date', [$filters['start_date'], $filters['end_date']]);
-        }
-
-        if (isset($filters['is_settled'])) {
-            $filters['is_settled'] ? $query->whereNotNull('settled_at') : $query->whereNull('settled_at');
-        }
-
-        return $query->paginate($perPage);
+            ->orderByDesc('id')
+            ->paginate($perPage);
     }
 
     /**

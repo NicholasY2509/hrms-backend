@@ -37,4 +37,29 @@ class AnnualLeave extends Model
     {
         return $this->belongsTo(Employee::class, 'employee_id', 'id');
     }
+
+    /**
+     * Scope a query to apply filters.
+     */
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['employee_id'] ?? null, function ($q, $employeeId) {
+            $q->where('employee_id', $employeeId);
+        });
+
+        $query->when($filters['status'] ?? null, function ($q, $status) {
+            $q->where('status', $status);
+        });
+
+        $query->when($filters['search'] ?? null, function ($q, $search) {
+            $q->where(function ($sq) use ($search) {
+                $sq->where('keterangan', 'like', '%' . $search . '%')
+                    ->orWhereHas('employee', function ($eq) use ($search) {
+                        $eq->filter(['search' => $search]);
+                    });
+            });
+        });
+
+        return $query;
+    }
 }

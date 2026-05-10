@@ -13,9 +13,7 @@ class SupervisorRepository
             ->with(['employee'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->whereHas('employee', function ($q) use ($search) {
-                    $q->where('first_name', 'like', "%{$search}%")
-                      ->orWhere('last_name', 'like', "%{$search}%")
-                      ->orWhere('employee_id_number', 'like', "%{$search}%");
+                    $q->filter(['search' => $search]);
                 });
             })
             ->paginate($perPage);

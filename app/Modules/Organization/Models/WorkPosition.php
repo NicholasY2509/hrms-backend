@@ -20,6 +20,7 @@ class WorkPosition extends Model
         $search = $filters['search'] ?? false;
 
         $query->when($search, function ($query, $search) {
+            $search = preg_replace('/\s+/', ' ', trim($search));
             $query->where(function ($query) use ($search) {
                 $query->where('alias', 'like', "%$search%")
                     ->orWhere('name', 'like', "%$search%");

@@ -41,6 +41,7 @@ class ZktecoUser extends Model
         });
 
         $query->when($search, function ($query, $search) {
+            $search = preg_replace('/\s+/', ' ', trim($search));
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('uid', 'like', "%{$search}%");

@@ -47,4 +47,20 @@ class ApprovalScheme extends Model
             ->whereNull('work_position_id')
             ->where('is_default', false);
     }
+
+    /**
+     * Scope a query to apply filters.
+     */
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($q, $search) {
+            $search = preg_replace('/\s+/', ' ', trim($search));
+            $q->where(function ($sq) use ($search) {
+                $sq->where('name', 'like', "%{$search}%")
+                  ->orWhere('model_class', 'like', "%{$search}%");
+            });
+        });
+
+        return $query;
+    }
 }

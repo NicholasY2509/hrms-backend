@@ -65,11 +65,7 @@ class UnpaidLeave extends Model
 
         $query->when($filters['search'] ?? null, function ($q, $search) {
             $q->whereHas('employee', function ($sq) use ($search) {
-                $sq->where(function ($ssq) use ($search) {
-                    $ssq->where('employee_id_number', 'like', "%{$search}%")
-                        ->orWhere('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%");
-                });
+                $sq->filter(['search' => $search]);
             });
         });
 
