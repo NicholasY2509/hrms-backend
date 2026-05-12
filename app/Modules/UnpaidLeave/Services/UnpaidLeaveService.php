@@ -179,21 +179,12 @@ class UnpaidLeaveService
             if ($leave->unpaid_leave_type?->is_annual_leave_deduction) {
                 $employee = $leave->employee;
                 
-                $deduction = $this->annualLeaveService->deduct($employee, $leave->total, $now);
-                $employee = $deduction['employee'];
-                $deductionDetails = $deduction['deduction_details'];
-
-                $employee->save();
-
-                $this->annualLeaveRepository->create([
-                    'employee_id' => $employee->id,
-                    'total' => $leave->total,
-                    'annual_leave_year' => $now->format('Y'),
-                    'annual_leave_at' => $annualLeaveAt,
-                    'status' => 'Potong',
-                    'keterangan' => $leave->note . " ({$leave->start_date} to {$leave->end_date})",
-                    'deduction_details' => $deductionDetails,
-                ]);
+                $this->annualLeaveService->deduct(
+                    $employee,
+                    (float) $leave->total,
+                    ($leave->note ?? 'Unpaid Leave') . " ({$leave->start_date} to {$leave->end_date})",
+                    Carbon::parse($annualLeaveAt)
+                );
 
                 $leave->cutted_at = $annualLeaveAt;
             }

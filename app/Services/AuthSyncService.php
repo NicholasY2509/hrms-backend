@@ -30,16 +30,12 @@ class AuthSyncService
 
         $claims = $this->decodeJwtPayload($token);
 
-        Log::info('AuthSyncService: Decoded JWT Claims', [
-            'claims' => $claims
-        ]);
 
         $email = $claims['email'] ?? null;
         $roles = $claims['roles'] ?? [];
 
         // 3. If JWT doesn't have email, fall back to HTTP profile call
         if (!$email) {
-            Log::info('AuthSyncService: No email in JWT, falling back to HTTP profile call.');
             $remoteData = $this->fetchRemoteUserProfile($token);
 
             if (!$remoteData || !isset($remoteData['data']['email'])) {

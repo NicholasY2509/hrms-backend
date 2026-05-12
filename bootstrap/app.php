@@ -39,6 +39,13 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function ($schedule) {
         $schedule->command('activitylog:clean')->daily();
+
+        // Automated Request Cleanup
+        $schedule->command('approval:auto-reject-stale')->dailyAt('00:00');
+
+        // Critical Business Rules
+        $schedule->command('leave:grant-monthly')->lastDayOfMonth('00:00');
+        $schedule->command('attendance:daily-absence-penalty')->dailyAt('00:05')->timezone('Asia/Jakarta');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

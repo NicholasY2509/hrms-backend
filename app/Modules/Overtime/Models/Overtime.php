@@ -81,9 +81,14 @@ class Overtime extends Model
             return 'Pending';
         }
 
-        // Map internal status to display status
+        if ($request->status === 'pending') {
+            $currentStep = $request->currentStep();
+            $approverNames = $currentStep ? $currentStep->getResolvedApproverNames() : null;
+            
+            return $approverNames ? "Pending by {$approverNames}" : 'Pending';
+        }
+
         return match ($request->status) {
-            'pending' => 'Pending',
             'approved' => 'Approved',
             'rejected' => 'Rejected',
             'cancelled' => 'Cancelled',

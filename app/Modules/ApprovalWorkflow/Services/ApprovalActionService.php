@@ -25,8 +25,19 @@ class ApprovalActionService
      */
     public function getMyPendingApprovals(int $perPage = 15, ?string $type = null)
     {
-        $employeeId = Auth::user()->employee->id ?? null;
+        $user = Auth::user();
+        $employeeId = $user->employee->id ?? null;
         if (!$employeeId) return collect([]);
+
+        $userRoles = $user->remote_roles;
+        if (is_string($userRoles)) {
+            $userRoles = json_decode($userRoles, true) ?? [];
+        }
+        $isIT = in_array('IT', (array) ($userRoles ?? []));
+
+        if ($isIT) {
+            return $this->repository->getAllPending($perPage, $type);
+        }
 
         return $this->repository->getPendingForEmployee($employeeId, $perPage, $type);
     }
@@ -107,7 +118,16 @@ class ApprovalActionService
      */
     protected function validateAuthority(int $id, string $action): ApprovalRequestStep
     {
-        $employeeId = Auth::user()->employee->id;
+        $user = Auth::user();
+        $employeeId = $user->employee->id ?? null;
+
+        // Check if user has IT role
+        $userRoles = $user->remote_roles;
+        if (is_string($userRoles)) {
+            $userRoles = json_decode($userRoles, true) ?? [];
+        }
+        $isIT = in_array('IT', (array) ($userRoles ?? []));
+
         $providedStep = ApprovalRequestStep::find($id);
         $requestId = $providedStep ? $providedStep->approval_request_id : $id;
         $request = ApprovalRequest::find($requestId);
@@ -118,9 +138,8 @@ class ApprovalActionService
 
         $actionText = $action === 'approve' ? 'menyetujui' : 'menolak';
 
-        // 1. If a specific Step ID was provided, strictly validate that step
         if ($providedStep) {
-            $isAuthorized = $this->isEmployeeAuthorizedForStep($providedStep, $employeeId);
+            $isAuthorized = $isIT || ($employeeId && $this->isEmployeeAuthorizedForStep($providedStep, $employeeId));
             
             if (!$isAuthorized) {
                 throw new \Exception("Anda tidak memiliki otoritas untuk {$actionText} langkah persetujuan ini.");
@@ -138,6 +157,23 @@ class ApprovalActionService
         }
 
         // 2. If a Request ID was provided, find the currently actionable step for this user
+        if ($isIT) {
+            $currentStep = ApprovalRequestStep::where('approval_request_id', $requestId)
+                ->where('sequence', $request->current_step_sequence)
+                ->where('status', 'pending')
+                ->first();
+            
+            if (!$currentStep) {
+                throw new \Exception("Tidak ada langkah persetujuan yang aktif untuk {$actionText} pengajuan ini.");
+            }
+
+            return $currentStep;
+        }
+
+        if (!$employeeId) {
+            throw new \Exception("Anda tidak memiliki otoritas untuk {$actionText} pengajuan ini.");
+        }
+
         $userSteps = ApprovalRequestStep::where('approval_request_id', $requestId)
             ->where(function ($query) use ($employeeId) {
                 $this->applyAuthorizerFilter($query, $employeeId);
@@ -161,8 +197,10 @@ class ApprovalActionService
     /**
      * Helper to check if employee is authorized for a specific step.
      */
-    protected function isEmployeeAuthorizedForStep(ApprovalRequestStep $step, int $employeeId): bool
+    protected function isEmployeeAuthorizedForStep(ApprovalRequestStep $step, ?int $employeeId): bool
     {
+        if (!$employeeId) return false;
+        
         $employee = Employee::find($employeeId);
         $workPositionId = $employee->work_position_id ?? null;
         $groupIds = DB::table('approval_group_employees')

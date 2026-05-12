@@ -8,6 +8,7 @@ use App\Modules\Leave\Services\AnnualLeaveService;
 use App\Modules\UnpaidLeave\Requests\V1\GetUnpaidLeaveManagementRequest;
 use App\Modules\UnpaidLeave\Repositories\UnpaidLeaveRepository;
 use App\Modules\UnpaidLeave\Resources\V1\UnpaidLeaveResource;
+use App\Modules\UnpaidLeave\Services\UnpaidLeaveService;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,6 +27,7 @@ class UnpaidLeaveManagementController extends Controller
 
     public function __construct(
         protected UnpaidLeaveRepository $repository,
+        protected UnpaidLeaveService $unpaidLeaveService,
         protected AnnualLeaveService $annualLeaveService,
         protected AnnualLeaveRepository $annualLeaveRepository
     ) {}
@@ -85,7 +87,7 @@ class UnpaidLeaveManagementController extends Controller
         }
 
         try {
-            $leave = app(\App\Modules\UnpaidLeave\Services\UnpaidLeaveService::class)->settle($leave);
+            $leave = $this->unpaidLeaveService->settle($leave);
 
             return $this->successResponse(
                 new UnpaidLeaveResource($leave),

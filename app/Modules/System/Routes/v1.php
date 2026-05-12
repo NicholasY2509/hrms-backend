@@ -20,6 +20,13 @@ Route::middleware(['api.auth'])->group(function () {
         Route::get('/{report}', [\App\Modules\System\Controllers\V1\ReportController::class, 'show']);
     });
 
+    Route::prefix('configuration')
+        ->middleware('role:admin,Admin HRD,IT')
+        ->group(function () {
+            Route::get('/settings', [\App\Modules\System\Controllers\V1\Configuration\SystemSettingController::class, 'index']);
+            Route::post('/settings/bulk', [\App\Modules\System\Controllers\V1\Configuration\SystemSettingController::class, 'bulkUpdate']);
+        });
+
     Route::prefix('portal/management')
         ->middleware('role:admin,Admin HRD')
         ->group(function () {

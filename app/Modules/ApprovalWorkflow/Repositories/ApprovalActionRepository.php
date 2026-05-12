@@ -76,6 +76,35 @@ class ApprovalActionRepository
     }
 
     /**
+     * Get ALL pending approvals (for IT/Admin).
+     */
+    public function getAllPending(int $perPage = 15, ?string $type = null): LengthAwarePaginator
+    {
+        return ApprovalRequest::query()
+            ->where('status', 'pending')
+            ->whereHas('approvable')
+            ->when($type, function ($query) use ($type) {
+                $query->where('approvable_type', 'like', "%{$type}%");
+            })
+            ->with([
+                'approvable' => function (MorphTo $morphTo) {
+                    $morphTo->morphWith([
+                        Overtime::class => ['employee'],
+                        UnpaidLeave::class => ['unpaid_leave_type', 'employee'],
+                        Career::class => ['employee'],
+                        WarningLetter::class => ['employee'],
+                        CertificateOfEmployment::class => ['employee'],
+                        PaidLeaveReversal::class => ['employee'],
+                    ]);
+                },
+                'steps.actor', 
+                'rule.scheme'
+            ])
+            ->latest()
+            ->paginate($perPage);
+    }
+
+    /**
      * Helper to check if employee is authorized for a specific step.
      */
     protected function isAuthorized(ApprovalRequestStep $step, int $employeeId, array $groupIds, ?int $workPositionId = null): bool
