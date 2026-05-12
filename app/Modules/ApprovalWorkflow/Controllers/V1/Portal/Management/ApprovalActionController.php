@@ -3,6 +3,7 @@
 namespace App\Modules\ApprovalWorkflow\Controllers\V1\Portal\Management;
 
 use App\Http\Controllers\Controller;
+use App\Modules\ApprovalWorkflow\Requests\V1\Portal\Management\GetApprovalActionRequest;
 use App\Modules\ApprovalWorkflow\Resources\V1\ApprovalRequestResource;
 use App\Modules\ApprovalWorkflow\Services\ApprovalActionService;
 use App\Traits\ApiResponses;
@@ -27,11 +28,8 @@ class ApprovalActionController extends Controller
 
     /**
      * List all pending requests for the authenticated manager.
-     * 
-     * @queryParam type string Filter by request type (e.g., Overtime, UnpaidLeave).
-     * @queryParam per_page int Results per page. Default: 15.
      */
-    public function index(Request $request): JsonResponse
+    public function index(GetApprovalActionRequest $request): JsonResponse
     {
         $approvals = $this->service->getMyPendingApprovals(
             $request->input('per_page', 15),
