@@ -22,6 +22,12 @@ class OvertimeRepository
         if (!empty($filters['employee_id'])) {
             $query->where('employee_id', $filters['employee_id']);
         }
+        
+        if (!empty($filters['department_id'])) {
+            $query->whereHas('employee', function ($query) use ($filters) {
+                $query->where('department_id', $filters['department_id']);
+            });
+        }
 
         if (!empty($filters['type'])) {
             $query->where('type', $filters['type']);
