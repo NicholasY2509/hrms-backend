@@ -74,10 +74,6 @@ class ApprovalRequestStep extends Model
      */
     public function getResolvedApproverNames(): ?string
     {
-        if ($this->actioned_by) {
-            return $this->actor?->name;
-        }
-
         if ($this->approver_type === 'group') {
             return $this->group?->employees->pluck('full_name')->join(', ') ?: 'No members';
         }
