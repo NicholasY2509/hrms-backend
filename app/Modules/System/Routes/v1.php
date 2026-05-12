@@ -1,7 +1,10 @@
 <?php
 
 use App\Modules\System\Controllers\V1\AuthController;
+use App\Modules\System\Controllers\V1\Configuration\SystemSettingController;
 use App\Modules\System\Controllers\V1\DashboardController;
+use App\Modules\System\Controllers\V1\Portal\Management\ManagementDashboardController;
+use App\Modules\System\Controllers\V1\ReportController;
 use App\Modules\System\Controllers\V1\SystemController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,22 +17,24 @@ Route::middleware(['api.auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
     // Report Routes
-    Route::prefix('reports')->group(function () {
-        Route::get('/', [\App\Modules\System\Controllers\V1\ReportController::class, 'index']);
-        Route::post('/', [\App\Modules\System\Controllers\V1\ReportController::class, 'store']);
-        Route::get('/{report}', [\App\Modules\System\Controllers\V1\ReportController::class, 'show']);
+    Route::prefix('reports')->controller(ReportController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::post('/', 'store');
+        Route::get('/{report}', 'show');
     });
 
     Route::prefix('configuration')
+        ->controller(SystemSettingController::class)
         ->middleware('role:admin,Admin HRD,IT')
         ->group(function () {
-            Route::get('/settings', [\App\Modules\System\Controllers\V1\Configuration\SystemSettingController::class, 'index']);
-            Route::post('/settings/bulk', [\App\Modules\System\Controllers\V1\Configuration\SystemSettingController::class, 'bulkUpdate']);
+            Route::get('/settings', 'index');
+            Route::post('/settings/bulk', 'bulkUpdate');
         });
 
     Route::prefix('portal/management')
+        ->controller(ManagementDashboardController::class)
         ->middleware('role:admin,Admin HRD')
         ->group(function () {
-            Route::get('/dashboard', [\App\Modules\System\Controllers\V1\Portal\Management\ManagementDashboardController::class, 'index']);
+            Route::get('/dashboard', 'index');
         });
 });

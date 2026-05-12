@@ -175,12 +175,12 @@ class ManagementDashboardService
      */
     protected function getPayrollInsights(): array
     {
-        $totalPayroll = EmployeeSalary::sum('amount');
+        $totalPayroll = EmployeeSalary::sum('amount_reporting');
         
         $byDept = DB::table('employee_salaries')
             ->join('employees', 'employee_salaries.employee_id', '=', 'employees.id')
             ->join('departments', 'employees.department_id', '=', 'departments.id')
-            ->select('departments.name', DB::raw('sum(employee_salaries.amount) as total'))
+            ->select('departments.name', DB::raw('sum(employee_salaries.amount_reporting) as total'))
             ->groupBy('departments.name')
             ->get();
 

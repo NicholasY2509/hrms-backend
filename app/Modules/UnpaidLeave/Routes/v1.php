@@ -17,9 +17,7 @@ Route::middleware(['api.auth'])->group(function () {
             });
         });
 
-        Route::prefix('management')
-            ->middleware('role:admin,hr-manager,manager')
-            ->group(function () {
+        Route::prefix('management')->group(function () {
             Route::prefix('leaves')->group(function () {
                 Route::get('/', [UnpaidLeaveManagementController::class, 'index']);
                 Route::get('/{id}', [UnpaidLeaveManagementController::class, 'show']);

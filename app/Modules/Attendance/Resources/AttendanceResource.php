@@ -2,6 +2,8 @@
 
 namespace App\Modules\Attendance\Resources;
 
+use App\Modules\Attendance\Services\MobileAttendanceService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -22,8 +24,8 @@ class AttendanceResource extends JsonResource
         $shiftEnd = null;
 
         if ($date && $workingHour) {
-            $shiftStart = \Carbon\Carbon::parse($date . ' ' . $workingHour->clock_in);
-            $shiftEnd = \Carbon\Carbon::parse($date . ' ' . $workingHour->clock_out);
+            $shiftStart = Carbon::parse($date . ' ' . $workingHour->clock_in);
+            $shiftEnd = Carbon::parse($date . ' ' . $workingHour->clock_out);
 
             if ($shiftEnd->lessThan($shiftStart)) {
                 $shiftEnd->addDay();
@@ -32,11 +34,11 @@ class AttendanceResource extends JsonResource
 
         $isClockedIn = false;
         if ($this->resource) {
-            $attendanceService = app(\App\Modules\Attendance\Services\AttendanceService::class);
+            $attendanceService = app(MobileAttendanceService::class);
             $isClockedIn = $attendanceService->isCurrentlyClockedIn($this->resource);
         }
 
-        $now = \Carbon\Carbon::now();
+        $now = Carbon::now();
         $isLocked = false;
         $lockTitle = null;
         $lockMessage = null;

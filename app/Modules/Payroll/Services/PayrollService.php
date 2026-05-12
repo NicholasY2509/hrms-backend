@@ -15,9 +15,7 @@ class PayrollService
      */
     public function getActiveSalary(int $employeeId): ?EmployeeSalary
     {
-        return EmployeeSalary::where('employee_id', $employeeId)
-            ->orderBy('id', 'desc')
-            ->first();
+        return EmployeeSalary::where('employee_id', $employeeId)->latest()->first();
     }
 
     /**

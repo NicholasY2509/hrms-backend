@@ -16,14 +16,14 @@ class SalaryResource extends JsonResource
     public function toArray(Request $request): array
     {
         $service = app(PayrollService::class);
-        $hourlyRate = $service->calculateRate($this->amount);
-        $realHourlyRate = $service->calculateRate($this->real_amount);
+        $hourlyRate = $service->calculateRate($this->amount_reporting);
+        $realHourlyRate = $service->calculateRate($this->amount_actual);
 
         return [
             'id' => $this->id,
             'employee_id' => $this->employee_id,
-            'amount' => $this->amount,
-            'real_amount' => $this->real_amount,
+            'amount' => (float) $this->amount_reporting,
+            'real_amount' => (float) $this->amount_actual,
             'hourly_rate' => $hourlyRate,
             'real_hourly_rate' => $realHourlyRate,
             'currency' => 'IDR',

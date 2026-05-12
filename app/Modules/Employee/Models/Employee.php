@@ -112,6 +112,126 @@ class Employee extends Model
     }
 
     /**
+     * Get the education history for the employee.
+     */
+    public function educations(): HasMany
+    {
+        return $this->hasMany(EmployeeEducation::class);
+    }
+
+    /**
+     * Get the work experience history for the employee.
+     */
+    public function experiences(): HasMany
+    {
+        return $this->hasMany(EmployeeExperience::class);
+    }
+
+    /**
+     * Get the family members for the employee.
+     */
+    public function families(): HasMany
+    {
+        return $this->hasMany(EmployeeFamily::class);
+    }
+
+    /**
+     * Get the bank accounts for the employee.
+     */
+    public function banks(): HasMany
+    {
+        return $this->hasMany(EmployeeBank::class);
+    }
+
+    /**
+     * Get the warning letters for the employee.
+     */
+    public function warnings(): HasMany
+    {
+        return $this->hasMany(EmployeeWarning::class);
+    }
+
+    /**
+     * Get the contract history for the employee.
+     */
+    public function contracts(): HasMany
+    {
+        return $this->hasMany(EmployeeContract::class);
+    }
+
+    /**
+     * Get the emergency contacts for the employee.
+     */
+    public function emergency_contacts(): HasMany
+    {
+        return $this->hasMany(EmergencyContact::class);
+    }
+
+    /**
+     * Get the driver licenses for the employee.
+     */
+    public function licenses(): HasMany
+    {
+        return $this->hasMany(EmployeeLicense::class);
+    }
+
+    /**
+     * Get the owned vehicles for the employee.
+     */
+    public function vehicles(): HasMany
+    {
+        return $this->hasMany(EmployeeVehicle::class);
+    }
+
+    /**
+     * Get the attachments for the employee.
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(EmployeeAttachment::class);
+    }
+
+    /**
+     * Get the insurances for the employee.
+     */
+    public function insurances(): HasMany
+    {
+        return $this->hasMany(EmployeeInsurance::class);
+    }
+
+    /**
+     * Get the training history for the employee.
+     */
+    public function trainings(): HasMany
+    {
+        return $this->hasMany(EmployeeTraining::class);
+    }
+
+    /**
+     * Get the performance records for the employee.
+     */
+    public function performances(): HasMany
+    {
+        return $this->hasMany(EmployeePerformance::class);
+    }
+
+    /**
+     * Get the inventory handovers for the employee.
+     */
+    public function inventories(): HasMany
+    {
+        return $this->hasMany(EmployeeInventory::class);
+    }
+
+    /**
+     * Get the BPJS records for the employee.
+     */
+    public function employee_bpjs(): HasMany
+    {
+        return $this->hasMany(EmployeeBpjs::class);
+    }
+
+    /**
      * Get the supervisor associated with this Employee.
      */
     public function supervisor(): BelongsTo
@@ -141,6 +261,38 @@ class Employee extends Model
     public function work_location(): BelongsTo
     {
         return $this->belongsTo(WorkLocation::class, 'work_location_id', 'id');
+    }
+
+    /**
+     * Get the gender of the employee.
+     */
+    public function gender(): BelongsTo
+    {
+        return $this->belongsTo(Gender::class);
+    }
+
+    /**
+     * Get the religion of the employee.
+     */
+    public function religion(): BelongsTo
+    {
+        return $this->belongsTo(Religion::class);
+    }
+
+    /**
+     * Get the marital status of the employee.
+     */
+    public function marital_status(): BelongsTo
+    {
+        return $this->belongsTo(MaritalStatus::class);
+    }
+
+    /**
+     * Get the blood group of the employee.
+     */
+    public function blood_group(): BelongsTo
+    {
+        return $this->belongsTo(BloodGroup::class);
     }
 
     /**

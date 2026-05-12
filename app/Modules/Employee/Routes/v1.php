@@ -6,6 +6,7 @@ use App\Modules\Employee\Controllers\V1\Portal\Employee\FaceController;
 use App\Modules\Employee\Controllers\V1\Portal\Management\CertificateOfEmploymentController;
 use App\Modules\Employee\Controllers\V1\Portal\Management\EmployeeSearchController;
 use App\Modules\Employee\Controllers\V1\Portal\Management\EmployeeManagementController;
+use App\Modules\Employee\Controllers\V1\Portal\Management\EmployeeDetailController;
 use App\Modules\Employee\Controllers\V1\Portal\Management\ResignationController;
 use App\Modules\Employee\Controllers\V1\Portal\Management\SupervisorManagementController;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,7 @@ Route::middleware(['api.auth'])->group(function () {
             ->middleware('role:Admin HRD')
             ->group(function () {
                 Route::get('/search', EmployeeSearchController::class);
+                Route::get('/employees/{id}/details/{type}', [EmployeeDetailController::class, 'show']);
                 Route::apiResource('employees', EmployeeManagementController::class);
                 Route::apiResource('supervisors', SupervisorManagementController::class);
                 Route::apiResource('certificate-of-employments', CertificateOfEmploymentController::class);

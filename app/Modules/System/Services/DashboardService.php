@@ -3,7 +3,9 @@
 namespace App\Modules\System\Services;
 
 use App\Modules\Attendance\Services\AttendanceService;
+use App\Modules\Attendance\Services\MobileAttendanceService;
 use App\Modules\Employee\Services\EmployeeService;
+use App\Modules\Overtime\Services\OvertimeService;
 use App\Modules\UnpaidLeave\Services\UnpaidLeaveService;
 use Carbon\Carbon;
 
@@ -12,14 +14,17 @@ class DashboardService
     protected AttendanceService $attendanceService;
     protected UnpaidLeaveService $unpaidLeaveService;
     protected EmployeeService $employeeService;
-    protected \App\Modules\Overtime\Services\OvertimeService $overtimeService;
+    protected OvertimeService $overtimeService;
+    protected MobileAttendanceService $mobileAttendanceService;
 
     public function __construct(
+        MobileAttendanceService $mobileAttendanceService,
         AttendanceService $attendanceService,
         UnpaidLeaveService $unpaidLeaveService,
         EmployeeService $employeeService,
-        \App\Modules\Overtime\Services\OvertimeService $overtimeService
+        OvertimeService $overtimeService
     ) {
+        $this->mobileAttendanceService = $mobileAttendanceService;
         $this->attendanceService = $attendanceService;
         $this->unpaidLeaveService = $unpaidLeaveService;
         $this->employeeService = $employeeService;
@@ -37,7 +42,7 @@ class DashboardService
         $employee = $this->employeeService->getProfile($userId);
         $employeeId = $employee?->id;
 
-        $attendance = $this->attendanceService->getUserStatus($userId);
+        $attendance = $this->mobileAttendanceService->getUserStatus($userId);
         $leaveRequests = $employeeId ? $this->unpaidLeaveService->getPendingRequests($employeeId) : collect();
         $overtimeRequests = $employeeId ? $this->overtimeService->getPendingRequests($employeeId) : collect();
         $holidays = $this->unpaidLeaveService->getUpcomingHolidays(2);
@@ -63,7 +68,7 @@ class DashboardService
             $pendingRequests->push([
                 'id' => $overtime->id,
                 'type' => 'overtime',
-                'title' => $overtime->overtime_type?->name ?? $overtime->type,
+                'title' => $overtime->type,
                 'date_info' => $overtime->date,
                 'status' => $overtime->status,
                 'note' => $overtime->note,
@@ -79,7 +84,7 @@ class DashboardService
         $today = $now->toDateString();
         $daysInMonthToDate = $now->day;
 
-        $summary = $this->attendanceService->getSummary($userId, $startOfMonth, $today);
+        $summary = $this->mobileAttendanceService->getSummary($userId, $startOfMonth, $today);
         
         $hadirCount = 0;
         $liburCount = 0;

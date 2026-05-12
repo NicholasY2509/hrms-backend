@@ -7,6 +7,7 @@ use App\Modules\Attendance\Requests\ClockInRequest;
 use App\Modules\Attendance\Requests\ClockOutRequest;
 use App\Modules\Attendance\Requests\GetAttendanceHistoryRequest;
 use App\Modules\Attendance\Resources\AttendanceResource;
+use App\Modules\Attendance\Services\AttendanceService;
 use App\Modules\Attendance\Services\MobileAttendanceService;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;

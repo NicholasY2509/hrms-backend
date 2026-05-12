@@ -109,6 +109,12 @@ class Overtime extends Model
             $q->where('type', $type);
         });
 
+        $query->when($filters['department_id'] ?? null, function ($q, $departmentId) {
+            $q->whereHas('employee', function ($sq) use ($departmentId) {
+                $sq->where('department_id', $departmentId);
+            });
+        });
+
         $query->when($filters['start_date'] ?? null, function ($q, $startDate) use ($filters) {
             if (!empty($filters['end_date'])) {
                 $q->whereBetween('date', [$startDate, $filters['end_date']]);
