@@ -38,7 +38,7 @@ class TeamController extends Controller
     public function index(TeamIndexRequest $request): JsonResponse
     {
         $teams = $this->repository->getPaginated(
-            $request->only(['search']),
+            $request->only(['search', 'work_location_id']),
             $request->input('per_page', 15)
         );
 
@@ -72,7 +72,7 @@ class TeamController extends Controller
     public function show(Team $team): JsonResponse
     {
         return $this->successResponse(
-            new TeamResource($team->load(['department', 'head'])),
+            new TeamResource($team->load(['workLocation', 'head'])),
             'Team details retrieved'
         );
     }

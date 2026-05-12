@@ -38,7 +38,7 @@ class OvertimeManagementController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['employee_id', 'type', 'start_date', 'end_date', 'is_settled']);
+        $filters = $request->only(['employee_id','department_id', 'type', 'start_date', 'end_date', 'is_settled']);
         $perPage = $request->query('per_page', 15);
 
         $overtimes = $this->repository->paginate($filters, $perPage);

@@ -34,8 +34,17 @@ class Team extends Model
             $search = preg_replace('/\s+/', ' ', trim($search));
             $query->where('name', 'like', "%$search%");
         });
+
+        $query->when($filters['work_location_id'] ?? false, function ($query, $locationId) {
+            $query->where('work_location_id', $locationId);
+        });
     }
  
+    public function workLocation(): BelongsTo
+    {
+        return $this->belongsTo(WorkLocation::class, 'work_location_id', 'id');
+    }
+
     public function head(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'team_head_id', 'id');
