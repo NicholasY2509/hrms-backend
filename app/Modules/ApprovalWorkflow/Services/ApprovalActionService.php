@@ -23,7 +23,7 @@ class ApprovalActionService
     /**
      * Get pending requests for the authenticated user.
      */
-    public function getMyPendingApprovals(int $perPage = 15, ?string $type = null)
+    public function getMyPendingApprovals(int $perPage = 15, $type = null)
     {
         $user = Auth::user();
         $employeeId = $user->employee->id ?? null;

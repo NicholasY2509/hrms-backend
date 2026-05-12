@@ -28,7 +28,7 @@ class GetUnpaidLeaveManagementRequest extends FormRequest
             'end_date' => 'nullable|date_format:Y-m-d',
             'settle_status' => 'nullable|string|in:settled,unsettled',
             'status' => 'nullable|string|in:pending,approved,rejected,cancelled',
-            'department_ids' => 'nullable|string', // Comma-separated or handled as needed
+            'department_id' => 'nullable|string',
             'search' => 'nullable|string',
             'per_page' => 'nullable|integer|min:1|max:100',
         ];

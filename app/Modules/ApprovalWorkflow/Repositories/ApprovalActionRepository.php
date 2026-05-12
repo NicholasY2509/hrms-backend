@@ -55,7 +55,12 @@ class ApprovalActionRepository
                     });
             })
             ->when($type, function ($query) use ($type) {
-                $query->where('approvable_type', 'like', "%{$type}%");
+                $types = is_array($type) ? $type : explode(',', $type);
+                $query->where(function ($q) use ($types) {
+                    foreach ($types as $t) {
+                        $q->orWhere('approvable_type', 'like', "%{$t}%");
+                    }
+                });
             })
             ->with([
                 'approvable' => function (MorphTo $morphTo) {

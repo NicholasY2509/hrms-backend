@@ -56,10 +56,9 @@ class UnpaidLeave extends Model
             });
         });
 
-        $query->when($filters['department_ids'] ?? null, function ($q, $departmentIds) {
-            $departmentIds = is_array($departmentIds) ? $departmentIds : explode(',', $departmentIds);
-            $q->whereHas('employee', function ($sq) use ($departmentIds) {
-                $sq->whereIn('department_id', $departmentIds);
+        $query->when($filters['department_id'] ?? null, function ($q, $departmentId) {
+            $q->whereHas('employee', function ($sq) use ($departmentId) {
+                $sq->where('department_id', $departmentId);
             });
         });
 
