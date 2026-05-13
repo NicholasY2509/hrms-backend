@@ -112,6 +112,13 @@ class UnpaidLeave extends Model
             return $this->confirmed_at ? 'Pending' : 'Draft';
         }
 
+        if ($request->status === 'pending') {
+            $currentStep = $request->currentStep();
+            if ($currentStep) {
+                return 'Pending by ' . $currentStep->getResolvedApproverNames();
+            }
+        }
+
         return match ($request->status) {
             'pending' => 'Pending',
             'approved' => 'Approved',

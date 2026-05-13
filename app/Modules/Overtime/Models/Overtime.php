@@ -70,13 +70,20 @@ class Overtime extends Model
             return 'Pending';
         }
 
-        // Map internal status to display status
-            return match ($request->status) {
-                'pending' => 'Pending',
-                'approved' => 'Approved',
-                'rejected' => 'Rejected',
-                'cancelled' => 'Cancelled',
-                default => 'Pending',
-            };
+        if ($request->status === 'pending') {
+            $currentStep = $request->currentStep();
+            if ($currentStep) {
+                return 'Pending by ' . $currentStep->getResolvedApproverNames();
+            }
         }
+
+        // Map internal status to display status
+        return match ($request->status) {
+            'pending' => 'Pending',
+            'approved' => 'Approved',
+            'rejected' => 'Rejected',
+            'cancelled' => 'Cancelled',
+            default => 'Pending',
+        };
+    }
 }
