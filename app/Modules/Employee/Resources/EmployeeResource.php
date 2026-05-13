@@ -28,6 +28,14 @@ class EmployeeResource extends JsonResource
             'initial_name' => $this->initial_name,
             'job_title' => $this->position?->name ?? 'N/A',
             'department' => $this->department?->name ?? 'N/A',
+            'department_detail' => $this->department ? [
+                'id' => $this->department->id,
+                'name' => $this->department->name,
+            ] : null,
+            'position_detail' => $this->position ? [
+                'id' => $this->position->id,
+                'name' => $this->position->name,
+            ] : null,
             'work_location' => $this->work_location?->name ?? 'N/A',
             'email' => $user?->email ?? $this->company_email,
             'company_email' => $this->company_email,

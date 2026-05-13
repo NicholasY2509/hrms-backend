@@ -3,6 +3,7 @@
 namespace App\Modules\Overtime\Resources\V1;
 
 use App\Modules\ApprovalWorkflow\Resources\V1\ApprovalRequestStepResource;
+use App\Modules\Employee\Resources\EmployeeResource;
 use App\Services\StorageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -18,22 +19,12 @@ class OvertimeResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'employee' => [
-                'id' => $this->employee_id,
-                'full_name' => $this->employee?->full_name,
-                'nik' => $this->employee?->employee_id_number,
-                'department' => [
-                    'id' => $this->employee?->department_id,
-                    'name' => $this->employee?->department?->name,
-                ],
-                'position' => [
-                    'id' => $this->employee?->work_position_id,
-                    'name' => $this->employee?->position?->name,
-                ],
-            ],
+            'employee' => new EmployeeResource($this->employee),
             'document_no' => $this->document_no,
-            'overtime_type' => $this->type,
-            'dac_type' => $this->overtime_type?->name ?? null,
+            'type' => [
+                'id' => $this->overtime_type_id,
+                'name' => $this->overtime_type?->name ?? $this->type,
+            ],
             'date' => $this->date,
             'start_time' => $this->start_time,
             'finish_time' => $this->finish_time,
@@ -41,8 +32,11 @@ class OvertimeResource extends JsonResource
             'estimated_overtime_price' => $this->estimated_overtime_price,
             'real_overtime_price' => $this->real_overtime_price,
             'note' => $this->note,
-            'attachment_urls' => $this->overtime_attachments->map(function ($attachment) {
-                return StorageService::url($attachment->path);
+            'attachments' => $this->overtime_attachments->map(function ($attachment) {
+                return [
+                    'id' => $attachment->id,
+                    'url' => StorageService::url($attachment->path),
+                ];
             }),
             'status' => $this->status,
             'settled_at' => $this->settled_at,

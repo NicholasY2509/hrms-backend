@@ -2,6 +2,7 @@
 
 namespace App\Modules\ApprovalWorkflow\Resources\V1;
 
+use App\Modules\Employee\Resources\EmployeeResource;
 use App\Modules\Overtime\Models\Overtime;
 use App\Modules\Overtime\Resources\V1\OvertimeResource;
 use App\Modules\UnpaidLeave\Resources\V1\UnpaidLeaveResource;
@@ -38,14 +39,7 @@ class ApprovalRequestResource extends JsonResource
                 }
                 $data = $approvable->toArray();
                 if ($approvable->relationLoaded('employee')) {
-                    $employee = $approvable->employee;
-                    $data['employee'] = [
-                        'id' => $employee->id,
-                        'full_name' => $employee->full_name,
-                        'nik' => $employee->nik,
-                        'department' => $employee->relationLoaded('department') ? $employee->department?->name : null,
-                        'position' => $employee->relationLoaded('position') ? $employee->position?->name : null,
-                    ];
+                    $data['employee'] = new EmployeeResource($approvable->employee);
                 }
                 return $data;
             }),

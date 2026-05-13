@@ -29,7 +29,11 @@ class UnpaidLeaveResource extends JsonResource
             'end_date' => $this->end_date,
             'total_days' => $this->total,
             'note' => $this->note,
-            'attachment_url' => StorageService::url($this->attachment),
+            'attachments' => [
+                [
+                    'url' => StorageService::url($this->attachment),
+                ]
+            ],
             'confirmed_at' => $this->confirmed_at,
             'settled_at' => $this->settled_at,
             'status' => $this->status,
