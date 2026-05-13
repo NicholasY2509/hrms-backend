@@ -45,14 +45,13 @@ class EmployeeDetailController extends Controller
             'license' => 'licenses',
             'vehicle' => 'vehicles',
             'attachment' => 'attachments',
-            'social_security' => 'employee_bpjs', // Assuming relationship name
+            'social_security' => 'employee_bpjs',
             'insurance' => 'insurances',
         ];
 
         $relationship = $typeMapping[$type] ?? $type;
 
         if (!method_exists($employee, $relationship)) {
-            // Try pluralized if not found
             $relationship = Str::plural($relationship);
             if (!method_exists($employee, $relationship)) {
                 return $this->errorResponse("Detail type '{$type}' not supported.", 400);
