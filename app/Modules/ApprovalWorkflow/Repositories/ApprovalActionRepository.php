@@ -65,12 +65,12 @@ class ApprovalActionRepository
             ->with([
                 'approvable' => function (MorphTo $morphTo) {
                     $morphTo->morphWith([
-                        Overtime::class => ['employee'],
-                        UnpaidLeave::class => ['unpaid_leave_type', 'employee'],
-                        Career::class => ['employee'],
-                        WarningLetter::class => ['employee'],
-                        CertificateOfEmployment::class => ['employee'],
-                        PaidLeaveReversal::class => ['employee'],
+                        Overtime::class => ['employee.department', 'employee.position'],
+                        UnpaidLeave::class => ['unpaid_leave_type', 'employee.department', 'employee.position'],
+                        Career::class => ['employee.department', 'employee.position'],
+                        WarningLetter::class => ['employee.department', 'employee.position'],
+                        CertificateOfEmployment::class => ['employee.department', 'employee.position'],
+                        PaidLeaveReversal::class => ['employee.department', 'employee.position'],
                     ]);
                 },
                 'steps.actor', 

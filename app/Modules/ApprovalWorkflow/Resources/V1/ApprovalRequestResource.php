@@ -3,6 +3,8 @@
 namespace App\Modules\ApprovalWorkflow\Resources\V1;
 
 use App\Modules\Overtime\Models\Overtime;
+use App\Modules\Overtime\Resources\V1\OvertimeResource;
+use App\Modules\UnpaidLeave\Resources\V1\UnpaidLeaveResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -25,7 +27,28 @@ class ApprovalRequestResource extends JsonResource
             
             'approvable_type' => $this->approvable_type,
             'approvable_id' => $this->approvable_id,
-            'approvable' => $this->whenLoaded('approvable'),
+            'approvable' => $this->whenLoaded('approvable', function () {
+                $approvable = $this->approvable;
+                if (!$approvable) return null;
+                if ($approvable instanceof Overtime) {
+                    return new OvertimeResource($approvable);
+                }
+                if ($approvable instanceof UnpaidLeave) {
+                    return new UnpaidLeaveResource($approvable);
+                }
+                $data = $approvable->toArray();
+                if ($approvable->relationLoaded('employee')) {
+                    $employee = $approvable->employee;
+                    $data['employee'] = [
+                        'id' => $employee->id,
+                        'full_name' => $employee->full_name,
+                        'nik' => $employee->nik,
+                        'department' => $employee->relationLoaded('department') ? $employee->department?->name : null,
+                        'position' => $employee->relationLoaded('position') ? $employee->position?->name : null,
+                    ];
+                }
+                return $data;
+            }),
             'category' => $this->getCategory(),
 
             'rule' => new ApprovalRuleResource($this->whenLoaded('rule')),
