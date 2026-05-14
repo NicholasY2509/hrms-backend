@@ -14,6 +14,7 @@ use App\Traits\ApiResponses;
 use App\Modules\Employee\Requests\ListEmployeeRequest;
 use App\Modules\Employee\Requests\StoreEmployeeRequest;
 use App\Modules\Employee\Requests\UpdateEmployeeRequest;
+use App\Modules\Employee\Requests\GenerateNikRequest;
 use App\Modules\Employee\Services\EmployeeService;
 use Illuminate\Http\JsonResponse;
 
@@ -115,6 +116,26 @@ class EmployeeManagementController extends Controller
         return $this->successResponse(
             null,
             'Employee deleted successfully'
+        );
+    }
+
+    /**
+     * @group Employee
+     * @subgroup Management
+     * 
+     * Generate a new employee ID number (NIK) based on work position.
+     * 
+     * @queryParam work_position_id int required The ID of the work position. Example: 1
+     */
+    public function generateNik(GenerateNikRequest $request): JsonResponse
+    {
+        $nik = $this->employeeService->generateEmployeeIdNumber(
+            $request->validated('work_position_id')
+        );
+
+        return $this->successResponse(
+            ['employee_id_number' => $nik],
+            'NIK generated successfully'
         );
     }
 }

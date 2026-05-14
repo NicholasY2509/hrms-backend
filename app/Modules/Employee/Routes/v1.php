@@ -33,6 +33,8 @@ Route::middleware(['api.auth'])->group(function () {
             ->group(function () {
                 Route::get('/search', EmployeeSearchController::class);
                 Route::get('/employees/{id}/details/{type}', [EmployeeDetailController::class, 'show']);
+                Route::put('/employees/{id}/details/{type}', [EmployeeDetailController::class, 'update']);
+                Route::get('/employees/generate-nik', [EmployeeManagementController::class, 'generateNik']);
                 Route::apiResource('employees', EmployeeManagementController::class);
                 Route::apiResource('supervisors', SupervisorManagementController::class);
                 Route::apiResource('certificate-of-employments', CertificateOfEmploymentController::class);

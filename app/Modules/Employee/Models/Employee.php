@@ -264,6 +264,22 @@ class Employee extends Model
     }
 
     /**
+     * Get the work employee status associated with this Employee.
+     */
+    public function work_employee_status(): BelongsTo
+    {
+        return $this->belongsTo(WorkEmployeeStatus::class, 'work_employee_status_id', 'id');
+    }
+
+    /**
+     * Get the employee status associated with this Employee.
+     */
+    public function employee_status(): BelongsTo
+    {
+        return $this->belongsTo(EmployeeStatus::class, 'employee_status_id', 'id');
+    }
+
+    /**
      * Get the gender of the employee.
      */
     public function gender(): BelongsTo

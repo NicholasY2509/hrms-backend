@@ -10,12 +10,17 @@ class EmergencyContact extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'emergency_contacts';
+    protected $table = 'employee_emergency_contacts';
     protected $guarded = ['id'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
 
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function relationship(): BelongsTo
+    {
+        return $this->belongsTo(FamilyRelationship::class, 'family_relationship_id');
     }
 }

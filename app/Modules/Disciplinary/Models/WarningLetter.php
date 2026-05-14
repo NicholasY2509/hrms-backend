@@ -20,8 +20,8 @@ class WarningLetter extends Model
         return $this->belongsTo(Employee::class);
     }
 
-    public function warningLetterType(): BelongsTo
+    public function warning_letter_type(): BelongsTo
     {
-        return $this->belongsTo(WarningLetterType::class);
+        return $this->belongsTo(WarningLetterType::class, 'warning_letter_type_id');
     }
 }

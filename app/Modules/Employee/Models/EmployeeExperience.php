@@ -10,7 +10,7 @@ class EmployeeExperience extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'work_experiences';
+    protected $table = 'employee_work_experiences';
     protected $guarded = ['id'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
 
