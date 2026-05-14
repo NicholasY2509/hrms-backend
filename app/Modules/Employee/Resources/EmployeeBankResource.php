@@ -9,6 +9,11 @@ class EmployeeBankResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id' => $this->id,
+            'bank_name' => $this->bank_name,
+            'account_number' => $this->account_number,
+            'account_name' => $this->account_name,
+        ];
     }
 }

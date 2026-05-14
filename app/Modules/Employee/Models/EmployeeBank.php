@@ -10,7 +10,7 @@ class EmployeeBank extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'bank_accounts';
+    protected $table = 'employee_bank_accounts';
     protected $guarded = ['id'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
 

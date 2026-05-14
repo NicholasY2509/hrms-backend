@@ -9,6 +9,10 @@ class EmployeeInsuranceResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id' => $this->id,
+            'insurance_name' => $this->insurance_name,
+            'card_number' => $this->card_number,
+        ];
     }
 }

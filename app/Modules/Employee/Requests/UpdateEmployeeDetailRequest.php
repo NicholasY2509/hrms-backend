@@ -85,9 +85,20 @@ class UpdateEmployeeDetailRequest extends FormRequest
                 '*.license_number' => ['required', 'string', 'max:50'],
                 '*.driver_license_type_id' => ['required', 'exists:driver_license_types,id'],
             ],
-            'training', 'performance', 'inventory', 'bank', 'warning', 'contract', 'emergency', 'attachment', 'social_security', 'insurance' => [
-                'id' => ['nullable', 'integer'], // If present, update existing record
-                '*' => ['sometimes', 'required'], // Simplified for now
+            'insurance' => [
+                '*.id' => ['nullable', 'integer'],
+                '*.insurance_name' => ['required', 'string', 'max:255'],
+                '*.card_number' => ['required', 'string', 'max:50'],
+            ],
+            'bank' => [
+                '*.id' => ['nullable', 'integer'],
+                '*.bank_name' => ['required', 'string', 'max:255'],
+                '*.account_number' => ['required', 'string', 'max:50'],
+                '*.account_name' => ['required', 'string', 'max:255'],
+            ],
+            'training', 'performance', 'inventory', 'warning', 'contract', 'emergency', 'attachment', 'social_security' => [
+                'id' => ['nullable', 'integer'],
+                '*' => ['sometimes', 'required'],
             ],
             default => [],
         };
