@@ -17,7 +17,8 @@ class CareerRepository
             'beforeDepartment',
             'afterDepartment',
             'beforeTeam',
-            'afterTeam'
+            'afterTeam',
+            'approvalRequest.steps'
         ]);
 
         if (isset($filters['employee_id'])) {
@@ -41,7 +42,8 @@ class CareerRepository
             'beforeDepartment',
             'afterDepartment',
             'beforeTeam',
-            'afterTeam'
+            'afterTeam',
+            'approvalRequest.steps'
         ])->find($id);
     }
 

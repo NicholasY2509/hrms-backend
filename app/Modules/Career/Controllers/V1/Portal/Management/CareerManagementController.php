@@ -70,12 +70,17 @@ class CareerManagementController extends Controller
             new CareerResource($career->load([
                 'employee', 
                 'careerType', 
-                'beforeWorkPosition', 
+                'beforeEmployeeStatus',
+                'afterEmployeeStatus',
+                'beforeWorkPosition',
                 'afterWorkPosition',
+                'beforeWorkLocation',
+                'afterWorkLocation',
                 'beforeDepartment',
                 'afterDepartment',
                 'beforeTeam',
-                'afterTeam'
+                'afterTeam',
+                'approvalRequest.steps'
             ])),
             'Career details retrieved'
         );
@@ -106,5 +111,20 @@ class CareerManagementController extends Controller
         $this->service->deleteCareer($career);
 
         return $this->successResponse(null, 'Career request deleted successfully');
+    }
+
+    /**
+     * Settle career.
+     * 
+     * Finalize the career transition by updating the employee's record.
+     */
+    public function settle(Career $career): JsonResponse
+    {
+        $settledCareer = $this->service->settle($career);
+
+        return $this->successResponse(
+            new CareerResource($settledCareer),
+            'Career transition finalized successfully'
+        );
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['api.auth'])->group(function () {
     Route::prefix('portal/management')->group(function () {
+        Route::post('careers/{career}/settle', [CareerManagementController::class, 'settle']);
         Route::apiResource('careers', CareerManagementController::class);
     });
 

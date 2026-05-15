@@ -11,7 +11,7 @@ class WarningLetterRepository
     {
         $query = WarningLetter::query()->with([
             'employee', 
-            'warningLetterType'
+            'warning_letter_type'
         ]);
 
         if (isset($filters['employee_id'])) {
