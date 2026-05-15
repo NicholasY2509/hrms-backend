@@ -103,7 +103,8 @@ class ProcessExportJob implements ShouldQueue
                 $pdf = Pdf::loadView($viewName, [
                     'data' => $data,
                     'report' => $this->report,
-                    'filters' => $this->report->filters ?? []
+                    'filters' => $this->report->filters ?? [],
+                    'meta' => method_exists($exportClass, 'getMeta') ? $exportClass->getMeta() : []
                 ]);
                 Storage::disk($disk)->put($fullPath, $pdf->output());
                 

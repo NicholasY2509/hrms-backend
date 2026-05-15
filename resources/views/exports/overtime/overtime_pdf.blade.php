@@ -56,7 +56,8 @@
             margin-bottom: 20px;
         }
 
-        .data-table th, .data-table td {
+        .data-table th,
+        .data-table td {
             border: 1px solid #000;
             padding: 5px;
             text-align: left;
@@ -68,8 +69,13 @@
             text-align: center;
         }
 
-        .text-center { text-align: center !important; }
-        .text-right { text-align: right !important; }
+        .text-center {
+            text-align: center !important;
+        }
+
+        .text-right {
+            text-align: right !important;
+        }
 
         .total-row {
             font-weight: bold;
@@ -126,12 +132,14 @@
             <tr>
                 <td>NOMOR DOKUMEN</td>
                 <td>:</td>
-                <td>{{ $meta['document_no'] ?? '-' }}</td>
+                <td>{{ $report->document_no }}</td>
             </tr>
             <tr>
                 <td>PERIODE</td>
                 <td>:</td>
-                <td>{{ \Carbon\Carbon::parse($meta['filters']['start_date'] ?? now())->translatedFormat('d F Y') }} - {{ \Carbon\Carbon::parse($meta['filters']['end_date'] ?? now())->translatedFormat('d F Y') }}</td>
+                <td>{{ \Carbon\Carbon::parse($meta['filters']['start_date'] ?? now())->translatedFormat('d F Y') }} -
+                    {{ \Carbon\Carbon::parse($meta['filters']['end_date'] ?? now())->translatedFormat('d F Y') }}
+                </td>
             </tr>
             <tr>
                 <td>DEPARTMENT</td>
@@ -166,7 +174,8 @@
                     <td class="text-center">{{ $item->finish_time }}</td>
                     <td class="text-center">{{ $item->total_time }}</td>
                     <td>{{ $item->note }}</td>
-                    <td class="text-right">Rp {{ number_format((float)($item->real_overtime_price ?? 0), 0, ',', '.') }}</td>
+                    <td class="text-right">Rp {{ number_format((float) ($item->real_overtime_price ?? 0), 0, ',', '.') }}
+                    </td>
                 </tr>
             @endforeach
         </tbody>
@@ -182,42 +191,30 @@
 
     <div class="signature-section">
         <p>Medan, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-        
+
         <table class="signature-table">
             <tr>
-                @if(!$template['is_hcd'])
-                    <td>Dibuat Oleh,</td>
-                @endif
+                <td>Dibuat Oleh,</td>
                 <td>Diajukan Oleh,</td>
-                <td colspan="{{ ($template['show_som'] || $template['is_hcd']) ? 3 : 2 }}">Disetujui Oleh,</td>
+                <td colspan="{{ $template['show_som'] ? 3 : 2 }}">Disetujui Oleh,</td>
             </tr>
             <tr>
-                @if(!$template['is_hcd'])
-                    <td>
-                        <div class="signature-space"></div>
-                        <div class="signature-name">{{ $meta['dept_head_name'] ?? '..........................' }}</div>
-                        <div>Dept Head</div>
-                    </td>
-                @endif
+                <td>
+                    <div class="signature-space"></div>
+                    <div class="signature-name">{{ $meta['dept_head_name'] ?? '..........................' }}</div>
+                    <div>Dept Head</div>
+                </td>
                 <td>
                     <div class="signature-space"></div>
                     <div class="signature-name">{{ $template['signatures']['hrd'] }}</div>
                     <div>HRD</div>
                 </td>
-                
+
                 @if($template['show_som'])
                     <td>
                         <div class="signature-space"></div>
                         <div class="signature-name">{{ $template['signatures']['som'] }}</div>
                         <div>SOM</div>
-                    </td>
-                @endif
-
-                @if($template['is_hcd'])
-                    <td>
-                        <div class="signature-space"></div>
-                        <div class="signature-name">{{ $meta['dept_head_name'] ?? '..........................' }}</div>
-                        <div>Dept Head</div>
                     </td>
                 @endif
 

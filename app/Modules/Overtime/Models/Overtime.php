@@ -114,6 +114,18 @@ class Overtime extends Model
                 $sq->where('department_id', $departmentId);
             });
         });
+        
+        $query->when($filters['work_position_id'] ?? null, function ($q, $positionId) {
+            $q->whereHas('employee', function ($sq) use ($positionId) {
+                $sq->where('work_position_id', $positionId);
+            });
+        });
+
+        $query->when($filters['work_location_id'] ?? null, function ($q, $locationId) {
+            $q->whereHas('employee', function ($sq) use ($locationId) {
+                $sq->where('work_location_id', $locationId);
+            });
+        });
 
         $query->when($filters['start_date'] ?? null, function ($q, $startDate) use ($filters) {
             if (!empty($filters['end_date'])) {

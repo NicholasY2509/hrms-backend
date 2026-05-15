@@ -24,6 +24,8 @@ class GetOvertimeManagementRequest extends FormRequest
         return [
             'employee_id' => 'nullable|integer',
             'department_id' => 'nullable|integer',
+            'work_position_id' => 'nullable|integer',
+            'work_location_id' => 'nullable|integer',
             'type' => 'nullable|string|in:UMUM,DAC,NATIONAL',
             'start_date' => 'nullable|date_format:Y-m-d',
             'end_date' => 'nullable|date_format:Y-m-d',
@@ -44,6 +46,14 @@ class GetOvertimeManagementRequest extends FormRequest
             ],
             'department_id' => [
                 'description' => 'Filter by department ID.',
+                'example' => 1,
+            ],
+            'work_position_id' => [
+                'description' => 'Filter by work position ID.',
+                'example' => 1,
+            ],
+            'work_location_id' => [
+                'description' => 'Filter by work location ID.',
                 'example' => 1,
             ],
             'type' => [

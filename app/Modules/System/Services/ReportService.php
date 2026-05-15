@@ -52,6 +52,7 @@ class ReportService
 
         $data['task_id'] = $task->id;
         $data['name'] = $this->generateReportName($data);
+        $data['document_no'] = $this->generateDocumentNo($data['type']);
         $report = $this->repository->create($data);
         
         $this->taskRepository->update($task->id, ['metadata' => ['report_id' => $report->id]]);
@@ -59,6 +60,25 @@ class ReportService
         ProcessExportJob::dispatch($report, $task);
 
         return $report;
+    }
+
+    /**
+     * Generate a unique document number for the report.
+     * Format: REP/YYYYMMDD/SEQ/CODE
+     *
+     * @param string $type
+     * @return string
+     */
+    private function generateDocumentNo(string $type): string
+    {
+        $date = now()->format('Ymd');
+        $code = config("reports.map.{$type}.code", 'GEN');
+        
+        // Count reports generated today to get the sequence
+        $count = Report::whereDate('created_at', now()->toDateString())->count();
+        $sequence = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+
+        return "REP/{$date}/{$sequence}/{$code}";
     }
 
     /**
