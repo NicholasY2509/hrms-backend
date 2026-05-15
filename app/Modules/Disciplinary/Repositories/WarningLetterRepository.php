@@ -11,7 +11,8 @@ class WarningLetterRepository
     {
         $query = WarningLetter::query()->with([
             'employee', 
-            'warning_letter_type'
+            'warning_letter_type',
+            'approvalRequest.steps'
         ]);
 
         if (isset($filters['employee_id'])) {
@@ -29,7 +30,8 @@ class WarningLetterRepository
     {
         return WarningLetter::with([
             'employee', 
-            'warningLetterType'
+            'warning_letter_type',
+            'approvalRequest.steps'
         ])->find($id);
     }
 

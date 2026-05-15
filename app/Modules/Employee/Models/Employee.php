@@ -232,6 +232,22 @@ class Employee extends Model
     }
 
     /**
+     * Get the resignation records for the employee.
+     */
+    public function resignations(): HasMany
+    {
+        return $this->hasMany(Resignation::class);
+    }
+
+    /**
+     * Get the latest approved resignation for the employee.
+     */
+    public function latestResignation(): HasOne
+    {
+        return $this->hasOne(Resignation::class)->latestOfMany();
+    }
+
+    /**
      * Get the supervisor associated with this Employee.
      */
     public function supervisor(): BelongsTo

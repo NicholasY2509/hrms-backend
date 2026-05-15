@@ -1,26 +1,40 @@
 <?php
 
-namespace App\Modules\Employee\Models;
+namespace App\Modules\CertificateOfEmployment\Models;
 
+use App\Modules\Employee\Models\Employee;
+use App\Modules\Organization\Models\WorkPosition;
 use App\Traits\Approvable;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Resignation extends Model
+class CertificateOfEmployment extends Model
 {
-    use SoftDeletes, Approvable;
+    use SoftDeletes, Approvable, HasUuids;
 
-    protected $table = 'resigns';
-    protected $guarded = ['id'];
+    protected $table = 'certificate_of_employments';
+    protected $guarded = [];
 
+    /**
+     * Get the employee that owns the CoE.
+     */
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
     }
 
     /**
-     * Get the dynamic status of the resignation.
+     * Get the work position associated with the CoE.
+     */
+    public function work_position(): BelongsTo
+    {
+        return $this->belongsTo(WorkPosition::class);
+    }
+
+    /**
+     * Get the dynamic status of the certificate.
      */
     public function getStatusAttribute()
     {
@@ -52,10 +66,10 @@ class Resignation extends Model
     /**
      * Sync the approval status with the model's native fields.
      */
-    public function syncApprovalStatus(string $status): void
-    {
-        if ($status === 'approved') {
-            $this->update(['confirmed_at' => now()]);
-        }
-    }
+    // public function syncApprovalStatus(string $status): void
+    // {
+    //     if ($status === 'approved') {
+    //         $this->update(['confirmed_at' => now()]);
+    //     }
+    // }
 }

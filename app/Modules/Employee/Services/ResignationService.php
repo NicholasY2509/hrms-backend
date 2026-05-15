@@ -43,4 +43,30 @@ class ResignationService
             return $this->repository->delete($resignation);
         });
     }
+
+    public function settle(Resignation $resignation, ?string $finalEffectiveDate = null): Resignation
+    {
+        return DB::transaction(function () use ($resignation, $finalEffectiveDate) {
+            if ($resignation->settled_at) {
+                return $resignation;
+            }
+
+            $effectiveDate = $finalEffectiveDate ?? $resignation->effective_date;
+
+            // 1. Update Employee Status and Resign Date
+            $resignation->employee->update([
+                'work_employee_status_id' => 2, // Resign
+                'resign_date' => $effectiveDate,
+            ]);
+
+            // 2. Mark Resignation as Settled
+            $resignation->update([
+                'effective_date' => $effectiveDate,
+                'settled_at' => now(),
+                'confirmed_at' => $resignation->confirmed_at ?? now(),
+            ]);
+
+            return $resignation->refresh();
+        });
+    }
 }

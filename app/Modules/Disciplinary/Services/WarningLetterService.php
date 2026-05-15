@@ -44,4 +44,20 @@ class WarningLetterService
             return $this->repository->delete($warningLetter);
         });
     }
+
+    public function settle(WarningLetter $warningLetter): WarningLetter
+    {
+        if ($warningLetter->settled_at) {
+            return $warningLetter;
+        }
+
+        return DB::transaction(function () use ($warningLetter) {
+            $warningLetter->update([
+                'settled_at' => now(),
+                'confirmed_at' => $warningLetter->confirmed_at ?? now(),
+            ]);
+
+            return $warningLetter->refresh();
+        });
+    }
 }

@@ -29,5 +29,9 @@ return [
             'view' => 'exports.attendance.team_report_pdf',
             'txt_view' => 'exports.attendance.team_report_txt',
         ],
+        'certificate_of_employment' => [
+            'class' => \App\Modules\CertificateOfEmployment\Exports\CertificateOfEmploymentExport::class,
+            'view' => 'exports.certificate_of_employment.coe_pdf',
+        ],
     ]
 ];

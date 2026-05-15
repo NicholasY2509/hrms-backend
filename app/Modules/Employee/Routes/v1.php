@@ -3,6 +3,7 @@
 use App\Modules\Employee\Controllers\V1\Configuration\EmployeeStatusController;
 use App\Modules\Employee\Controllers\V1\Portal\Employee\MyProfileController;
 use App\Modules\Employee\Controllers\V1\Portal\Employee\FaceController;
+use App\Modules\Employee\Controllers\V1\Portal\Employee\MyResignationController;
 use App\Modules\Employee\Controllers\V1\Portal\Management\CertificateOfEmploymentController;
 use App\Modules\Employee\Controllers\V1\Portal\Management\EmployeeSearchController;
 use App\Modules\Employee\Controllers\V1\Portal\Management\EmployeeManagementController;
@@ -25,6 +26,10 @@ Route::middleware(['api.auth'])->group(function () {
                 Route::post('/register', [FaceController::class, 'register']);
                 Route::post('/verify', [FaceController::class, 'verify']);
             });
+
+            // Resignation
+            Route::get('resignations', [MyResignationController::class, 'index']);
+            Route::post('resignations', [MyResignationController::class, 'store']);
         });
 
         // Management Context
@@ -37,8 +42,8 @@ Route::middleware(['api.auth'])->group(function () {
                 Route::get('/employees/generate-nik', [EmployeeManagementController::class, 'generateNik']);
                 Route::apiResource('employees', EmployeeManagementController::class);
                 Route::apiResource('supervisors', SupervisorManagementController::class);
-                Route::apiResource('certificate-of-employments', CertificateOfEmploymentController::class);
-                Route::apiResource('resignations', ResignationController::class);
+                Route::post('resignations/{resignation}/settle', [ResignationController::class, 'settle']);
+                Route::apiResource('resignations', ResignationController::class)->only(['index', 'show']);
             });
 
         // Configuration Context

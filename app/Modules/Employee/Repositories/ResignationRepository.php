@@ -9,7 +9,7 @@ class ResignationRepository
 {
     public function getPaginated(array $filters, int $perPage = 15): LengthAwarePaginator
     {
-        $query = Resignation::query()->with(['employee']);
+        $query = Resignation::query()->with(['employee', 'approvalRequest.steps']);
 
         if (isset($filters['employee_id'])) {
             $query->where('employee_id', $filters['employee_id']);
@@ -20,7 +20,7 @@ class ResignationRepository
 
     public function findById(int $id): ?Resignation
     {
-        return Resignation::with(['employee'])->find($id);
+        return Resignation::with(['employee', 'approvalRequest.steps'])->find($id);
     }
 
     public function create(array $data): Resignation

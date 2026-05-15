@@ -11,6 +11,7 @@ use App\Modules\Employee\Services\ResignationService;
 use App\Modules\Employee\Repositories\ResignationRepository;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * @group Employee Management
@@ -70,8 +71,21 @@ class ResignationController extends Controller
     public function show(Resignation $resignation): JsonResponse
     {
         return $this->successResponse(
-            new ResignationResource($resignation->load(['employee'])),
+            new ResignationResource($resignation->load(['employee', 'approvalRequest.steps'])),
             'Resignation details retrieved'
+        );
+    }
+
+    /**
+     * Settle resignation.
+     */
+    public function settle(Resignation $resignation, Request $request): JsonResponse
+    {
+        $settledResignation = $this->service->settle($resignation, $request->input('effective_date'));
+
+        return $this->successResponse(
+            new ResignationResource($settledResignation),
+            'Resignation finalized successfully'
         );
     }
 

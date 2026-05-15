@@ -72,7 +72,8 @@ class WarningLetterManagementController extends Controller
         return $this->successResponse(
             new WarningLetterResource($warningLetter->load([
                 'employee', 
-                'warningLetterType'
+                'warning_letter_type',
+                'approvalRequest.steps'
             ])),
             'Warning letter details retrieved'
         );
@@ -106,5 +107,20 @@ class WarningLetterManagementController extends Controller
         $this->service->deleteWarningLetter($warningLetter);
 
         return $this->successResponse(null, 'Warning letter deleted successfully');
+    }
+
+    /**
+     * Settle warning letter.
+     * 
+     * Finalize the warning letter.
+     */
+    public function settle(WarningLetter $warningLetter): JsonResponse
+    {
+        $settledWarningLetter = $this->service->settle($warningLetter);
+
+        return $this->successResponse(
+            new WarningLetterResource($settledWarningLetter),
+            'Warning letter finalized successfully'
+        );
     }
 }
