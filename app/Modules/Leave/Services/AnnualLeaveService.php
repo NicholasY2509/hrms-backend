@@ -4,6 +4,7 @@ namespace App\Modules\Leave\Services;
 
 use App\Modules\Employee\Models\Employee;
 use Illuminate\Support\Carbon;
+use Carbon\CarbonInterface;
 
 class AnnualLeaveService
 {
@@ -15,7 +16,7 @@ class AnnualLeaveService
      * @param Carbon $referenceDate
      * @return array
      */
-    public function deduct(Employee $employee, $amount, Carbon $referenceDate): array
+    public function deduct(Employee $employee, $amount, CarbonInterface $referenceDate): array
     {
         $deduction_details = [];
         $currentYear = (int) $referenceDate->year;
