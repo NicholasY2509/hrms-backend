@@ -18,7 +18,8 @@ class HolidayResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'date' => $this->date,
-            'is_national' => (bool) ($this->is_national ?? true),
+            'description' => $this->description,
+            'is_half_day' => (bool) $this->is_half_day,
         ];
     }
 }

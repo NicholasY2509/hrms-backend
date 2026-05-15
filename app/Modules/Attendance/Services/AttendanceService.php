@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 use App\Modules\Attendance\Models\AttendanceMobileScan;
 use Illuminate\Support\Facades\Storage;
 use App\Services\StorageService;
+use Carbon\Carbon;
 
 class AttendanceService
 {
@@ -84,5 +85,18 @@ class AttendanceService
         );
 
         return $task;
+    }
+
+    /**
+     * Update an attendance working hour (schedule).
+     */
+    public function updateWorkingHour(AttendanceWorkingHour $attendanceWorkingHour, array $data): AttendanceWorkingHour
+    {
+        if (isset($data['attendance_at'])) {
+            $data['attendance_at'] = Carbon::parse($data['attendance_at'])->format('Y-m-d');
+        }
+
+        $attendanceWorkingHour->update($data);
+        return $attendanceWorkingHour->load(['employee', 'working_hour', 'attendance']);
     }
 }

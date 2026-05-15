@@ -51,6 +51,7 @@ Route::middleware(['api.auth'])->group(function () {
             Route::controller(AttendanceWorkingHourManagementController::class)->group(function () {
                 Route::get('/attendance-working-hours', 'index');
                 Route::post('/attendance-working-hours/import', 'import');
+                Route::put('/attendance-working-hours/{attendanceWorkingHour}', 'update');
             });
 
             Route::apiResource('working-hours', WorkingHourManagementController::class);
