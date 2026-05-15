@@ -173,22 +173,33 @@ class UnpaidLeaveService
 
             if ($leave->unpaid_leave_type?->is_annual_leave_deduction) {
                 $employee = $leave->employee;
-                
-                $deduction = $this->annualLeaveService->deduct($employee, $leave->total, $now);
-                $employee = $deduction['employee'];
-                $deductionDetails = $deduction['deduction_details'];
 
-                $employee->save();
+                // Check for existing automated deductions (penalties) in the period to avoid double-deducting
+                $existingDeductionsCount = $this->annualLeaveRepository->countAutomatedDeductionsInRange(
+                    $employee->id,
+                    $leave->start_date,
+                    $leave->end_date
+                );
 
-                $this->annualLeaveRepository->create([
-                    'employee_id' => $employee->id,
-                    'total' => $leave->total,
-                    'annual_leave_year' => $now->format('Y'),
-                    'annual_leave_at' => $annualLeaveAt,
-                    'status' => 'Potong',
-                    'keterangan' => $leave->note . " ({$leave->start_date} to {$leave->end_date})",
-                    'deduction_details' => $deductionDetails,
-                ]);
+                $daysToDeduct = max(0, $leave->total - $existingDeductionsCount);
+
+                if ($daysToDeduct > 0) {
+                    $deduction = $this->annualLeaveService->deduct($employee, $daysToDeduct, $now);
+                    $employee = $deduction['employee'];
+                    $deductionDetails = $deduction['deduction_details'];
+
+                    $employee->save();
+
+                    $this->annualLeaveRepository->create([
+                        'employee_id' => $employee->id,
+                        'total' => $daysToDeduct,
+                        'annual_leave_year' => $now->format('Y'),
+                        'annual_leave_at' => $annualLeaveAt,
+                        'status' => 'Potong',
+                        'keterangan' => $leave->note . " ({$leave->start_date} to {$leave->end_date})",
+                        'deduction_details' => $deductionDetails,
+                    ]);
+                }
 
                 $leave->cutted_at = $annualLeaveAt;
             }

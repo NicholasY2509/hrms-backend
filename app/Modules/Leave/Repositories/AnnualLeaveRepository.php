@@ -49,4 +49,16 @@ class AnnualLeaveRepository
 
         return $query->latest('annual_leave_at')->paginate($perPage);
     }
+
+    /**
+     * Count existing automated absence deductions for an employee within a date range.
+     */
+    public function countAutomatedDeductionsInRange(int $employeeId, string $startDate, string $endDate): int
+    {
+        return AnnualLeave::where('employee_id', $employeeId)
+            ->where('status', 'Potong')
+            ->whereBetween('annual_leave_at', [$startDate, $endDate])
+            ->where('keterangan', 'like', '%Tidak Absen%')
+            ->count();
+    }
 }
