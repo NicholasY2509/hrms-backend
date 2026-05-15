@@ -196,15 +196,25 @@ class UnpaidLeaveService
 
             if ($leave->unpaid_leave_type?->is_annual_leave_deduction) {
                 $employee = $leave->employee;
-                
-                $this->annualLeaveService->deduct(
-                    $employee,
-                    (float) $leave->total,
-                    ($leave->note ?? 'Unpaid Leave') . " ({$leave->start_date} to {$leave->end_date})",
-                    Carbon::parse($now)
+                // Check for existing automated deductions (penalties) in the period to avoid double-deducting
+                $existingDeductionsCount = $this->annualLeaveRepository->countAutomatedDeductionsInRange(
+                    $employee->id,
+                    $leave->start_date,
+                    $leave->end_date
                 );
 
-                $leave->cutted_at = $now->format('Y-m-d');
+                $daysToDeduct = max(0, (float) $leave->total - $existingDeductionsCount);
+
+                if ($daysToDeduct > 0) {
+                    $this->annualLeaveService->deduct(
+                        $employee,
+                        $daysToDeduct,
+                        ($leave->note ?? 'Unpaid Leave') . " ({$leave->start_date} to {$leave->end_date})",
+                        Carbon::parse($leave->start_date)
+                    );
+                }
+
+                $leave->cutted_at = $leave->start_date;
             }
 
             $leave->settled_at = $now->format('Y-m-d');
