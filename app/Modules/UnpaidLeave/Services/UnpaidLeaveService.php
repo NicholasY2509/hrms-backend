@@ -145,7 +145,7 @@ class UnpaidLeaveService
      */
     public function getPendingRequests(int $employeeId, int $limit = 5)
     {
-        return \App\Modules\UnpaidLeave\Models\UnpaidLeave::with(['unpaid_leave_type', 'approvalRequest'])
+        return UnpaidLeave::with(['unpaid_leave_type', 'approvalRequest'])
             ->where('employee_id', $employeeId)
             ->whereNull('settled_at')
             ->whereHas('approvalRequest', function ($query) {
@@ -215,6 +215,20 @@ class UnpaidLeaveService
                 }
 
                 $leave->cutted_at = $leave->start_date;
+            } elseif ($leave->unpaid_leave_type_id == 10) {
+                // NEW CASE: Reverse any automated penalties because this leave is "free" (e.g. Sick Leave Type ID 10)
+                $automatedDeductions = $this->annualLeaveRepository->getAutomatedDeductionsInRange(
+                    $leave->employee_id,
+                    $leave->start_date,
+                    $leave->end_date
+                );
+
+                foreach ($automatedDeductions as $deduction) {
+                    $this->annualLeaveService->restoreDeduction(
+                        $deduction, 
+                        "Izin " . $leave->unpaid_leave_type->name . " pada " . $deduction->annual_leave_at->format('Y-m-d')
+                    );
+                }
             }
 
             $leave->settled_at = $now->format('Y-m-d');

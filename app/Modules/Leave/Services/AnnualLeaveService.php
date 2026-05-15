@@ -103,4 +103,45 @@ class AnnualLeaveService
             ]);
         });
     }
+
+    /**
+     * Restore annual leave balance from a previous deduction.
+     * 
+     * @param AnnualLeave $originalDeduction
+     * @param string $reason
+     * @return void
+     */
+    public function restoreDeduction(AnnualLeave $originalDeduction, string $reason): void
+    {
+        DB::transaction(function () use ($originalDeduction, $reason) {
+            $employee = $originalDeduction->employee;
+            $details = $originalDeduction->deduction_details;
+            $currentYear = Carbon::now()->year;
+
+            foreach ($details as $year => $amount) {
+                if ((int)$year === $currentYear) {
+                    $employee->annual_leave_3 += (float) $amount;
+                } else {
+                    // All other years (usually currentYear - 1) go to annual_leave_2
+                    $employee->annual_leave_2 += (float) $amount;
+                }
+            }
+
+            $employee->save();
+
+            // Create reversal history record
+            $this->repository->create([
+                'employee_id' => $employee->id,
+                'total' => $originalDeduction->total,
+                'annual_leave_year' => $currentYear,
+                'annual_leave_at' => Carbon::now(),
+                'status' => 'Tambah',
+                'keterangan' => "Pengembalian: " . $reason . " (Ref: #" . $originalDeduction->id . ")",
+                'deduction_details' => $details,
+            ]);
+
+            // Soft delete the original deduction to avoid duplicate accounting
+            $originalDeduction->delete();
+        });
+    }
 }
