@@ -20,6 +20,7 @@ Route::middleware(['api.auth'])->group(function () {
         Route::prefix('management')->group(function () {
             Route::prefix('leaves')->group(function () {
                 Route::get('/', [UnpaidLeaveManagementController::class, 'index']);
+                Route::get('/calendar', [UnpaidLeaveManagementController::class, 'calendar']);
                 Route::get('/{id}', [UnpaidLeaveManagementController::class, 'show']);
                 Route::post('/{id}/settle', [UnpaidLeaveManagementController::class, 'settle']);
             });

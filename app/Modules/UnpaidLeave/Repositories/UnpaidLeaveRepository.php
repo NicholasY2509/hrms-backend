@@ -2,6 +2,7 @@
 
 namespace App\Modules\UnpaidLeave\Repositories;
 
+use App\Modules\UnpaidLeave\Models\Holiday;
 use App\Modules\UnpaidLeave\Models\UnpaidLeave;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -63,5 +64,30 @@ class UnpaidLeaveRepository
             return false;
         }
         return $leave->update($data);
+    }
+
+    /**
+     * Get unpaid leaves for calendar view within a date range.
+     */
+    public function getCalendarData(array $filters)
+    {
+        return UnpaidLeave::with(['employee', 'unpaid_leave_type', 'approvalRequest'])
+            ->where(function ($query) use ($filters) {
+                $query->whereBetween('start_date', [$filters['start_date'], $filters['end_date']])
+                    ->orWhereBetween('end_date', [$filters['start_date'], $filters['end_date']])
+                    ->orWhere(function ($q) use ($filters) {
+                        $q->where('start_date', '<=', $filters['start_date'])
+                            ->where('end_date', '>=', $filters['end_date']);
+                    });
+            })
+            ->when($filters['employee_id'] ?? null, fn($q, $id) => $q->where('employee_id', $id))
+            ->when($filters['department_id'] ?? null, function ($q, $deptId) {
+                $q->whereHas('employee', fn($sq) => $sq->where('department_id', $deptId));
+            })
+            ->when($filters['unpaid_leave_type_id'] ?? null, fn($q, $typeId) => $q->where('unpaid_leave_type_id', $typeId))
+            ->when($filters['status'] ?? null, function ($q, $status) {
+                $q->whereHas('approvalRequest', fn($sq) => $sq->where('status', $status));
+            })
+            ->get();
     }
 }

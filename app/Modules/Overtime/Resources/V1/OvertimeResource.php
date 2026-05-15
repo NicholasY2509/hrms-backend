@@ -21,10 +21,8 @@ class OvertimeResource extends JsonResource
             'id' => $this->id,
             'employee' => new EmployeeResource($this->employee),
             'document_no' => $this->document_no,
-            'type' => [
-                'id' => $this->overtime_type_id,
-                'name' => $this->overtime_type?->name ?? $this->type,
-            ],
+            'type' => $this->type,
+            'dac_type' => $this->overtime_type?->name,
             'date' => $this->date,
             'start_time' => $this->start_time,
             'finish_time' => $this->finish_time,

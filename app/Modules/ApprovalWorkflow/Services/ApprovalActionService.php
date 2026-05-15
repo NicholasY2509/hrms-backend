@@ -10,6 +10,8 @@ use App\Services\StorageService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Modules\ApprovalWorkflow\Events\ApprovalStepActionable;
+use App\Modules\ApprovalWorkflow\Events\ApprovalRequestFinished;
 
 class ApprovalActionService
 {
@@ -69,10 +71,18 @@ class ApprovalActionService
             if ($allApproved) {
                 $request->update(['status' => 'approved']);
                 $this->syncParentModelStatus($request, 'approved');
+                
+                event(new ApprovalRequestFinished($request, 'approved'));
             } else {
                 // Move sequence forward if this was the current one
                 if ($step->sequence == $request->current_step_sequence) {
                     $request->increment('current_step_sequence');
+                    
+                    // Dispatch event for the next step(s)
+                    $nextSteps = $request->steps()->where('sequence', $request->current_step_sequence)->get();
+                    foreach ($nextSteps as $nextStep) {
+                        event(new ApprovalStepActionable($nextStep));
+                    }
                 }
             }
 
@@ -107,6 +117,8 @@ class ApprovalActionService
             
             // 3. Sync with Parent Model
             $this->syncParentModelStatus($request, 'rejected');
+
+            event(new ApprovalRequestFinished($request, 'rejected', $notes));
 
             return $request;
         });

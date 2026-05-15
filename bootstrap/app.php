@@ -26,6 +26,10 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         },
     )
+    ->withCommands([
+        __DIR__.'/../app/Console/Commands',
+        ...glob(__DIR__.'/../app/Modules/*/Console/Commands'),
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(SecurityHeaders::class);
         $middleware->throttleApi('api');
@@ -46,6 +50,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Critical Business Rules
         $schedule->command('leave:grant-monthly')->lastDayOfMonth('00:00');
         $schedule->command('attendance:daily-absence-penalty')->dailyAt('00:05')->timezone('Asia/Jakarta');
+
+        // Notification Alerts
+        $schedule->command('employee:notify-birthdays')->dailyAt('08:00')->timezone('Asia/Jakarta');
+        $schedule->command('attendance:notify-missing-logs')->dailyAt('09:00')->timezone('Asia/Jakarta');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

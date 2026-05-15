@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use App\Modules\Attendance\Models\AttendanceSetting;
 use App\Modules\Attendance\Models\AttendanceMobileScan;
+use App\Modules\Attendance\Events\EmployeeLateArrival;
 
 class MobileAttendanceService
 {
@@ -115,6 +116,8 @@ class MobileAttendanceService
         if (!$attendance->late_time && $currentTime->greaterThan($clockInTime)) {
             $attendance->late_time = $currentTime->diff($clockInTime)->format('%H:%I:%S');
             $attendance->attendance_status_id = self::STATUS_LATE;
+            
+            event(new EmployeeLateArrival($attendance));
         } elseif (!$attendance->attendance_status_id) {
             $attendance->attendance_status_id = self::STATUS_PRESENT;
         }

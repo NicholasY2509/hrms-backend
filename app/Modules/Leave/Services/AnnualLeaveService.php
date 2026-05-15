@@ -5,7 +5,7 @@ namespace App\Modules\Leave\Services;
 use App\Modules\Employee\Models\Employee;
 use App\Modules\Leave\Models\AnnualLeave;
 use App\Modules\Leave\Repositories\AnnualLeaveRepository;
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class AnnualLeaveService

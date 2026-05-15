@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Overtime\Repositories\OvertimeRepository;
 use App\Modules\Overtime\Requests\SettleOvertimeRequest;
 use App\Modules\Overtime\Requests\UpdateOvertimeRequest;
+use App\Modules\Overtime\Requests\V1\GetOvertimeManagementRequest;
 use App\Modules\Overtime\Resources\V1\OvertimeResource;
 use App\Modules\Overtime\Services\OvertimeService;
 use App\Traits\ApiResponses;
@@ -29,16 +30,10 @@ class OvertimeManagementController extends Controller
 
     /**
      * List all employee overtime requests.
-     * 
-     * @queryParam employee_id int Filter by employee.
-     * @queryParam type string Filter by type (UMUM, DAC, NATIONAL).
-     * @queryParam start_date date Filter by start date (Y-m-d).
-     * @queryParam end_date date Filter by end date (Y-m-d).
-     * @queryParam per_page int Results per page.
      */
-    public function index(Request $request): JsonResponse
+    public function index(GetOvertimeManagementRequest $request): JsonResponse
     {
-        $filters = $request->only(['employee_id','department_id', 'type', 'start_date', 'end_date', 'is_settled']);
+        $filters = $request->validated();
         $perPage = $request->query('per_page', 15);
 
         $overtimes = $this->repository->paginate($filters, $perPage);

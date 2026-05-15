@@ -8,30 +8,22 @@ use App\Modules\UnpaidLeave\Models\UnpaidLeaveType;
 use App\Modules\UnpaidLeave\Repositories\UnpaidLeaveRepository;
 use Illuminate\Support\Facades\DB;
 use App\Services\StorageService;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\UploadedFile;
 use App\Modules\Leave\Services\AnnualLeaveService;
 use App\Modules\Leave\Repositories\AnnualLeaveRepository;
 use App\Modules\UnpaidLeave\Models\UnpaidLeave;
+use App\Modules\UnpaidLeave\Services\HolidayService;
 
 class UnpaidLeaveService
 {
-    protected UnpaidLeaveRepository $repository;
-    protected AnnualLeaveService $annualLeaveService;
-    protected AnnualLeaveRepository $annualLeaveRepository;
-    protected UnpaidLeaveApprovalService $approvalService;
-
     public function __construct(
-        UnpaidLeaveRepository $repository,
-        AnnualLeaveService $annualLeaveService,
-        AnnualLeaveRepository $annualLeaveRepository,
-        UnpaidLeaveApprovalService $approvalService
-    ) {
-        $this->repository = $repository;
-        $this->annualLeaveService = $annualLeaveService;
-        $this->annualLeaveRepository = $annualLeaveRepository;
-        $this->approvalService = $approvalService;
-    }
+        protected UnpaidLeaveRepository $repository,
+        protected AnnualLeaveService $annualLeaveService,
+        protected AnnualLeaveRepository $annualLeaveRepository,
+        protected UnpaidLeaveApprovalService $approvalService,
+        protected HolidayService $holidayService
+    ) {}
 
     /**
      * Get list of unpaid leaves for an employee.
@@ -42,6 +34,22 @@ class UnpaidLeaveService
     public function getUserUnpaidLeaves(int $employeeId, int $perPage = 15)
     {
         return $this->repository->getByEmployeeId($employeeId, $perPage);
+    }
+
+    /**
+     * Get paginated unpaid leaves for management.
+     */
+    public function getPaginatedLeaves(array $filters = [], int $perPage = 15)
+    {
+        return $this->repository->paginate($filters, $perPage);
+    }
+
+    /**
+     * Get unpaid leave detail by ID.
+     */
+    public function getLeaveDetail(int $id)
+    {
+        return $this->repository->find($id);
     }
 
     /**
@@ -103,8 +111,8 @@ class UnpaidLeaveService
         }
 
         // Subtract holidays that are not Sundays
-        $holidaysCount = Holiday::betweenDates($startDate, $endDate)
-            ->whereRaw('DAYOFWEEK(date) != 1')
+        $holidaysCount = $this->holidayService->getHolidaysInRange($startDate, $endDate)
+            ->filter(fn($h) => Carbon::parse($h->date)->dayOfWeek !== Carbon::SUNDAY)
             ->count();
 
         return max(0, $count - $holidaysCount);
@@ -153,10 +161,21 @@ class UnpaidLeaveService
      */
     public function getUpcomingHolidays(int $limit = 2)
     {
-        return Holiday::where('date', '>=', Carbon::now()->toDateString())
-            ->orderBy('date', 'asc')
-            ->limit($limit)
-            ->get();
+        return $this->holidayService->getAllHolidays()
+            ->where('date', '>=', Carbon::now()->toDateString())
+            ->sortBy('date')
+            ->take($limit);
+    }
+
+    /**
+     * Get calendar data (leaves and holidays).
+     */
+    public function getCalendarData(array $filters): array
+    {
+        return [
+            'leaves' => $this->repository->getCalendarData($filters),
+            'holidays' => $this->holidayService->getHolidaysInRange($filters['start_date'], $filters['end_date']),
+        ];
     }
 
     /**
@@ -174,7 +193,6 @@ class UnpaidLeaveService
 
         return DB::transaction(function () use ($leave) {
             $now = Carbon::now();
-            $annualLeaveAt = $leave->start_date;
 
             if ($leave->unpaid_leave_type?->is_annual_leave_deduction) {
                 $employee = $leave->employee;
@@ -183,10 +201,10 @@ class UnpaidLeaveService
                     $employee,
                     (float) $leave->total,
                     ($leave->note ?? 'Unpaid Leave') . " ({$leave->start_date} to {$leave->end_date})",
-                    Carbon::parse($annualLeaveAt)
+                    Carbon::parse($now)
                 );
 
-                $leave->cutted_at = $annualLeaveAt;
+                $leave->cutted_at = $now->format('Y-m-d');
             }
 
             $leave->settled_at = $now->format('Y-m-d');

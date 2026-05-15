@@ -8,6 +8,8 @@ use App\Modules\ApprovalWorkflow\Repositories\ApprovalRuleRepository;
 use App\Modules\Employee\Models\Employee;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Facades\Log;
+use App\Modules\ApprovalWorkflow\Events\ApprovalStepActionable;
+use App\Modules\ApprovalWorkflow\Events\ApprovalRequestCreated;
 
 trait Approvable
 {
@@ -79,6 +81,14 @@ trait Approvable
             }
             
             Log::info("Approval flow initialized for " . get_class($this) . " ID: {$this->id} using Rule ID: {$rule->id}");
+
+            // 6. Notify initial approvers (Sequence 1)
+            $firstSteps = $request->steps()->where('sequence', 1)->get();
+            foreach ($firstSteps as $firstStep) {
+                event(new ApprovalStepActionable($firstStep));
+            }
+
+            event(new ApprovalRequestCreated($request));
             
         } catch (\Exception $e) {
             Log::error("Failed to initialize approval flow for " . get_class($this) . ": " . $e->getMessage());
@@ -91,12 +101,12 @@ trait Approvable
     protected function resolveApplicantWorkPositionId(): ?int
     {
         // Try direct relationship
-        if (isset($this->employee) && $this->employee->work_position_id) {
+        if ($this->employee && $this->employee->work_position_id) {
             return $this->employee->work_position_id;
         }
 
         // Try through user relationship
-        if (isset($this->user->employee) && $this->user->employee->work_position_id) {
+        if ($this->user && $this->user->employee && $this->user->employee->work_position_id) {
             return $this->user->employee->work_position_id;
         }
 
@@ -109,12 +119,12 @@ trait Approvable
     protected function resolveApplicantWorkLocationId(): ?int
     {
         // Try direct relationship
-        if (isset($this->employee) && $this->employee->work_location_id) {
+        if ($this->employee && $this->employee->work_location_id) {
             return $this->employee->work_location_id;
         }
 
         // Try through user relationship
-        if (isset($this->user->employee) && $this->user->employee->work_location_id) {
+        if ($this->user && $this->user->employee && $this->user->employee->work_location_id) {
             return $this->user->employee->work_location_id;
         }
 
@@ -127,12 +137,12 @@ trait Approvable
     protected function resolveApplicantDepartmentId(): ?int
     {
         // Try direct relationship
-        if (isset($this->employee) && $this->employee->department_id) {
+        if ($this->employee && $this->employee->department_id) {
             return $this->employee->department_id;
         }
 
         // Try through user relationship
-        if (isset($this->user->employee) && $this->user->employee->department_id) {
+        if ($this->user && $this->user->employee && $this->user->employee->department_id) {
             return $this->user->employee->department_id;
         }
 
