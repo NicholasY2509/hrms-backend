@@ -27,6 +27,7 @@ Route::middleware(['api.auth'])->group(function () {
             });
 
             Route::get('/', [OvertimeManagementController::class, 'index']);
+            Route::get('/export', [OvertimeManagementController::class, 'export']);
             Route::get('/{id}', [OvertimeManagementController::class, 'show']);
             Route::patch('/{id}', [OvertimeManagementController::class, 'update']);
             Route::post('/{id}/settle', [OvertimeManagementController::class, 'settle']);

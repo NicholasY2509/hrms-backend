@@ -33,5 +33,21 @@ return [
             'class' => \App\Modules\CertificateOfEmployment\Exports\CertificateOfEmploymentExport::class,
             'view' => 'exports.certificate_of_employment.coe_pdf',
         ],
+        'warning_letter' => [
+            'class' => \App\Modules\Disciplinary\Exports\WarningLetterExport::class,
+            'view' => 'exports.disciplinary.warning_letter_pdf',
+        ],
+        'resignation' => [
+            'class' => \App\Modules\Employee\Exports\ResignationExport::class,
+            'view' => 'exports.employee.resignation_pdf',
+        ],
+        'career' => [
+            'class' => \App\Modules\Career\Exports\CareerExport::class,
+            'view' => 'exports.career.career_pdf',
+        ],
+        'overtime' => [
+            'class' => \App\Modules\Overtime\Exports\OvertimeExport::class,
+            'view' => 'exports.overtime.overtime_pdf',
+        ],
     ]
 ];

@@ -4,6 +4,7 @@ namespace App\Modules\Employee\Models;
 
 use App\Modules\Attendance\Models\AttendanceWorkingHour;
 use App\Modules\Attendance\Models\AttendanceUser;
+use App\Modules\Disciplinary\Models\WarningLetter;
 use App\Modules\User\Models\User;
 use App\Modules\Organization\Models\Department;
 use App\Modules\Organization\Models\Team;
@@ -149,6 +150,14 @@ class Employee extends Model
     public function warnings(): HasMany
     {
         return $this->hasMany(EmployeeWarning::class);
+    }
+
+    /**
+     * Get the disciplinary warning letters for the employee.
+     */
+    public function warning_letters(): HasMany
+    {
+        return $this->hasMany(WarningLetter::class);
     }
 
     /**

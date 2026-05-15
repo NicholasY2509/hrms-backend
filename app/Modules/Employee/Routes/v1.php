@@ -43,6 +43,7 @@ Route::middleware(['api.auth'])->group(function () {
                 Route::apiResource('employees', EmployeeManagementController::class);
                 Route::apiResource('supervisors', SupervisorManagementController::class);
                 Route::post('resignations/{resignation}/settle', [ResignationController::class, 'settle']);
+                Route::get('resignations/{resignation}/export', [ResignationController::class, 'export']);
                 Route::apiResource('resignations', ResignationController::class)->only(['index', 'show']);
             });
 

@@ -13,6 +13,9 @@ use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+use App\Modules\System\Services\ReportService;
+use App\Modules\Overtime\Services\OvertimeTemplateService;
+
 /**
  * @group Overtime
  * @subgroup Management Portal
@@ -25,7 +28,8 @@ class OvertimeManagementController extends Controller
 
     public function __construct(
         protected OvertimeRepository $repository,
-        protected OvertimeService $service
+        protected OvertimeService $service,
+        protected ReportService $reportService
     ) {}
 
     /**
@@ -116,6 +120,32 @@ class OvertimeManagementController extends Controller
         return $this->successResponse(
             new OvertimeResource($updatedOvertime),
             'Overtime request updated successfully.'
+        );
+    }
+
+    /**
+     * Export overtime requests to PDF.
+     * 
+     * @queryParam start_date date optional Filter by start date.
+     * @queryParam end_date date optional Filter by end date.
+     * @queryParam department_id int optional Filter by department.
+     */
+    public function export(GetOvertimeManagementRequest $request): JsonResponse
+    {
+        $filters = $request->validated();
+        $filters['is_settled'] = true;
+        
+        $report = $this->reportService->requestReport([
+            'type' => 'overtime',
+            'format' => 'pdf',
+            'name' => 'Form Pengajuan Lembur - ' . now()->format('YmdHis'),
+            'filters' => $filters
+        ]);
+
+        return $this->successResponse(
+            $report,
+            'Proses pembuatan dokumen lembur sedang berlangsung.',
+            202
         );
     }
 }

@@ -12,6 +12,9 @@ use App\Modules\Career\Repositories\CareerRepository;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 
+use App\Modules\System\Services\ReportService;
+use Illuminate\Http\Request;
+
 /**
  * @group Career
  * @subgroup Management Portal
@@ -22,7 +25,8 @@ class CareerManagementController extends Controller
 
     public function __construct(
         protected CareerService $service,
-        protected CareerRepository $repository
+        protected CareerRepository $repository,
+        protected ReportService $reportService
     ) {}
 
     /**
@@ -125,6 +129,29 @@ class CareerManagementController extends Controller
         return $this->successResponse(
             new CareerResource($settledCareer),
             'Career transition finalized successfully'
+        );
+    }
+
+    /**
+     * Export career transition to PDF.
+     * 
+     * Generate a printable form for the career transition.
+     */
+    public function export(Career $career): JsonResponse
+    {
+        $report = $this->reportService->requestReport([
+            'type' => 'career',
+            'format' => 'pdf',
+            'name' => 'Transisi Karir - ' . $career->employee?->full_name,
+            'filters' => [
+                'id' => $career->id
+            ]
+        ]);
+
+        return $this->successResponse(
+            $report,
+            'Proses pembuatan Formulir Transisi Karir sedang berlangsung.',
+            202
         );
     }
 }

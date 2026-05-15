@@ -13,6 +13,8 @@ use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+use App\Modules\System\Services\ReportService;
+
 /**
  * @group Employee Management
  * @subgroup Management Portal
@@ -23,7 +25,8 @@ class ResignationController extends Controller
 
     public function __construct(
         protected ResignationService $service,
-        protected ResignationRepository $repository
+        protected ResignationRepository $repository,
+        protected ReportService $reportService
     ) {}
 
     /**
@@ -117,5 +120,28 @@ class ResignationController extends Controller
         $this->service->deleteResignation($resignation);
 
         return $this->successResponse(null, 'Resignation deleted successfully');
+    }
+
+    /**
+     * Export resignation to PDF.
+     * 
+     * Generate a printable formal letter for the resignation.
+     */
+    public function export(Resignation $resignation): JsonResponse
+    {
+        $report = $this->reportService->requestReport([
+            'type' => 'resignation',
+            'format' => 'pdf',
+            'name' => 'Surat Pengunduran Diri - ' . $resignation->employee?->full_name,
+            'filters' => [
+                'id' => $resignation->id
+            ]
+        ]);
+
+        return $this->successResponse(
+            $report,
+            'Proses pembuatan Surat Pengunduran Diri sedang berlangsung.',
+            202
+        );
     }
 }
