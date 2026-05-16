@@ -231,9 +231,20 @@ class EmployeeService
         } else {
             $relationship = $config['relation'];
             $isAttachment = $relationship === 'attachments';
-            
-            // Handle bulk sync if data is an array of items
-            if (isset($data[0]) && is_array($data[0])) {
+            $isSingle = isset($config['is_single']) && $config['is_single'] === true;
+
+            if ($isSingle) {
+                if ($type === 'tax-profile' && isset($data['ptkp_status'])) {
+                    $ptkp = \App\Modules\Payroll\Models\TaxPtkpSetting::where('code', $data['ptkp_status'])->first();
+                    if ($ptkp) {
+                        $data['ptkp_setting_id'] = $ptkp->id;
+                    }
+                    unset($data['ptkp_status']);
+                    unset($data['ter_category']); // Derived from ptkp_setting
+                }
+
+                $employee->{$relationship}()->updateOrCreate([], $data);
+            } elseif (isset($data[0]) && is_array($data[0])) {
                 $incomingIds = collect($data)->pluck('id')->filter()->toArray();
                 
                 // 1. Delete items not in incoming payload

@@ -23,8 +23,8 @@ use App\Modules\Employee\Resources\EmployeeEmergencyContactResource;
 use App\Modules\Employee\Resources\EmployeeLicenseResource;
 use App\Modules\Employee\Resources\EmployeeVehicleResource;
 use App\Modules\Employee\Resources\EmployeeAttachmentResource;
-use App\Modules\Employee\Resources\EmployeeBpjsResource;
 use App\Modules\Employee\Resources\EmployeeInsuranceResource;
+use App\Modules\Employee\Resources\V1\EmployeeTaxProfileResource;
 use App\Modules\Employee\Requests\UpdateEmployeeDetailRequest;
 use App\Modules\Employee\Services\EmployeeService;
 
@@ -92,6 +92,14 @@ class EmployeeDetailController extends Controller
         $relationship = $config['relation'];
         if (!method_exists($employee, $relationship)) {
             return $this->errorResponse("Relationship '{$relationship}' not found on Employee model.", 500);
+        }
+
+        if (isset($config['is_single']) && $config['is_single'] === true) {
+            $data = $employee->{$relationship}()->first();
+            return $this->successResponse(
+                $data ? new $resourceClass($data) : null,
+                Str::title($type) . ' data retrieved'
+            );
         }
 
         $data = $employee->{$relationship}()->get();
@@ -199,6 +207,11 @@ class EmployeeDetailController extends Controller
             'insurance' => [
                 'resource' => EmployeeInsuranceResource::class,
                 'relation' => 'insurances'
+            ],
+            'tax-profile' => [
+                'resource' => EmployeeTaxProfileResource::class,
+                'relation' => 'tax_profile',
+                'is_single' => true
             ],
         ];
     }

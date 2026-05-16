@@ -60,6 +60,8 @@ class EmployeeResource extends JsonResource
             'current_address' => $this->current_address,
             'place_birth' => $this->place_birth,
             'date_birth' => $this->date_birth,
+            'annual_leave_2' => $this->annual_leave_2,
+            'annual_leave_3' => $this->annual_leave_3,
             'supervisor' => $supervisor ? [
                 'id' => $supervisor->id,
                 'name' => $supervisor->full_name,

@@ -5,6 +5,7 @@ namespace App\Modules\Employee\Models;
 use App\Modules\Attendance\Models\AttendanceWorkingHour;
 use App\Modules\Attendance\Models\AttendanceUser;
 use App\Modules\Disciplinary\Models\WarningLetter;
+use App\Modules\Payroll\Models\EmployeeTaxProfile;
 use App\Modules\User\Models\User;
 use App\Modules\Organization\Models\Department;
 use App\Modules\Organization\Models\Team;
@@ -246,6 +247,14 @@ class Employee extends Model
     public function resignations(): HasMany
     {
         return $this->hasMany(Resignation::class);
+    }
+
+    /**
+     * Get the tax profile associated with the employee.
+     */
+    public function tax_profile(): HasOne
+    {
+        return $this->hasOne(EmployeeTaxProfile::class);
     }
 
     /**

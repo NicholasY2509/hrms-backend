@@ -10,6 +10,7 @@ use App\Modules\Employee\Controllers\V1\Portal\Management\EmployeeManagementCont
 use App\Modules\Employee\Controllers\V1\Portal\Management\EmployeeDetailController;
 use App\Modules\Employee\Controllers\V1\Portal\Management\ResignationController;
 use App\Modules\Employee\Controllers\V1\Portal\Management\SupervisorManagementController;
+use App\Modules\Employee\Controllers\V1\Portal\Management\EmployeeTaxProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['api.auth'])->group(function () {
@@ -45,6 +46,10 @@ Route::middleware(['api.auth'])->group(function () {
                 Route::post('resignations/{resignation}/settle', [ResignationController::class, 'settle']);
                 Route::get('resignations/{resignation}/export', [ResignationController::class, 'export']);
                 Route::apiResource('resignations', ResignationController::class)->only(['index', 'show']);
+
+                // Tax Profiles
+                Route::get('employee-tax-profiles/{employee_id}', [EmployeeTaxProfileController::class, 'show']);
+                Route::post('employee-tax-profiles', [EmployeeTaxProfileController::class, 'store']);
             });
 
         // Configuration Context
