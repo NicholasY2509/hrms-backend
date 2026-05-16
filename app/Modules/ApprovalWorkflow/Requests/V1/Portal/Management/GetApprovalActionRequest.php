@@ -25,6 +25,7 @@ class GetApprovalActionRequest extends FormRequest
     {
         return [
             'type' => 'nullable',
+            'search' => 'nullable|string',
             'per_page' => 'nullable|integer|min:1|max:100',
         ];
     }

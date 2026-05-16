@@ -33,7 +33,7 @@ Route::middleware(['api.auth'])->group(function () {
 
         });
 
-        Route::prefix('management')->middleware('role:admin,hr-manager,manager')->group(function () {
+        Route::prefix('management')->middleware('role:Admin HRD')->group(function () {
 
             Route::controller(AttendanceManagementController::class)->group(function () {
                 Route::get('/attendances', 'index');
@@ -72,7 +72,7 @@ Route::middleware(['api.auth'])->group(function () {
             });
         });
         
-        Route::prefix('configuration')->middleware('role:admin')->group(function () {
+        Route::prefix('configuration')->middleware('role:Admin HRD')->group(function () {
             
             Route::controller(AttendanceSettingController::class)->group(function () {
                 Route::get('/settings', 'index');

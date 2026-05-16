@@ -18,7 +18,7 @@ Route::middleware(['api.auth'])->group(function () {
             });
         });
 
-        Route::prefix('management')->group(function () {
+        Route::prefix('management')->middleware('role:Admin HRD')->group(function () {
             Route::prefix('leaves')->group(function () {
                 Route::get('/', [UnpaidLeaveManagementController::class, 'index']);
                 Route::get('/calendar', [UnpaidLeaveManagementController::class, 'calendar']);

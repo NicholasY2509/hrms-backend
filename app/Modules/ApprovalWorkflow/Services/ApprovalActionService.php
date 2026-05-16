@@ -25,23 +25,87 @@ class ApprovalActionService
     /**
      * Get pending requests for the authenticated user.
      */
-    public function getMyPendingApprovals(int $perPage = 15, $type = null)
+    public function getMyPendingApprovals(array $params = [])
+    {
+        $employeeId = $this->getEmployeeId();
+        if (!$employeeId) return $this->emptyResponse();
+
+        if ($this->isIT()) {
+            return [
+                'data' => $this->repository->getAllPending($params['per_page'] ?? 15, $params['type'] ?? null),
+                'counts' => $this->repository->getCountsForEmployee($employeeId)
+            ];
+        }
+
+        return [
+            'data' => $this->repository->getPendingForEmployee($employeeId, $params),
+            'counts' => $this->repository->getCountsForEmployee($employeeId)
+        ];
+    }
+
+    /**
+     * Get all upcoming requests where the user is an approver in a future step.
+     */
+    public function getMyUpcomingApprovals(array $params = [])
+    {
+        $employeeId = $this->getEmployeeId();
+        if (!$employeeId) return $this->emptyResponse();
+
+        return [
+            'data' => $this->repository->getUpcomingForEmployee($employeeId, $params),
+            'counts' => $this->repository->getCountsForEmployee($employeeId)
+        ];
+    }
+
+    /**
+     * Get all ongoing requests where the user is an approver in any step.
+     */
+    public function getMyOngoingApprovals(array $params = [])
+    {
+        $employeeId = $this->getEmployeeId();
+        if (!$employeeId) return $this->emptyResponse();
+
+        return [
+            'data' => $this->repository->getOngoingForEmployee($employeeId, $params),
+            'counts' => $this->repository->getCountsForEmployee($employeeId)
+        ];
+    }
+
+    /**
+     * Get history of finalized requests where user was involved.
+     */
+    public function getMyHistoryApprovals(array $params = [])
+    {
+        $employeeId = $this->getEmployeeId();
+        if (!$employeeId) return $this->emptyResponse();
+
+        return [
+            'data' => $this->repository->getHistoryForEmployee($employeeId, $params),
+            'counts' => $this->repository->getCountsForEmployee($employeeId)
+        ];
+    }
+
+    protected function getEmployeeId(): ?int
+    {
+        return Auth::user()->employee->id ?? null;
+    }
+
+    protected function isIT(): bool
     {
         $user = Auth::user();
-        $employeeId = $user->employee->id ?? null;
-        if (!$employeeId) return collect([]);
-
         $userRoles = $user->remote_roles;
         if (is_string($userRoles)) {
             $userRoles = json_decode($userRoles, true) ?? [];
         }
-        $isIT = in_array('IT', (array) ($userRoles ?? []));
+        return in_array('IT', (array) ($userRoles ?? []));
+    }
 
-        if ($isIT) {
-            return $this->repository->getAllPending($perPage, $type);
-        }
-
-        return $this->repository->getPendingForEmployee($employeeId, $perPage, $type);
+    protected function emptyResponse(): array
+    {
+        return [
+            'data' => collect([]),
+            'counts' => ['pending' => 0, 'upcoming' => 0, 'ongoing' => 0, 'history' => 0]
+        ];
     }
 
     /**

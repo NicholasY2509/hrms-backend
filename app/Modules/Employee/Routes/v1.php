@@ -49,7 +49,7 @@ Route::middleware(['api.auth'])->group(function () {
 
         // Configuration Context
         Route::prefix('configuration')
-            ->middleware('role:admin')
+            ->middleware('role:Admin HRD')
             ->group(function () {
                 Route::apiResource('employee-statuses', EmployeeStatusController::class);
             });

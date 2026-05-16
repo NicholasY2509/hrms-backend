@@ -4,6 +4,7 @@ namespace App\Modules\ApprovalWorkflow\Controllers\V1\Portal\Management;
 
 use App\Http\Controllers\Controller;
 use App\Modules\ApprovalWorkflow\Requests\V1\Portal\Management\GetApprovalActionRequest;
+use App\Modules\ApprovalWorkflow\Resources\V1\ApprovalActionCollection;
 use App\Modules\ApprovalWorkflow\Resources\V1\ApprovalRequestResource;
 use App\Modules\ApprovalWorkflow\Services\ApprovalActionService;
 use App\Traits\ApiResponses;
@@ -31,15 +32,53 @@ class ApprovalActionController extends Controller
      */
     public function index(GetApprovalActionRequest $request): JsonResponse
     {
-        $approvals = $this->service->getMyPendingApprovals(
-            $request->input('per_page', 15),
-            $request->input('type')
+        $result = $this->service->getMyPendingApprovals($request->validated());
+
+        return $this->successResponse(
+            (new ApprovalActionCollection($result['data'], $result['counts'], 'pending'))->response()->getData(true),
+            'Daftar persetujuan berhasil diambil.'
         );
-
-        $resource = ApprovalRequestResource::collection($approvals);
-
-        return $this->successResponse($resource->response()->getData(true), 'Daftar persetujuan berhasil diambil.');
     }
+
+    /**
+     * List all upcoming requests (future steps) for the authenticated manager.
+     */
+    public function upcoming(GetApprovalActionRequest $request): JsonResponse
+    {
+        $result = $this->service->getMyUpcomingApprovals($request->validated());
+
+        return $this->successResponse(
+            (new ApprovalActionCollection($result['data'], $result['counts'], 'upcoming'))->response()->getData(true),
+            'Daftar pengajuan mendatang berhasil diambil.'
+        );
+    }
+
+    /**
+     * List all ongoing requests (any step) for the authenticated manager.
+     */
+    public function ongoing(GetApprovalActionRequest $request): JsonResponse
+    {
+        $result = $this->service->getMyOngoingApprovals($request->validated());
+
+        return $this->successResponse(
+            (new ApprovalActionCollection($result['data'], $result['counts'], 'ongoing'))->response()->getData(true),
+            'Daftar pengajuan berjalan berhasil diambil.'
+        );
+    }
+
+    /**
+     * List history of finalized requests.
+     */
+    public function history(GetApprovalActionRequest $request): JsonResponse
+    {
+        $result = $this->service->getMyHistoryApprovals($request->validated());
+
+        return $this->successResponse(
+            (new ApprovalActionCollection($result['data'], $result['counts'], 'history'))->response()->getData(true),
+            'Riwayat pengajuan berhasil diambil.'
+        );
+    }
+
 
     /**
      * Approve a request.
@@ -59,7 +98,7 @@ class ApprovalActionController extends Controller
                 $request->input('notes'),
                 $request->file('attachment')
             );
-            return $this->successResponse($approvalRequest, 'Pengajuan berhasil disetujui.');
+            return $this->successResponse(new ApprovalRequestResource($approvalRequest), 'Pengajuan berhasil disetujui.');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 400);
         }
@@ -84,7 +123,7 @@ class ApprovalActionController extends Controller
                 $request->input('notes'),
                 $request->file('attachment')
             );
-            return $this->successResponse($approvalRequest, 'Pengajuan telah ditolak.');
+            return $this->successResponse(new ApprovalRequestResource($approvalRequest), 'Pengajuan telah ditolak.');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 400);
         }

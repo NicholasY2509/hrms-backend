@@ -14,7 +14,7 @@ Route::middleware(['api.auth'])->group(function () {
         });
 
         // Operational Oversight (Management)
-        Route::prefix('management')->group(function () {
+        Route::prefix('management')->middleware('role:Admin HRD')->group(function () {
             Route::get('certificate-of-employments', [CertificateOfEmploymentManagementController::class, 'index']);
             Route::post('certificate-of-employments', [CertificateOfEmploymentManagementController::class, 'store']);
             Route::get('certificate-of-employments/{certificate_of_employment}', [CertificateOfEmploymentManagementController::class, 'show']);

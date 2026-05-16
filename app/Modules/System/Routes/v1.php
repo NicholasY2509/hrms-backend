@@ -25,7 +25,7 @@ Route::middleware(['api.auth'])->group(function () {
 
     Route::prefix('configuration')
         ->controller(SystemSettingController::class)
-        ->middleware('role:admin,Admin HRD,IT')
+        ->middleware('role:Admin HRD')
         ->group(function () {
             Route::get('/settings', 'index');
             Route::post('/settings/bulk', 'bulkUpdate');
@@ -33,7 +33,7 @@ Route::middleware(['api.auth'])->group(function () {
 
     Route::prefix('portal/management')
         ->controller(ManagementDashboardController::class)
-        ->middleware('role:admin,Admin HRD')
+        ->middleware('role:Admin HRD')
         ->group(function () {
             Route::get('/dashboard', 'index');
         });

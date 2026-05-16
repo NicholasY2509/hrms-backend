@@ -15,7 +15,7 @@ Route::middleware('api.auth')->group(function () {
      * CONFIGURATION (IT / Admin Only)
      * --------------------------------------------------------------------------
      */
-    Route::prefix('config')->group(function () {
+    Route::prefix('config')->middleware('role:Admin HRD')->group(function () {
         // Approval Groups Configuration
         Route::prefix('groups')->controller(ApprovalGroupController::class)->group(function () {
             Route::get('/', 'index');
@@ -57,9 +57,12 @@ Route::middleware('api.auth')->group(function () {
     Route::prefix('portal')->group(function () {
         
         // Management Context (HR/Managers)
-        Route::prefix('management')->group(function () {
+        Route::prefix('management')->middleware('role:Admin HRD')->group(function () {
             Route::prefix('actions')->controller(ApprovalActionController::class)->group(function () {
-                Route::get('/', 'index');
+                Route::get('pending', 'index');
+                Route::get('ongoing', 'ongoing');
+                Route::get('upcoming', 'upcoming');
+                Route::get('history', 'history');
                 Route::post('{id}/approve', 'approve');
                 Route::post('{id}/reject', 'reject');
             });

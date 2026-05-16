@@ -27,9 +27,26 @@ class AnnualLeaveService
     {
         $date = $date ?: Carbon::now();
         $currentYear = $date->year;
+        $lastYear = $currentYear - 1;
 
-        return DB::transaction(function () use ($employee, $amount, $keterangan, $date, $currentYear) {
-            $employee->annual_leave_3 += $amount;
+        return DB::transaction(function () use ($employee, $amount, $keterangan, $date, $currentYear, $lastYear) {
+            $remaining = (float) $amount;
+            $details = [];
+
+            // 1. If annual_leave_2 (Last Year) is negative, pay it back first up to 0
+            if ($remaining > 0 && $employee->annual_leave_2 < 0) {
+                $payback = min($remaining, abs((float) $employee->annual_leave_2));
+                $employee->annual_leave_2 += $payback;
+                $remaining -= $payback;
+                $details[$lastYear] = $payback;
+            }
+
+            // 2. Any remaining amount goes to annual_leave_3 (This Year)
+            if ($remaining > 0) {
+                $employee->annual_leave_3 += $remaining;
+                $details[$currentYear] = ($details[$currentYear] ?? 0) + $remaining;
+            }
+
             $employee->save();
 
             return $this->repository->create([
@@ -39,7 +56,7 @@ class AnnualLeaveService
                 'annual_leave_at' => $date,
                 'status' => 'Tambah',
                 'keterangan' => $keterangan,
-                'deduction_details' => [$currentYear => $amount],
+                'deduction_details' => $details,
             ]);
         });
     }

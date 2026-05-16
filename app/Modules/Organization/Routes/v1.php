@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['api.auth'])->group(function () {
     Route::prefix('portal/management')
-        ->middleware('role:admin,hr-manager')
+        ->middleware('role:Admin HRD')
         ->group(function () {
         
         Route::apiResource('work-locations', WorkLocationController::class);
