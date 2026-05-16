@@ -21,6 +21,7 @@ class SocialNotificationListener
                 'title' => 'Selamat Ulang Tahun!',
                 'message' => "Selamat ulang tahun, {$employee->first_name}! Semoga hari Anda menyenangkan.",
                 'type' => 'social_birthday_self',
+                'icon' => 'birthday',
                 'action_url' => '/portal/profile'
             ]));
         }

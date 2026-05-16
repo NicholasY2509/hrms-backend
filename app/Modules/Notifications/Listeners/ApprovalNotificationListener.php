@@ -7,6 +7,7 @@ use App\Modules\ApprovalWorkflow\Events\ApprovalRequestFinished;
 use App\Modules\ApprovalWorkflow\Events\ApprovalRequestCreated;
 use App\Modules\Notifications\Notifications\BaseNotification;
 use App\Modules\Employee\Models\Employee;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class ApprovalNotificationListener
@@ -26,8 +27,9 @@ class ApprovalNotificationListener
             if ($employee->user) {
                 $employee->user->notify(new BaseNotification([
                     'title' => 'Persetujuan Diperlukan',
-                    'message' => "Anda memiliki permintaan persetujuan baru dari {$request->approvable->employee->full_name}.",
+                    'message' => "Anda memiliki permintaan persetujuan baru dari {$request->approvable->employee->full_name}. Detail: " . $this->getRequestSummary($request),
                     'type' => 'approval_required',
+                    'icon' => 'approval_required',
                     'action_url' => $this->getActionUrl($request, true), // Management mode
                     'request_id' => $request->id
                 ]));
@@ -45,7 +47,7 @@ class ApprovalNotificationListener
 
         if ($employee && $employee->user) {
             $statusLabel = $event->status === 'approved' ? 'Disetujui' : 'Ditolak';
-            $message = "Pengajuan {$this->getRequestTypeName($request)} Anda telah {$statusLabel}.";
+            $message = "Pengajuan " . $this->getRequestSummary($request) . " Anda telah {$statusLabel}.";
             
             if ($event->status === 'rejected' && $event->notes) {
                 $message .= " Alasan: {$event->notes}";
@@ -55,6 +57,7 @@ class ApprovalNotificationListener
                 'title' => "Pengajuan {$statusLabel}",
                 'message' => $message,
                 'type' => "approval_{$event->status}",
+                'icon' => "approval_{$event->status}",
                 'action_url' => $this->getActionUrl($request, false), // Employee mode
                 'request_id' => $request->id
             ]));
@@ -72,12 +75,30 @@ class ApprovalNotificationListener
         if ($employee && $employee->user) {
             $employee->user->notify(new BaseNotification([
                 'title' => 'Pengajuan Berhasil',
-                'message' => "Pengajuan {$this->getRequestTypeName($request)} Anda telah berhasil dikirim dan sedang dalam proses persetujuan.",
+                'message' => "Pengajuan " . $this->getRequestSummary($request) . " Anda telah berhasil dikirim dan sedang dalam proses persetujuan.",
                 'type' => 'approval_submitted',
+                'icon' => 'approval_submitted',
                 'action_url' => $this->getActionUrl($request, false), // Employee mode
                 'request_id' => $request->id
             ]));
         }
+    }
+
+    protected function getRequestSummary($request): string
+    {
+        $approvable = $request->approvable;
+        $type = class_basename($request->approvable_type);
+
+        return match($type) {
+            'UnpaidLeave' => "Izin/Cuti selama " . ($approvable->total ?? 0) . " hari (" . Carbon::parse($approvable->start_date)->format('d/m/Y') . " - " . Carbon::parse($approvable->end_date)->format('d/m/Y') . ")",
+            'Overtime' => "Lembur selama {$approvable->total_time} jam pada tanggal " . Carbon::parse($approvable->date)->format('d/m/Y'),
+            'Career' => "Transisi Karir (" . ($approvable->careerType->name ?? 'Update Karir') . ")",
+            'WarningLetter' => "Surat Peringatan (" . ($approvable->warning_letter_type->name ?? 'Update SP') . ")",
+            'CertificateOfEmployment' => "Surat Keterangan Kerja",
+            'PaidLeaveReversal' => "Pengembalian Hak Cuti",
+            'Resignation' => "Pengunduran Diri",
+            default => $this->getRequestTypeName($request)
+        };
     }
 
     protected function getActionUrl($request, bool $isManagement = false): string

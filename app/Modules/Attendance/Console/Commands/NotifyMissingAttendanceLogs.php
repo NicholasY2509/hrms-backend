@@ -34,6 +34,7 @@ class NotifyMissingAttendanceLogs extends Command
                     'title' => 'Log Absensi Tidak Lengkap',
                     'message' => "Anda memiliki log absensi yang tidak lengkap untuk tanggal {$yesterday}. Harap segera lengkapi.",
                     'type' => 'attendance_missing_log',
+                    'icon' => 'attendance_late',
                     'action_url' => '/portal/attendance'
                 ]));
                 $this->info("Notified {$schedule->employee->full_name} about missing log.");

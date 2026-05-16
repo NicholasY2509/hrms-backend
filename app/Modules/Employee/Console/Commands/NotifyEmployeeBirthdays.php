@@ -16,7 +16,9 @@ class NotifyEmployeeBirthdays extends Command
     {
         $today = Carbon::today()->format('m-d');
         
-        $employees = Employee::whereRaw("DATE_FORMAT(date_birth, '%m-%d') = ?", [$today])->get();
+        $employees = Employee::whereRaw("DATE_FORMAT(date_birth, '%m-%d') = ?", [$today])
+            ->where('work_employee_status_id', 1)
+            ->get();
 
         foreach ($employees as $employee) {
             event(new EmployeeBirthday($employee));

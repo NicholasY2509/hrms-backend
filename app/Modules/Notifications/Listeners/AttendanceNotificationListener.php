@@ -23,6 +23,7 @@ class AttendanceNotificationListener
                 'title' => 'Terlambat Datang',
                 'message' => "Anda tercatat terlambat datang pada hari ini selama {$attendance->late_time}.",
                 'type' => 'attendance_late',
+                'icon' => 'attendance_late',
                 'action_url' => '/portal/attendance'
             ]));
         }
@@ -33,6 +34,7 @@ class AttendanceNotificationListener
                 'title' => 'Karyawan Terlambat',
                 'message' => "{$employee->full_name} terlambat datang selama {$attendance->late_time}.",
                 'type' => 'attendance_late_alert',
+                'icon' => 'attendance_late',
                 'action_url' => "/management/attendance?employee_id={$employee->id}"
             ]));
         }
