@@ -18,6 +18,7 @@ class EmployeeSalaryRepository
     {
         return EmployeeSalary::where('employee_id', $employeeId)
             ->where('is_active', true)
+            ->latest('created_at')
             ->first();
     }
 

@@ -7,7 +7,7 @@ use App\Modules\Employee\Resources\EmployeeResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class DashboardResource extends JsonResource
+class MobileDashboardResource extends JsonResource
 {
     /**
      * Transform the resource into an array.

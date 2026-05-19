@@ -3,8 +3,8 @@
 namespace App\Modules\System\Controllers\V1;
 
 use App\Http\Controllers\Controller;
-use App\Modules\System\Resources\DashboardResource;
-use App\Modules\System\Services\DashboardService;
+use App\Modules\System\Resources\MobileDashboardResource;
+use App\Modules\System\Services\MobileDashboardService;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -12,25 +12,25 @@ use Illuminate\Support\Facades\Auth;
 /**
  * @group Dashboard
  *
- * API for employee dashboard data aggregation.
+ * API for employee mobile dashboard data aggregation.
  */
-class DashboardController extends Controller
+class MobileDashboardController extends Controller
 {
     use ApiResponses;
 
-    protected DashboardService $dashboardService;
+    protected MobileDashboardService $dashboardService;
 
-    public function __construct(DashboardService $dashboardService)
+    public function __construct(MobileDashboardService $dashboardService)
     {
         $this->dashboardService = $dashboardService;
     }
 
     /**
-     * Get aggregated dashboard data.
+     * Get aggregated mobile dashboard data.
      *
      * @response {
      *  "status": "Success",
-     *  "message": "Dashboard data retrieved successfully",
+     *  "message": "Mobile dashboard data retrieved successfully",
      *  "data": {
      *      "employee": {...},
      *      "attendance": {...},
@@ -45,6 +45,6 @@ class DashboardController extends Controller
         $userId = Auth::id();
         $data = $this->dashboardService->getDashboardData($userId);
 
-        return $this->successResponse(new DashboardResource($data), 'Dashboard data retrieved successfully');
+        return $this->successResponse(new MobileDashboardResource($data), 'Mobile dashboard data retrieved successfully');
     }
 }

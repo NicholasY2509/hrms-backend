@@ -19,7 +19,7 @@ class EmployeeSalaryController extends Controller
 
     /**
      * @group Payroll Management
-     * @queryParam employee_id int required
+     * @queryParam employee_id int required The ID of the employee.
      */
     public function index(Request $request): JsonResponse
     {

@@ -90,9 +90,9 @@ class ZktecoUserService
 
             foreach ($rows as $item) {
                 $uid = $item['PIN2'];
-                $uids[] = $uid;
+                $uids[$uid] = $uid;
                 
-                $upsertData[] = [
+                $upsertData[$uid] = [
                     'uid' => $uid,
                     'name' => $item['Name'] ?: null,
                     'zkteco_machine_id' => $machine->id,
@@ -100,6 +100,9 @@ class ZktecoUserService
                     'updated_at' => $now,
                 ];
             }
+
+            $upsertData = array_values($upsertData);
+            $uids = array_values($uids);
 
             $this->updateProgress(70, "Menyimpan data ke database...");
 

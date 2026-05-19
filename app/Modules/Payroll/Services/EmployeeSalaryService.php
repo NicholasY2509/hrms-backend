@@ -17,6 +17,11 @@ class EmployeeSalaryService
         return $this->repository->getByEmployee($employeeId);
     }
 
+    public function getActiveSalary(int $employeeId)
+    {
+        return $this->repository->findActive($employeeId);
+    }
+
     public function updateBaseSalary(int $employeeId, array $data): EmployeeSalary
     {
         return DB::transaction(function () use ($employeeId, $data) {

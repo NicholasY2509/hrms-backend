@@ -9,7 +9,7 @@ use App\Modules\Overtime\Services\OvertimeService;
 use App\Modules\UnpaidLeave\Services\UnpaidLeaveService;
 use Carbon\Carbon;
 
-class DashboardService
+class MobileDashboardService
 {
     protected AttendanceService $attendanceService;
     protected UnpaidLeaveService $unpaidLeaveService;
@@ -32,7 +32,7 @@ class DashboardService
     }
 
     /**
-     * Get aggregated data for the employee dashboard.
+     * Get aggregated data for the employee mobile dashboard.
      *
      * @param int $userId
      * @return array

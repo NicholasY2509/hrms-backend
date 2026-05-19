@@ -1,30 +1,27 @@
 <?php
 
-namespace App\Modules\Payroll\Controllers\V1;
+namespace App\Modules\Payroll\Controllers\V1\Portal\Employee;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Payroll\Services\PayrollService;
-use App\Modules\Payroll\Resources\V1\SalaryResource;
+use App\Modules\Payroll\Services\EmployeeSalaryService;
+use App\Modules\Payroll\Resources\V1\EmployeeSalaryResource;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * @group Payroll
+ * @group Payroll Employee
  */
-class PayrollController extends Controller
+class MySalaryController extends Controller
 {
     use ApiResponses;
 
-    protected PayrollService $service;
-
-    public function __construct(PayrollService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected EmployeeSalaryService $service
+    ) {}
 
     /**
-     * Get the authenticated user's salary details.
+     * Get the authenticated user's current salary details.
      * 
      * @response {
      *  "status": "Success",
@@ -32,17 +29,21 @@ class PayrollController extends Controller
      *  "data": {
      *      "id": 1,
      *      "employee_id": 1,
-     *      "basic_salary": 5000000,
+     *      "bpjs_base_amount": 5000000,
+     *      "actual_base_amount": 5000000,
      *      "hourly_rate": 28901.73,
+     *      "real_hourly_rate": 28901.73,
      *      "currency": "IDR",
      *      "calculation_factor": 173,
+     *      "effective_date": "2026-04-21",
+     *      "is_active": true,
      *      "updated_at": "2026-04-21 10:00:00"
      *  }
      * }
      */
-    public function salaryDetails(): JsonResponse
+    public function index(): JsonResponse
     {
-        $employeeId = Auth::user()->user_employee?->employee_id;
+        $employeeId = Auth::user()?->user_employee?->employee_id;
 
         if (!$employeeId) {
             return $this->errorResponse('Employee record not found for this user.', 404);
@@ -55,7 +56,7 @@ class PayrollController extends Controller
         }
 
         return $this->successResponse(
-            new SalaryResource($salary),
+            new EmployeeSalaryResource($salary),
             'Salary details retrieved successfully'
         );
     }

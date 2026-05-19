@@ -2,7 +2,8 @@
 
 use App\Modules\System\Controllers\V1\AuthController;
 use App\Modules\System\Controllers\V1\Configuration\SystemSettingController;
-use App\Modules\System\Controllers\V1\DashboardController;
+use App\Modules\System\Controllers\V1\MobileDashboardController;
+use App\Modules\System\Controllers\V1\Portal\Employee\MyDashboardController;
 use App\Modules\System\Controllers\V1\Portal\Management\ManagementDashboardController;
 use App\Modules\System\Controllers\V1\ReportController;
 use App\Modules\System\Controllers\V1\SystemController;
@@ -14,7 +15,14 @@ Route::get('/test-passport', [SystemController::class, 'testPassport']);
 // Auth Routes
 Route::middleware(['api.auth'])->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
-    Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/mobile-dashboard', [MobileDashboardController::class, 'index']);
+
+    // Employee Portal Routes (Web Dashboard)
+    Route::prefix('portal/employee')
+        ->controller(MyDashboardController::class)
+        ->group(function () {
+            Route::get('/dashboard', 'index');
+        });
 
     // Report Routes
     Route::prefix('reports')->controller(ReportController::class)->group(function () {
@@ -38,3 +46,4 @@ Route::middleware(['api.auth'])->group(function () {
             Route::get('/dashboard', 'index');
         });
 });
+

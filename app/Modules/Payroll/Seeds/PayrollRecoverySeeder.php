@@ -13,6 +13,9 @@ class PayrollRecoverySeeder extends Seeder
 {
     public function run(): void
     {
+        // Move truncate outside transaction to avoid implicit commits in MySQL
+        DB::table('employee_salaries')->truncate();
+
         DB::transaction(function () {
             // 1. Restore Basic Salary Components
             $components = [
@@ -45,26 +48,28 @@ class PayrollRecoverySeeder extends Seeder
                 \App\Modules\Payroll\Models\TaxPtkpSetting::updateOrCreate(['code' => $p['code']], $p);
             }
 
-            // 3. Migrate from temp_salaries
-            $tempSalaries = DB::table('temp_salaries')->get();
+            // 3. Migrate from temp_employee_salaries (Original Data)
+            $originalSalaries = DB::table('temp_employee_salaries')->get();
             $restoredCount = 0;
 
-            foreach ($tempSalaries as $temp) {
-                if (!$temp->NIK) continue;
+            foreach ($originalSalaries as $original) {
+                if (!$original->employee_id) continue;
                 
-                $employee = Employee::where('id_card_number', $temp->NIK)->first();
+                // Ensure employee exists
+                $employee = Employee::find($original->employee_id);
+                if (!$employee) continue;
                 
-                if ($employee) {
-                    EmployeeSalary::create([
-                        'employee_id' => $employee->id,
-                        'bpjs_base_amount' => $temp->{'GAJI 1'},
-                        'actual_base_amount' => $temp->{'GAJI 2'},
-                        'effective_date' => now()->startOfMonth(),
-                        'reason' => 'Data migration from legacy temp_salaries',
-                        'is_active' => true
-                    ]);
-                    $restoredCount++;
-                }
+                EmployeeSalary::create([
+                    'employee_id' => $original->employee_id,
+                    'bpjs_base_amount' => $original->amount ?? 0,
+                    'actual_base_amount' => $original->real_amount ?? 0,
+                    'effective_date' => $original->created_at ?? now(),
+                    'reason' => 'Restored from original employee_salaries backup',
+                    'is_active' => true,
+                    'created_at' => $original->created_at,
+                    'updated_at' => $original->updated_at,
+                ]);
+                $restoredCount++;
             }
 
             // 4. Restore Tax Profiles from legacy logic
@@ -107,18 +112,5 @@ class PayrollRecoverySeeder extends Seeder
 
             echo "Restored $restoredCount salaries and $taxRestoredCount tax profiles.\n";
         });
-    }
-
-    private function deriveTerCategory($ptkp): string
-    {
-        $categoryA = ['TK/0', 'TK/1', 'K/0'];
-        $categoryB = ['TK/2', 'TK/3', 'K/1', 'K/2'];
-        $categoryC = ['K/3'];
-
-        if (in_array($ptkp, $categoryA)) return 'A';
-        if (in_array($ptkp, $categoryB)) return 'B';
-        if (in_array($ptkp, $categoryC)) return 'C';
-        
-        return 'A'; // Fallback
     }
 }
