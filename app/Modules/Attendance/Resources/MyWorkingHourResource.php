@@ -2,12 +2,11 @@
 
 namespace App\Modules\Attendance\Resources;
 
-use App\Modules\Employee\Resources\EmployeeResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Carbon\Carbon;
 
-class AttendanceWorkingHourResource extends JsonResource
+class MyWorkingHourResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -37,11 +36,14 @@ class AttendanceWorkingHourResource extends JsonResource
             'shift_start' => $shiftStart?->toDateTimeString(),
             'shift_end' => $shiftEnd?->toDateTimeString(),
             'status' => $this->attendance?->attendance_status?->name,
-            'employee' => new EmployeeResource($this->whenLoaded('employee')),
-            'working_hour' => $this->whenLoaded('working_hour'),
-            'attendance' => $this->whenLoaded('attendance'),
             'working_hour_id' => $this->working_hour_id,
             'employee_id' => $this->employee_id,
+            'working_hour' => $workingHour ? [
+                'id' => $workingHour->id,
+                'name' => $workingHour->name,
+                'clock_in' => $workingHour->clock_in,
+                'clock_out' => $workingHour->clock_out,
+            ] : null,
         ];
     }
 }

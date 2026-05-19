@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Attendance\Requests\ClockInRequest;
 use App\Modules\Attendance\Requests\ClockOutRequest;
 use App\Modules\Attendance\Requests\GetAttendanceHistoryRequest;
+use App\Modules\Attendance\Requests\GetMyWorkingHoursRequest;
 use App\Modules\Attendance\Resources\AttendanceResource;
 use App\Modules\Attendance\Services\AttendanceService;
 use App\Modules\Attendance\Services\MobileAttendanceService;
@@ -115,6 +116,43 @@ class MyAttendanceController extends Controller
         return $this->successResponse(
             new \App\Modules\Attendance\Resources\AttendanceWorkingHourResource($workingHour),
             'Working hour retrieved successfully'
+        );
+    }
+
+    /**
+     * Get all working hours (shifts) for the authenticated employee.
+     * 
+     * @queryParam start_date date Filter by start date (YYYY-MM-DD). Example: 2026-05-01
+     * @queryParam end_date date Filter by end date (YYYY-MM-DD). Example: 2026-05-31
+     * @queryParam per_page int Results per page. Default: 15. Example: 15
+     * 
+     * @response {
+     *  "status": "Success",
+     *  "message": "Daftar jadwal kerja berhasil diambil.",
+     *  "data": {
+     *      "data": [
+     *          {
+     *              "id": 1,
+     *              "date": "2026-05-01",
+     *              "shift_start": "2026-05-01 08:30:00",
+     *              "shift_end": "2026-05-01 17:00:00",
+     *              "working_hour_id": 1,
+     *              "employee_id": 1
+     *          }
+     *      ],
+     *      "links": {...},
+     *      "meta": {...}
+     *  }
+     * }
+     */
+    public function myWorkingHours(GetMyWorkingHoursRequest $request): JsonResponse
+    {
+        $userId = Auth::id();
+        $schedules = $this->mobileAttendanceService->getMyWorkingHours($userId, $request->validated());
+
+        return $this->successResponse(
+            \App\Modules\Attendance\Resources\MyWorkingHourResource::collection($schedules)->response()->getData(true),
+            'Daftar jadwal kerja berhasil diambil.'
         );
     }
 

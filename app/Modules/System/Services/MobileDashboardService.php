@@ -115,7 +115,7 @@ class MobileDashboardService
                 'count' => $item->count,
                 'percentage' => round($percentage, 1),
             ];
-        });
+        })->values();
 
         return [
             'employee' => $employee,

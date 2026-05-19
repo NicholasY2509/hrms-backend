@@ -26,6 +26,7 @@ Route::middleware(['api.auth'])->group(function () {
                 Route::get('/', 'index');
                 Route::get('/status', 'status');
                 Route::get('/working-hour', 'workingHour');
+                Route::get('/working-hours', 'myWorkingHours');
                 Route::post('/clock-in', 'clockIn');
                 Route::post('/clock-out', 'clockOut');
                 Route::post('/check-location', 'checkLocation');

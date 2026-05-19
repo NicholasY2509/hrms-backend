@@ -26,7 +26,7 @@ class MobileDashboardResource extends JsonResource
                     'date' => $holiday->date,
                     'description' => $holiday->description,
                 ];
-            }),
+            })->values(),
             'tenure' => $this['tenure'],
             'attendance_summary' => $this['attendance_summary'],
             'attendance_rate' => $this['attendance_rate'],

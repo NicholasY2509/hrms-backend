@@ -374,6 +374,31 @@ class MobileAttendanceService
     }
 
     /**
+     * Get working hours (shifts) for the authenticated employee with pagination/filters.
+     */
+    public function getMyWorkingHours(int $userId, array $params)
+    {
+        $userEmployee = \App\Modules\Employee\Models\UserEmployee::where('user_id', $userId)->first();
+        if (!$userEmployee || !$userEmployee->employee_id) {
+            throw new ApplicationException('Data karyawan tidak ditemukan untuk user ini!', 404);
+        }
+
+        $query = AttendanceWorkingHour::query()
+            ->where('employee_id', $userEmployee->employee_id)
+            ->with(['working_hour', 'attendance.attendance_status']);
+
+        // Default to current month if date range is not specified
+        $startDate = $params['start_date'] ?? Carbon::now()->startOfMonth()->format('Y-m-d');
+        $endDate = $params['end_date'] ?? Carbon::now()->endOfMonth()->format('Y-m-d');
+
+        $query->whereBetween('attendance_at', [$startDate, $endDate]);
+        $query->orderBy('attendance_at', 'asc');
+
+        $perPage = $params['per_page'] ?? 15;
+        return $query->paginate($perPage);
+    }
+
+    /**
      * Get attendance history and summary for a user.
      */
     public function getHistoryWithSummary(int $userId, array $params): array
