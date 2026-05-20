@@ -39,5 +39,31 @@ class AttendanceWorkingHour extends Model
     {
         return $this->belongsTo(WorkingHour::class, 'working_hour_id', 'id');
     }
+
+    /**
+     * Scope a query to apply filters.
+     */
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['employee_id'] ?? null, function ($q, $employeeId) {
+            $q->where('employee_id', $employeeId);
+        });
+
+        $query->when($filters['start_date'] ?? null, function ($q, $startDate) {
+            $q->whereDate('attendance_at', '>=', $startDate);
+        });
+
+        $query->when($filters['end_date'] ?? null, function ($q, $endDate) {
+            $q->whereDate('attendance_at', '<=', $endDate);
+        });
+
+        $query->when($filters['search'] ?? null, function ($q, $search) {
+            $q->whereHas('employee', function ($sq) use ($search) {
+                $sq->filter(['search' => $search]);
+            });
+        });
+
+        return $query;
+    }
 }
 

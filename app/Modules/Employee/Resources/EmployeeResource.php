@@ -2,6 +2,9 @@
 
 namespace App\Modules\Employee\Resources;
 
+use App\Modules\Organization\Resources\DepartmentResource;
+use App\Modules\Organization\Resources\WorkLocationResource;
+use App\Modules\Organization\Resources\WorkPositionResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -26,17 +29,26 @@ class EmployeeResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'initial_name' => $this->initial_name,
-            'job_title' => $this->position?->name ?? 'N/A',
-            'department' => $this->department?->name ?? 'N/A',
-            'department_detail' => $this->department ? [
+            'department' => $this->department ? [
                 'id' => $this->department->id,
                 'name' => $this->department->name,
             ] : null,
-            'position_detail' => $this->position ? [
+            'position' => $this->position ? [
                 'id' => $this->position->id,
                 'name' => $this->position->name,
             ] : null,
-            'work_location' => $this->work_location?->name ?? 'N/A',
+            'work_location' => $this->work_location ? [
+                'id' => $this->work_location->id,
+                'name' => $this->work_location->name,
+            ] : null,
+            'work_employee_status' => $this->work_employee_status ? [
+                'id' => $this->work_employee_status->id,
+                'name' => $this->work_employee_status->name,
+            ] : null,
+            'work_employee_type' => $this->work_employee_type ? [
+                'id' => $this->work_employee_type->id,
+                'name' => $this->work_employee_type->name,
+            ] : null,
             'email' => $user?->email ?? $this->company_email,
             'company_email' => $this->company_email,
             'photo_url' => $this->profile_url,
@@ -45,18 +57,11 @@ class EmployeeResource extends JsonResource
             'resign_date' => $this->resign_date,
             'phone_number' => $this->phone_number,
             'handphone' => $this->handphone,
-            'address' => $this->current_address,
             'current_address' => $this->current_address,
-            'residence_address' => $this->residence_address,
             'place_birth' => $this->place_birth,
             'date_birth' => $this->date_birth,
-            'gender_id' => $this->gender_id,
-            'marital_status_id' => $this->marital_status_id,
-            'religion_id' => $this->religion_id,
-            'blood_group_id' => $this->blood_group_id,
             'annual_leave_2' => $this->annual_leave_2,
             'annual_leave_3' => $this->annual_leave_3,
-            'is_get_annual_leave' => (bool) $this->is_get_annual_leave,
             'supervisor' => $supervisor ? [
                 'id' => $supervisor->id,
                 'name' => $supervisor->full_name,

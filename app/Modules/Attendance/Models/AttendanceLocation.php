@@ -29,6 +29,7 @@ class AttendanceLocation extends Model
         });
 
         $query->when($search, function ($query, $search) {
+            $search = preg_replace('/\s+/', ' ', trim($search));
             $query->where('name', 'like', "%$search%");
         });
     }

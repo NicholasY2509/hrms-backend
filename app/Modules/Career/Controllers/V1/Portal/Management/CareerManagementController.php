@@ -12,6 +12,9 @@ use App\Modules\Career\Repositories\CareerRepository;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 
+use App\Modules\System\Services\ReportService;
+use Illuminate\Http\Request;
+
 /**
  * @group Career
  * @subgroup Management Portal
@@ -22,7 +25,8 @@ class CareerManagementController extends Controller
 
     public function __construct(
         protected CareerService $service,
-        protected CareerRepository $repository
+        protected CareerRepository $repository,
+        protected ReportService $reportService
     ) {}
 
     /**
@@ -70,12 +74,17 @@ class CareerManagementController extends Controller
             new CareerResource($career->load([
                 'employee', 
                 'careerType', 
-                'beforeWorkPosition', 
+                'beforeEmployeeStatus',
+                'afterEmployeeStatus',
+                'beforeWorkPosition',
                 'afterWorkPosition',
+                'beforeWorkLocation',
+                'afterWorkLocation',
                 'beforeDepartment',
                 'afterDepartment',
                 'beforeTeam',
-                'afterTeam'
+                'afterTeam',
+                'approvalRequest.steps'
             ])),
             'Career details retrieved'
         );
@@ -106,5 +115,43 @@ class CareerManagementController extends Controller
         $this->service->deleteCareer($career);
 
         return $this->successResponse(null, 'Career request deleted successfully');
+    }
+
+    /**
+     * Settle career.
+     * 
+     * Finalize the career transition by updating the employee's record.
+     */
+    public function settle(Career $career): JsonResponse
+    {
+        $settledCareer = $this->service->settle($career);
+
+        return $this->successResponse(
+            new CareerResource($settledCareer),
+            'Career transition finalized successfully'
+        );
+    }
+
+    /**
+     * Export career transition to PDF.
+     * 
+     * Generate a printable form for the career transition.
+     */
+    public function export(Career $career): JsonResponse
+    {
+        $report = $this->reportService->requestReport([
+            'type' => 'career',
+            'format' => 'pdf',
+            'name' => 'Transisi Karir - ' . $career->employee?->full_name,
+            'filters' => [
+                'id' => $career->id
+            ]
+        ]);
+
+        return $this->successResponse(
+            $report,
+            'Proses pembuatan Formulir Transisi Karir sedang berlangsung.',
+            202
+        );
     }
 }

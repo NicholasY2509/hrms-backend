@@ -16,7 +16,8 @@ Route::middleware(['api.auth'])->group(function () {
             Route::post('/{id}/settle', [MyOvertimeController::class, 'settle']);
         });
 
-        Route::prefix('management')->group(function () {
+        Route::prefix('management')->middleware('role:Admin HRD')->group(function() {
+            
             Route::prefix('types')->group(function () {
                 Route::get('/', [OvertimeTypeController::class, 'index']);
                 Route::post('/', [OvertimeTypeController::class, 'store']);
@@ -26,6 +27,7 @@ Route::middleware(['api.auth'])->group(function () {
             });
 
             Route::get('/', [OvertimeManagementController::class, 'index']);
+            Route::get('/export', [OvertimeManagementController::class, 'export']);
             Route::get('/{id}', [OvertimeManagementController::class, 'show']);
             Route::patch('/{id}', [OvertimeManagementController::class, 'update']);
             Route::post('/{id}/settle', [OvertimeManagementController::class, 'settle']);

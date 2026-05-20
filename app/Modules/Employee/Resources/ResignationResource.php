@@ -30,6 +30,10 @@ class ResignationResource extends JsonResource
             
             'confirmed_at' => $this->confirmed_at,
             'settled_at' => $this->settled_at,
+            'status' => $this->status,
+            'approvals' => $this->whenLoaded('approvalRequest', function () {
+                return \App\Modules\ApprovalWorkflow\Resources\V1\ApprovalRequestStepResource::collection($this->approvalRequest?->steps ?? collect([]));
+            }),
             
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

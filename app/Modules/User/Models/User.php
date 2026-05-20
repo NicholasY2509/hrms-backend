@@ -10,12 +10,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
-
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 #[Fillable(['email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['*'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->logExcept(['password', 'remember_token']);
+    }
 
     /**
      * Get the user_employee record.
@@ -60,6 +70,7 @@ class User extends Authenticatable
         $search = $filters['search'] ?? false;
 
         $query->when($search, function ($query, $search) {
+            $search = preg_replace('/\s+/', ' ', trim($search));
             $query->where(function ($query) use ($search) {
                 $query->where('email', 'like', "%$search%");
             });

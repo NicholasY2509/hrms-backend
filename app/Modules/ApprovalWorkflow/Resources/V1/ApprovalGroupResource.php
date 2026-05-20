@@ -20,7 +20,7 @@ class ApprovalGroupResource extends JsonResource
                         'id' => $employee->id,
                         'name' => $employee->full_name,
                         'nik' => $employee->nik,
-                        'job_title' => $employee->position?->name,
+                        'position' => $employee->position?->name,
                     ];
                 });
             }),

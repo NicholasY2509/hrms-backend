@@ -2,6 +2,8 @@
 
 namespace App\Modules\ApprovalWorkflow\Models;
 
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -9,6 +11,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ApprovalRequest extends Model
 {
+    use LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['*'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
     protected $table = 'approval_requests';
     protected $guarded = ['id'];
 

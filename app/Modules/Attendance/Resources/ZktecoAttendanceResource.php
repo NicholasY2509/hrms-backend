@@ -19,9 +19,9 @@ class ZktecoAttendanceResource extends JsonResource
             'timestamp' => $this->timestamp,
             'attendance_at' => $this->attendance_at,
             'zkteco_machine_id' => $this->zkteco_machine_id,
-            'machine' => $this->machine ? [
-                'id' => $this->machine->id,
-                'name' => $this->machine->name,
+            'zkteco_machine' => $this->zkteco_machine ? [
+                'id' => $this->zkteco_machine->id,
+                'name' => $this->zkteco_machine->name,
             ] : null,
             'attendance_user' => $this->attendance_user ? [
                 'id' => $this->attendance_user->id,

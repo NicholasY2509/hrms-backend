@@ -36,6 +36,7 @@ class AttendanceWorkingHourResource extends JsonResource
             'date' => $date,
             'shift_start' => $shiftStart?->toDateTimeString(),
             'shift_end' => $shiftEnd?->toDateTimeString(),
+            'status' => $this->attendance?->attendance_status?->name,
             'employee' => new EmployeeResource($this->whenLoaded('employee')),
             'working_hour' => $this->whenLoaded('working_hour'),
             'attendance' => $this->whenLoaded('attendance'),

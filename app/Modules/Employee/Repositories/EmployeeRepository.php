@@ -110,4 +110,31 @@ class EmployeeRepository
         $employee = $this->findById($id);
         return $employee->delete();
     }
+    /**
+     * Get the last employee for a specific work position.
+     *
+     * @param int $workPositionId
+     * @return Employee|null
+     */
+    public function getLastEmployeeByWorkPosition(int $workPositionId): ?Employee
+    {
+        return Employee::query()
+            ->where('work_position_id', $workPositionId)
+            ->orderByDesc('employee_id_number')
+            ->first();
+    }
+
+    /**
+     * Get the last employee excluding specific work position IDs.
+     *
+     * @param array $excludeWorkPositionIds
+     * @return Employee|null
+     */
+    public function getLastEmployeeExcludingWorkPositions(array $excludeWorkPositionIds): ?Employee
+    {
+        return Employee::query()
+            ->whereNotIn('work_position_id', $excludeWorkPositionIds)
+            ->orderByDesc(\DB::raw('CAST(employee_id_number AS UNSIGNED)'))
+            ->first();
+    }
 }

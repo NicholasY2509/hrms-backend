@@ -7,12 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Traits\Approvable;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use App\Modules\ApprovalWorkflow\Traits\HasApprovalStatus;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Overtime extends Model
 {
-    use Approvable;
+    use Approvable, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['*'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
+
     use SoftDeletes;
 
     protected $table = 'overtimes';
@@ -72,18 +83,74 @@ class Overtime extends Model
 
         if ($request->status === 'pending') {
             $currentStep = $request->currentStep();
-            if ($currentStep) {
-                return 'Pending by ' . $currentStep->getResolvedApproverNames();
-            }
+            $approverNames = $currentStep ? $currentStep->getResolvedApproverNames() : null;
+            
+            return $approverNames ? "Pending by {$approverNames}" : 'Pending';
         }
 
-        // Map internal status to display status
         return match ($request->status) {
-            'pending' => 'Pending',
             'approved' => 'Approved',
             'rejected' => 'Rejected',
             'cancelled' => 'Cancelled',
             default => 'Pending',
         };
+    }
+
+    /**
+     * Scope a query to apply filters.
+     */
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['employee_id'] ?? null, function ($q, $employeeId) {
+            $q->where('employee_id', $employeeId);
+        });
+
+        $query->when($filters['type'] ?? null, function ($q, $type) {
+            $q->where('type', $type);
+        });
+
+        $query->when($filters['department_id'] ?? null, function ($q, $departmentId) {
+            $q->whereHas('employee', function ($sq) use ($departmentId) {
+                $sq->where('department_id', $departmentId);
+            });
+        });
+        
+        $query->when($filters['work_position_id'] ?? null, function ($q, $positionId) {
+            $q->whereHas('employee', function ($sq) use ($positionId) {
+                $sq->where('work_position_id', $positionId);
+            });
+        });
+
+        $query->when($filters['work_location_id'] ?? null, function ($q, $locationId) {
+            $q->whereHas('employee', function ($sq) use ($locationId) {
+                $sq->where('work_location_id', $locationId);
+            });
+        });
+
+        $query->when($filters['start_date'] ?? null, function ($q, $startDate) use ($filters) {
+            if (!empty($filters['end_date'])) {
+                $q->whereBetween('date', [$startDate, $filters['end_date']]);
+            } else {
+                $q->whereDate('date', '>=', $startDate);
+            }
+        });
+
+        $query->when($filters['end_date'] ?? null, function ($q, $endDate) use ($filters) {
+            if (empty($filters['start_date'])) {
+                $q->whereDate('date', '<=', $endDate);
+            }
+        });
+
+        if (isset($filters['is_settled'])) {
+            $filters['is_settled'] ? $query->whereNotNull('settled_at') : $query->whereNull('settled_at');
+        }
+
+        $query->when($filters['search'] ?? null, function ($q, $search) {
+            $q->whereHas('employee', function ($sq) use ($search) {
+                $sq->filter(['search' => $search]);
+            });
+        });
+
+        return $query;
     }
 }

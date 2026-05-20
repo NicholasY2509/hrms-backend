@@ -11,4 +11,14 @@ class WarningLetterType extends Model
 
     protected $table = 'warning_letter_types';
     protected $guarded = ['id'];
+
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($q, $search) {
+            $search = preg_replace('/\s+/', ' ', trim($search));
+            $q->where('name', 'like', '%' . $search . '%');
+        });
+
+        return $query;
+    }
 }

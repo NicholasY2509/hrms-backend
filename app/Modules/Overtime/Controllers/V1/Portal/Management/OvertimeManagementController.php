@@ -6,11 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Modules\Overtime\Repositories\OvertimeRepository;
 use App\Modules\Overtime\Requests\SettleOvertimeRequest;
 use App\Modules\Overtime\Requests\UpdateOvertimeRequest;
+use App\Modules\Overtime\Requests\V1\GetOvertimeManagementRequest;
 use App\Modules\Overtime\Resources\V1\OvertimeResource;
 use App\Modules\Overtime\Services\OvertimeService;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+
+use App\Modules\System\Services\ReportService;
+use App\Modules\Overtime\Services\OvertimeTemplateService;
 
 /**
  * @group Overtime
@@ -24,21 +28,16 @@ class OvertimeManagementController extends Controller
 
     public function __construct(
         protected OvertimeRepository $repository,
-        protected OvertimeService $service
+        protected OvertimeService $service,
+        protected ReportService $reportService
     ) {}
 
     /**
      * List all employee overtime requests.
-     * 
-     * @queryParam employee_id int Filter by employee.
-     * @queryParam type string Filter by type (UMUM, DAC, NATIONAL).
-     * @queryParam start_date date Filter by start date (Y-m-d).
-     * @queryParam end_date date Filter by end date (Y-m-d).
-     * @queryParam per_page int Results per page.
      */
-    public function index(Request $request): JsonResponse
+    public function index(GetOvertimeManagementRequest $request): JsonResponse
     {
-        $filters = $request->only(['employee_id','department_id', 'type', 'start_date', 'end_date', 'is_settled']);
+        $filters = $request->validated();
         $perPage = $request->query('per_page', 15);
 
         $overtimes = $this->repository->paginate($filters, $perPage);
@@ -121,6 +120,32 @@ class OvertimeManagementController extends Controller
         return $this->successResponse(
             new OvertimeResource($updatedOvertime),
             'Overtime request updated successfully.'
+        );
+    }
+
+    /**
+     * Export overtime requests to PDF.
+     * 
+     * @queryParam start_date date optional Filter by start date.
+     * @queryParam end_date date optional Filter by end date.
+     * @queryParam department_id int optional Filter by department.
+     */
+    public function export(GetOvertimeManagementRequest $request): JsonResponse
+    {
+        $filters = $request->validated();
+        $filters['is_settled'] = true;
+        
+        $report = $this->reportService->requestReport([
+            'type' => 'overtime',
+            'format' => 'pdf',
+            'name' => 'Form Pengajuan Lembur - ' . now()->format('YmdHis'),
+            'filters' => $filters
+        ]);
+
+        return $this->successResponse(
+            $report,
+            'Proses pembuatan dokumen lembur sedang berlangsung.',
+            202
         );
     }
 }

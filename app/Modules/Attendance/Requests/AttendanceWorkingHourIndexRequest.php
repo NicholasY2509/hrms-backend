@@ -5,6 +5,7 @@ namespace App\Modules\Attendance\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
+ * @queryParam search string Filter by employee name or ID number. Example: NICHOLAS
  * @queryParam employee_id int Filter by employee ID. Example: 1
  * @queryParam start_date date Filter by start date (YYYY-MM-DD). Example: 2024-01-01
  * @queryParam end_date date Filter by end date (YYYY-MM-DD). Example: 2024-01-31
@@ -28,6 +29,7 @@ class AttendanceWorkingHourIndexRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'search' => 'nullable|string',
             'employee_id' => 'nullable|integer|exists:employees,id',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',

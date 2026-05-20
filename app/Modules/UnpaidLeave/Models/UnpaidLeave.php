@@ -6,13 +6,23 @@ use App\Modules\Employee\Models\Employee;
 use App\Modules\ApprovalWorkflow\Traits\HasApprovalStatus;
 use App\Modules\UnpaidLeave\Services\UnpaidLeaveService;
 use App\Traits\Approvable;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UnpaidLeave extends Model
 {
-    use SoftDeletes, Approvable;
+    use SoftDeletes, Approvable, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['*'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
 
     protected $table = 'unpaid_leaves';
     protected $guarded = ['id'];
@@ -54,11 +64,7 @@ class UnpaidLeave extends Model
 
         $query->when($filters['search'] ?? null, function ($q, $search) {
             $q->whereHas('employee', function ($sq) use ($search) {
-                $sq->where(function ($ssq) use ($search) {
-                    $ssq->where('employee_id_number', 'like', "%{$search}%")
-                        ->orWhere('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%");
-                });
+                $sq->filter(['search' => $search]);
             });
         });
 
@@ -114,13 +120,12 @@ class UnpaidLeave extends Model
 
         if ($request->status === 'pending') {
             $currentStep = $request->currentStep();
-            if ($currentStep) {
-                return 'Pending by ' . $currentStep->getResolvedApproverNames();
-            }
+            $approverNames = $currentStep ? $currentStep->getResolvedApproverNames() : null;
+            
+            return $approverNames ? "Pending by {$approverNames}" : 'Pending';
         }
 
         return match ($request->status) {
-            'pending' => 'Pending',
             'approved' => 'Approved',
             'rejected' => 'Rejected',
             'cancelled' => 'Cancelled',

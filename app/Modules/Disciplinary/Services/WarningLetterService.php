@@ -44,4 +44,43 @@ class WarningLetterService
             return $this->repository->delete($warningLetter);
         });
     }
+
+    public function settle(WarningLetter $warningLetter): WarningLetter
+    {
+        if ($warningLetter->settled_at) {
+            return $warningLetter;
+        }
+
+        return DB::transaction(function () use ($warningLetter) {
+            $warningLetter->update([
+                'settled_at' => now(),
+                'confirmed_at' => $warningLetter->confirmed_at ?? now(),
+            ]);
+
+            return $warningLetter->refresh();
+        });
+    }
+
+    /**
+     * Get paginated warning letters for a specific employee.
+     */
+    public function getEmployeeWarningLetters(int $employeeId, array $filters = [], int $perPage = 15)
+    {
+        $filters['employee_id'] = $employeeId;
+        return $this->repository->getPaginated($filters, $perPage);
+    }
+
+    /**
+     * Get detailed warning letter for a specific employee.
+     */
+    public function getEmployeeWarningLetterDetail(int $id, int $employeeId): ?WarningLetter
+    {
+        $warningLetter = $this->repository->findById($id);
+
+        if (!$warningLetter || $warningLetter->employee_id !== $employeeId) {
+            return null;
+        }
+
+        return $warningLetter;
+    }
 }

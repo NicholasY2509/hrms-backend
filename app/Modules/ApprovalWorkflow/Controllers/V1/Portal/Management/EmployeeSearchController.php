@@ -23,13 +23,8 @@ class EmployeeSearchController extends Controller
 
         $employees = Employee::query()
             ->with(['position', 'department'])
-            ->when($search, function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('first_name', 'like', "%{$search}%")
-                      ->orWhere('last_name', 'like', "%{$search}%")
-                      ->orWhere('employee_id_number', 'like', "%{$search}%");
-                });
-            })
+            ->where('work_employee_status_id', 1)
+            ->filter(['search' => $search])
             ->limit(15)
             ->get();
 

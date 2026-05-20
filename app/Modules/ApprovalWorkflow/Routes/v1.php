@@ -15,37 +15,37 @@ Route::middleware('api.auth')->group(function () {
      * CONFIGURATION (IT / Admin Only)
      * --------------------------------------------------------------------------
      */
-    Route::prefix('config')->group(function () {
+    Route::prefix('config')->middleware('role:Admin HRD')->group(function () {
         // Approval Groups Configuration
-        Route::prefix('groups')->group(function () {
-            Route::get('/', [ApprovalGroupController::class, 'index']);
-            Route::post('/', [ApprovalGroupController::class, 'store']);
-            Route::post('/{id}/sync-employees', [ApprovalGroupController::class, 'syncEmployees']);
-            Route::delete('/{id}', [ApprovalGroupController::class, 'destroy']);
+        Route::prefix('groups')->controller(ApprovalGroupController::class)->group(function () {
+            Route::get('/', 'index');
+            Route::post('/', 'store');
+            Route::post('/{id}/sync-employees', 'syncEmployees');
+            Route::delete('/{id}', 'destroy');
         });
 
         // Approval Schemes
-        Route::prefix('schemes')->group(function () {
-            Route::get('/', [ApprovalSchemeController::class, 'index']);
-            Route::post('/', [ApprovalSchemeController::class, 'store']);
-            Route::get('/{id}', [ApprovalSchemeController::class, 'show']);
-            Route::patch('/{id}', [ApprovalSchemeController::class, 'update']);
-            Route::delete('/{id}', [ApprovalSchemeController::class, 'destroy']);
+        Route::prefix('schemes')->controller(ApprovalSchemeController::class)->group(function () {
+            Route::get('/', 'index');
+            Route::post('/', 'store');
+            Route::get('/{id}', 'show');
+            Route::patch('/{id}', 'update');
+            Route::delete('/{id}', 'destroy');
         });
 
         // Approval Rules
-        Route::prefix('rules')->group(function () {
-            Route::post('/', [ApprovalRuleController::class, 'store']);
-            Route::patch('/{id}', [ApprovalRuleController::class, 'update']);
-            Route::delete('/{id}', [ApprovalRuleController::class, 'destroy']);
+        Route::prefix('rules')->controller(ApprovalRuleController::class)->group(function () {
+            Route::post('/', 'store');
+            Route::patch('/{id}', 'update');
+            Route::delete('/{id}', 'destroy');
         });
 
         // Step Types
-        Route::prefix('step-types')->group(function () {
-            Route::get('/', [ApprovalStepTypeController::class, 'index']);
-            Route::post('/', [ApprovalStepTypeController::class, 'store']);
-            Route::patch('/{id}', [ApprovalStepTypeController::class, 'update']);
-            Route::delete('/{id}', [ApprovalStepTypeController::class, 'destroy']);
+        Route::prefix('step-types')->controller(ApprovalStepTypeController::class)->group(function () {
+            Route::get('/', 'index');
+            Route::post('/', 'store');
+            Route::patch('/{id}', 'update');
+            Route::delete('/{id}', 'destroy');
         });
     });
 
@@ -57,11 +57,14 @@ Route::middleware('api.auth')->group(function () {
     Route::prefix('portal')->group(function () {
         
         // Management Context (HR/Managers)
-        Route::prefix('management')->group(function () {
-            Route::prefix('actions')->group(function () {
-                Route::get('/', [ApprovalActionController::class, 'index']);
-                Route::post('{id}/approve', [ApprovalActionController::class, 'approve']);
-                Route::post('{id}/reject', [ApprovalActionController::class, 'reject']);
+        Route::prefix('management')->middleware('role:Admin HRD')->group(function () {
+            Route::prefix('actions')->controller(ApprovalActionController::class)->group(function () {
+                Route::get('pending', 'index');
+                Route::get('ongoing', 'ongoing');
+                Route::get('upcoming', 'upcoming');
+                Route::get('history', 'history');
+                Route::post('{id}/approve', 'approve');
+                Route::post('{id}/reject', 'reject');
             });
 
             Route::get('employee-search', [EmployeeSearchController::class, 'search']);

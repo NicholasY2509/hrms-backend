@@ -10,6 +10,8 @@ use App\Services\StorageService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Modules\ApprovalWorkflow\Events\ApprovalStepActionable;
+use App\Modules\ApprovalWorkflow\Events\ApprovalRequestFinished;
 
 class ApprovalActionService
 {
@@ -23,12 +25,87 @@ class ApprovalActionService
     /**
      * Get pending requests for the authenticated user.
      */
-    public function getMyPendingApprovals(int $perPage = 15, $type = null)
+    public function getMyPendingApprovals(array $params = [])
     {
-        $employeeId = Auth::user()->employee->id ?? null;
-        if (!$employeeId) return collect([]);
+        $employeeId = $this->getEmployeeId();
+        if (!$employeeId) return $this->emptyResponse();
 
-        return $this->repository->getPendingForEmployee($employeeId, $perPage, $type);
+        if ($this->isIT()) {
+            return [
+                'data' => $this->repository->getAllPending($params['per_page'] ?? 15, $params['type'] ?? null),
+                'counts' => $this->repository->getCountsForEmployee($employeeId)
+            ];
+        }
+
+        return [
+            'data' => $this->repository->getPendingForEmployee($employeeId, $params),
+            'counts' => $this->repository->getCountsForEmployee($employeeId)
+        ];
+    }
+
+    /**
+     * Get all upcoming requests where the user is an approver in a future step.
+     */
+    public function getMyUpcomingApprovals(array $params = [])
+    {
+        $employeeId = $this->getEmployeeId();
+        if (!$employeeId) return $this->emptyResponse();
+
+        return [
+            'data' => $this->repository->getUpcomingForEmployee($employeeId, $params),
+            'counts' => $this->repository->getCountsForEmployee($employeeId)
+        ];
+    }
+
+    /**
+     * Get all ongoing requests where the user is an approver in any step.
+     */
+    public function getMyOngoingApprovals(array $params = [])
+    {
+        $employeeId = $this->getEmployeeId();
+        if (!$employeeId) return $this->emptyResponse();
+
+        return [
+            'data' => $this->repository->getOngoingForEmployee($employeeId, $params),
+            'counts' => $this->repository->getCountsForEmployee($employeeId)
+        ];
+    }
+
+    /**
+     * Get history of finalized requests where user was involved.
+     */
+    public function getMyHistoryApprovals(array $params = [])
+    {
+        $employeeId = $this->getEmployeeId();
+        if (!$employeeId) return $this->emptyResponse();
+
+        return [
+            'data' => $this->repository->getHistoryForEmployee($employeeId, $params),
+            'counts' => $this->repository->getCountsForEmployee($employeeId)
+        ];
+    }
+
+    protected function getEmployeeId(): ?int
+    {
+        return Auth::user()->employee->id ?? null;
+    }
+
+    protected function isIT(): bool
+    {
+        $user = Auth::user();
+        $userRoles = $user->remote_roles;
+        if (is_string($userRoles)) {
+            $userRoles = json_decode($userRoles, true) ?? [];
+        }
+        return in_array('IT', (array) ($userRoles ?? []));
+    }
+
+    protected function emptyResponse(): array
+    {
+        return [
+            'data' => collect([]),
+            'counts' => ['pending' => 0, 'upcoming' => 0, 'ongoing' => 0, 'history' => 0]
+        ];
     }
 
     /**
@@ -58,10 +135,18 @@ class ApprovalActionService
             if ($allApproved) {
                 $request->update(['status' => 'approved']);
                 $this->syncParentModelStatus($request, 'approved');
+                
+                event(new ApprovalRequestFinished($request, 'approved'));
             } else {
                 // Move sequence forward if this was the current one
                 if ($step->sequence == $request->current_step_sequence) {
                     $request->increment('current_step_sequence');
+                    
+                    // Dispatch event for the next step(s)
+                    $nextSteps = $request->steps()->where('sequence', $request->current_step_sequence)->get();
+                    foreach ($nextSteps as $nextStep) {
+                        event(new ApprovalStepActionable($nextStep));
+                    }
                 }
             }
 
@@ -97,6 +182,8 @@ class ApprovalActionService
             // 3. Sync with Parent Model
             $this->syncParentModelStatus($request, 'rejected');
 
+            event(new ApprovalRequestFinished($request, 'rejected', $notes));
+
             return $request;
         });
     }
@@ -107,7 +194,16 @@ class ApprovalActionService
      */
     protected function validateAuthority(int $id, string $action): ApprovalRequestStep
     {
-        $employeeId = Auth::user()->employee->id;
+        $user = Auth::user();
+        $employeeId = $user->employee->id ?? null;
+
+        // Check if user has IT role
+        $userRoles = $user->remote_roles;
+        if (is_string($userRoles)) {
+            $userRoles = json_decode($userRoles, true) ?? [];
+        }
+        $isIT = in_array('IT', (array) ($userRoles ?? []));
+
         $providedStep = ApprovalRequestStep::find($id);
         $requestId = $providedStep ? $providedStep->approval_request_id : $id;
         $request = ApprovalRequest::find($requestId);
@@ -118,9 +214,8 @@ class ApprovalActionService
 
         $actionText = $action === 'approve' ? 'menyetujui' : 'menolak';
 
-        // 1. If a specific Step ID was provided, strictly validate that step
         if ($providedStep) {
-            $isAuthorized = $this->isEmployeeAuthorizedForStep($providedStep, $employeeId);
+            $isAuthorized = $isIT || ($employeeId && $this->isEmployeeAuthorizedForStep($providedStep, $employeeId));
             
             if (!$isAuthorized) {
                 throw new \Exception("Anda tidak memiliki otoritas untuk {$actionText} langkah persetujuan ini.");
@@ -138,6 +233,23 @@ class ApprovalActionService
         }
 
         // 2. If a Request ID was provided, find the currently actionable step for this user
+        if ($isIT) {
+            $currentStep = ApprovalRequestStep::where('approval_request_id', $requestId)
+                ->where('sequence', $request->current_step_sequence)
+                ->where('status', 'pending')
+                ->first();
+            
+            if (!$currentStep) {
+                throw new \Exception("Tidak ada langkah persetujuan yang aktif untuk {$actionText} pengajuan ini.");
+            }
+
+            return $currentStep;
+        }
+
+        if (!$employeeId) {
+            throw new \Exception("Anda tidak memiliki otoritas untuk {$actionText} pengajuan ini.");
+        }
+
         $userSteps = ApprovalRequestStep::where('approval_request_id', $requestId)
             ->where(function ($query) use ($employeeId) {
                 $this->applyAuthorizerFilter($query, $employeeId);
@@ -161,8 +273,10 @@ class ApprovalActionService
     /**
      * Helper to check if employee is authorized for a specific step.
      */
-    protected function isEmployeeAuthorizedForStep(ApprovalRequestStep $step, int $employeeId): bool
+    protected function isEmployeeAuthorizedForStep(ApprovalRequestStep $step, ?int $employeeId): bool
     {
+        if (!$employeeId) return false;
+        
         $employee = Employee::find($employeeId);
         $workPositionId = $employee->work_position_id ?? null;
         $groupIds = DB::table('approval_group_employees')

@@ -23,6 +23,10 @@ class AttendanceUser extends Model
         return $this->belongsTo(Employee::class, 'employee_id', 'id');
     }
 
+    public function zkteco_machine(){
+        return $this->belongsTo(ZktecoMachine::class, 'zkteco_machine_id', 'id');
+    }
+
     /**
      * Scope for filtering attendance users.
      */
@@ -36,11 +40,11 @@ class AttendanceUser extends Model
         });
 
         $query->when($search, function ($query, $search) {
-            $query->whereHas('employee', function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('employee_id_number', 'like', "%{$search}%");
-            })->orWhere('uid', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->whereHas('employee', function ($sq) use ($search) {
+                    $sq->filter(['search' => $search]);
+                })->orWhere('uid', 'like', "%{$search}%");
+            });
         });
     }
 }

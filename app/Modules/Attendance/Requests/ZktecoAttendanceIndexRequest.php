@@ -23,6 +23,7 @@ class ZktecoAttendanceIndexRequest extends FormRequest
         return [
             'uid' => 'nullable|string|max:255',
             'zkteco_machine_id' => 'nullable|integer|exists:zkteco_machines,id',
+            'search' => 'nullable|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'per_page' => 'nullable|integer|min:1|max:100',

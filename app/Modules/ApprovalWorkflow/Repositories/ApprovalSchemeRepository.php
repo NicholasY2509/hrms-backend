@@ -12,15 +12,10 @@ class ApprovalSchemeRepository
      */
     public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = ApprovalScheme::query()->withCount(['rules', 'positionRules', 'departmentRules']);
-
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where('name', 'like', "%{$search}%")
-                  ->orWhere('model_class', 'like', "%{$search}%");
-        }
-
-        return $query->paginate($perPage);
+        return ApprovalScheme::query()
+            ->withCount(['rules', 'positionRules', 'departmentRules'])
+            ->filter($filters)
+            ->paginate($perPage);
     }
 
     /**

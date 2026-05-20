@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\UnpaidLeave\Controllers\V1\Portal\Employee\MyUnpaidLeaveController;
+use App\Modules\UnpaidLeave\Controllers\V1\Portal\Management\HolidayManagementController;
 use App\Modules\UnpaidLeave\Controllers\V1\Portal\Management\UnpaidLeaveTypeController;
 use App\Modules\UnpaidLeave\Controllers\V1\Portal\Management\UnpaidLeaveManagementController;
 use Illuminate\Support\Facades\Route;
@@ -17,19 +18,29 @@ Route::middleware(['api.auth'])->group(function () {
             });
         });
 
-        Route::prefix('management')->group(function () {
+        Route::prefix('management')->middleware('role:Admin HRD')->group(function () {
             Route::prefix('leaves')->group(function () {
                 Route::get('/', [UnpaidLeaveManagementController::class, 'index']);
+                Route::get('/calendar', [UnpaidLeaveManagementController::class, 'calendar']);
                 Route::get('/{id}', [UnpaidLeaveManagementController::class, 'show']);
                 Route::post('/{id}/settle', [UnpaidLeaveManagementController::class, 'settle']);
             });
 
-            Route::prefix('types')->group(function () {
-                Route::get('/', [UnpaidLeaveTypeController::class, 'index']);
-                Route::post('/', [UnpaidLeaveTypeController::class, 'store']);
-                Route::get('/{id}', [UnpaidLeaveTypeController::class, 'show']);
-                Route::put('/{id}', [UnpaidLeaveTypeController::class, 'update']);
-                Route::delete('/{id}', [UnpaidLeaveTypeController::class, 'destroy']);
+            Route::prefix('types')->controller(UnpaidLeaveTypeController::class)->group(function () {
+                Route::get('/', 'index');
+                Route::post('/', 'store');
+                Route::get('/{id}', 'show');
+                Route::put('/{id}', 'update');
+                Route::delete('/{id}', 'destroy');
+            });
+
+            Route::prefix('holidays')->controller(HolidayManagementController::class)->group(function () {
+                Route::get('/', 'index');
+                Route::post('/', 'store');
+                Route::get('/{id}', 'show');
+                Route::put('/{id}', 'update');
+                Route::delete('/{id}', 'destroy');
+                Route::post('/auto-insert-sundays', 'autoInsertSundays');
             });
         });
     });

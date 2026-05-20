@@ -3,16 +3,14 @@
 namespace App\Modules\UnpaidLeave\Controllers\V1\Portal\Management;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Leave\Repositories\AnnualLeaveRepository;
-use App\Modules\Leave\Services\AnnualLeaveService;
 use App\Modules\UnpaidLeave\Requests\V1\GetUnpaidLeaveManagementRequest;
-use App\Modules\UnpaidLeave\Repositories\UnpaidLeaveRepository;
+use App\Modules\UnpaidLeave\Requests\V1\GetUnpaidLeaveCalendarRequest;
 use App\Modules\UnpaidLeave\Resources\V1\UnpaidLeaveResource;
+use App\Modules\UnpaidLeave\Resources\V1\UnpaidLeaveCalendarResource;
+use App\Modules\UnpaidLeave\Resources\V1\HolidayResource;
+use App\Modules\UnpaidLeave\Services\UnpaidLeaveService;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 /**
  * @group Unpaid Leave
@@ -25,9 +23,7 @@ class UnpaidLeaveManagementController extends Controller
     use ApiResponses;
 
     public function __construct(
-        protected UnpaidLeaveRepository $repository,
-        protected AnnualLeaveService $annualLeaveService,
-        protected AnnualLeaveRepository $annualLeaveRepository
+        protected UnpaidLeaveService $unpaidLeaveService
     ) {}
 
     /**
@@ -38,7 +34,7 @@ class UnpaidLeaveManagementController extends Controller
         $filters = $request->validated();
         $perPage = $request->query('per_page', 15);
 
-        $leaves = $this->repository->paginate($filters, $perPage);
+        $leaves = $this->unpaidLeaveService->getPaginatedLeaves($filters, $perPage);
 
         return $this->successResponse(
             UnpaidLeaveResource::collection($leaves)->response()->getData(true),
@@ -51,7 +47,7 @@ class UnpaidLeaveManagementController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $leave = $this->repository->find($id);
+        $leave = $this->unpaidLeaveService->getLeaveDetail($id);
 
         if (!$leave) {
             return $this->errorResponse('Unpaid leave request not found.', 404);
@@ -74,7 +70,7 @@ class UnpaidLeaveManagementController extends Controller
      */
     public function settle(int $id): JsonResponse
     {
-        $leave = $this->repository->find($id);
+        $leave = $this->unpaidLeaveService->getLeaveDetail($id);
 
         if (!$leave) {
             return $this->errorResponse('Unpaid leave request not found.', 404);
@@ -85,7 +81,7 @@ class UnpaidLeaveManagementController extends Controller
         }
 
         try {
-            $leave = app(\App\Modules\UnpaidLeave\Services\UnpaidLeaveService::class)->settle($leave);
+            $leave = $this->unpaidLeaveService->settle($leave);
 
             return $this->successResponse(
                 new UnpaidLeaveResource($leave),
@@ -95,5 +91,23 @@ class UnpaidLeaveManagementController extends Controller
         } catch (\Exception $e) {
             return $this->errorResponse('Failed to settle unpaid leave: ' . $e->getMessage(), 500);
         }
+    }
+
+    /**
+     * Get unpaid leave data for calendar view.
+     * 
+     * This endpoint returns a combined list of unpaid leave requests and public holidays 
+     * within the specified date range.
+     */
+    public function calendar(GetUnpaidLeaveCalendarRequest $request): JsonResponse
+    {
+        $filters = $request->validated();
+        
+        $data = $this->unpaidLeaveService->getCalendarData($filters);
+
+        return $this->successResponse([
+            'leaves' => UnpaidLeaveCalendarResource::collection($data['leaves']),
+            'holidays' => HolidayResource::collection($data['holidays']),
+        ], 'Calendar data retrieved successfully.');
     }
 }

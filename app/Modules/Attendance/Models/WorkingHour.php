@@ -19,6 +19,7 @@ class WorkingHour extends Model
     public function scopeSearch($query, $search)
     {
         if ($search) {
+            $search = preg_replace('/\s+/', ' ', trim($search));
             return $query->where('name', 'like', "%{$search}%");
         }
         return $query;

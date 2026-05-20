@@ -8,27 +8,22 @@ use App\Modules\UnpaidLeave\Models\UnpaidLeaveType;
 use App\Modules\UnpaidLeave\Repositories\UnpaidLeaveRepository;
 use Illuminate\Support\Facades\DB;
 use App\Services\StorageService;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\UploadedFile;
 use App\Modules\Leave\Services\AnnualLeaveService;
 use App\Modules\Leave\Repositories\AnnualLeaveRepository;
 use App\Modules\UnpaidLeave\Models\UnpaidLeave;
+use App\Modules\UnpaidLeave\Services\HolidayService;
 
 class UnpaidLeaveService
 {
-    protected UnpaidLeaveRepository $repository;
-    protected AnnualLeaveService $annualLeaveService;
-    protected AnnualLeaveRepository $annualLeaveRepository;
-
     public function __construct(
-        UnpaidLeaveRepository $repository,
-        AnnualLeaveService $annualLeaveService,
-        AnnualLeaveRepository $annualLeaveRepository
-    ) {
-        $this->repository = $repository;
-        $this->annualLeaveService = $annualLeaveService;
-        $this->annualLeaveRepository = $annualLeaveRepository;
-    }
+        protected UnpaidLeaveRepository $repository,
+        protected AnnualLeaveService $annualLeaveService,
+        protected AnnualLeaveRepository $annualLeaveRepository,
+        protected UnpaidLeaveApprovalService $approvalService,
+        protected HolidayService $holidayService
+    ) {}
 
     /**
      * Get list of unpaid leaves for an employee.
@@ -39,6 +34,22 @@ class UnpaidLeaveService
     public function getUserUnpaidLeaves(int $employeeId, int $perPage = 15)
     {
         return $this->repository->getByEmployeeId($employeeId, $perPage);
+    }
+
+    /**
+     * Get paginated unpaid leaves for management.
+     */
+    public function getPaginatedLeaves(array $filters = [], int $perPage = 15)
+    {
+        return $this->repository->paginate($filters, $perPage);
+    }
+
+    /**
+     * Get unpaid leave detail by ID.
+     */
+    public function getLeaveDetail(int $id)
+    {
+        return $this->repository->find($id);
     }
 
     /**
@@ -66,6 +77,8 @@ class UnpaidLeaveService
             $data['confirmed_at'] = Carbon::now()->toDateString();
 
             $leave = $this->repository->create($data);
+
+            $this->approvalService->generateInitialApprovals($leave);
 
             return $leave;
         });
@@ -98,8 +111,8 @@ class UnpaidLeaveService
         }
 
         // Subtract holidays that are not Sundays
-        $holidaysCount = Holiday::betweenDates($startDate, $endDate)
-            ->whereRaw('DAYOFWEEK(date) != 1')
+        $holidaysCount = $this->holidayService->getHolidaysInRange($startDate, $endDate)
+            ->filter(fn($h) => Carbon::parse($h->date)->dayOfWeek !== Carbon::SUNDAY)
             ->count();
 
         return max(0, $count - $holidaysCount);
@@ -132,7 +145,7 @@ class UnpaidLeaveService
      */
     public function getPendingRequests(int $employeeId, int $limit = 5)
     {
-        return \App\Modules\UnpaidLeave\Models\UnpaidLeave::with(['unpaid_leave_type', 'approvalRequest'])
+        return UnpaidLeave::with(['unpaid_leave_type', 'approvalRequest'])
             ->where('employee_id', $employeeId)
             ->whereNull('settled_at')
             ->whereHas('approvalRequest', function ($query) {
@@ -148,10 +161,21 @@ class UnpaidLeaveService
      */
     public function getUpcomingHolidays(int $limit = 2)
     {
-        return Holiday::where('date', '>=', Carbon::now()->toDateString())
-            ->orderBy('date', 'asc')
-            ->limit($limit)
-            ->get();
+        return $this->holidayService->getAllHolidays()
+            ->where('date', '>=', Carbon::now()->toDateString())
+            ->sortBy('date')
+            ->take($limit);
+    }
+
+    /**
+     * Get calendar data (leaves and holidays).
+     */
+    public function getCalendarData(array $filters): array
+    {
+        return [
+            'leaves' => $this->repository->getCalendarData($filters),
+            'holidays' => $this->holidayService->getHolidaysInRange($filters['start_date'], $filters['end_date']),
+        ];
     }
 
     /**
@@ -169,11 +193,9 @@ class UnpaidLeaveService
 
         return DB::transaction(function () use ($leave) {
             $now = Carbon::now();
-            $annualLeaveAt = $leave->start_date;
 
             if ($leave->unpaid_leave_type?->is_annual_leave_deduction) {
                 $employee = $leave->employee;
-
                 // Check for existing automated deductions (penalties) in the period to avoid double-deducting
                 $existingDeductionsCount = $this->annualLeaveRepository->countAutomatedDeductionsInRange(
                     $employee->id,
@@ -181,27 +203,32 @@ class UnpaidLeaveService
                     $leave->end_date
                 );
 
-                $daysToDeduct = max(0, $leave->total - $existingDeductionsCount);
+                $daysToDeduct = max(0, (float) $leave->total - $existingDeductionsCount);
 
                 if ($daysToDeduct > 0) {
-                    $deduction = $this->annualLeaveService->deduct($employee, $daysToDeduct, $now);
-                    $employee = $deduction['employee'];
-                    $deductionDetails = $deduction['deduction_details'];
-
-                    $employee->save();
-
-                    $this->annualLeaveRepository->create([
-                        'employee_id' => $employee->id,
-                        'total' => $daysToDeduct,
-                        'annual_leave_year' => $now->format('Y'),
-                        'annual_leave_at' => $annualLeaveAt,
-                        'status' => 'Potong',
-                        'keterangan' => $leave->note . " ({$leave->start_date} to {$leave->end_date})",
-                        'deduction_details' => $deductionDetails,
-                    ]);
+                    $this->annualLeaveService->deduct(
+                        $employee,
+                        $daysToDeduct,
+                        ($leave->note ?? 'Unpaid Leave') . " ({$leave->start_date} to {$leave->end_date})",
+                        Carbon::parse($leave->start_date)
+                    );
                 }
 
-                $leave->cutted_at = $annualLeaveAt;
+                $leave->cutted_at = $leave->start_date;
+            } elseif ($leave->unpaid_leave_type_id == 10) {
+                // NEW CASE: Reverse any automated penalties because this leave is "free" (e.g. Sick Leave Type ID 10)
+                $automatedDeductions = $this->annualLeaveRepository->getAutomatedDeductionsInRange(
+                    $leave->employee_id,
+                    $leave->start_date,
+                    $leave->end_date
+                );
+
+                foreach ($automatedDeductions as $deduction) {
+                    $this->annualLeaveService->restoreDeduction(
+                        $deduction, 
+                        "Izin " . $leave->unpaid_leave_type->name . " pada " . $deduction->annual_leave_at->format('Y-m-d')
+                    );
+                }
             }
 
             $leave->settled_at = $now->format('Y-m-d');

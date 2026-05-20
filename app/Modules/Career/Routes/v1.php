@@ -5,11 +5,13 @@ use App\Modules\Career\Controllers\V1\Portal\Management\CareerManagementControll
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['api.auth'])->group(function () {
-    Route::prefix('portal/management')->group(function () {
+    Route::prefix('portal/management')->middleware('role:Admin HRD')->group(function () {
+        Route::post('careers/{career}/settle', [CareerManagementController::class, 'settle']);
+        Route::get('careers/{career}/export', [CareerManagementController::class, 'export']);
         Route::apiResource('careers', CareerManagementController::class);
     });
 
-    Route::prefix('configuration')->group(function () {
+    Route::prefix('configuration')->middleware('role:Admin HRD')->group(function () {
         Route::apiResource('career-types', CareerTypeController::class);
     });
 });

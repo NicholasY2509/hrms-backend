@@ -88,4 +88,30 @@ class ApprovalRequestStep extends Model
 
         return $this->approver?->full_name;
     }
+
+    /**
+     * Check if a specific employee is authorized to act on this step.
+     */
+    public function isAuthorized(?int $employeeId): bool
+    {
+        if (!$employeeId) return false;
+
+        if (in_array($this->approver_type, ['user', 'employee', 'supervisor', 'dept_head'])) {
+            return $this->approver_id == $employeeId;
+        }
+
+        if ($this->approver_type === 'group') {
+            return \Illuminate\Support\Facades\DB::table('approval_group_employees')
+                ->where('approval_group_id', $this->approver_id)
+                ->where('employee_id', $employeeId)
+                ->exists();
+        }
+
+        if ($this->approver_type === 'work_position') {
+            $employee = Employee::find($employeeId);
+            return $this->approver_id == ($employee->work_position_id ?? null);
+        }
+
+        return false;
+    }
 }

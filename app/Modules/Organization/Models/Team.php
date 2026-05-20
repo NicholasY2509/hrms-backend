@@ -3,6 +3,8 @@
 namespace App\Modules\Organization\Models;
  
 use App\Modules\Employee\Models\Employee;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,7 +12,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  
 class Team extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['*'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
  
     protected $table = 'teams';
     protected $guarded = ['id'];
@@ -21,6 +31,7 @@ class Team extends Model
         $search = $filters['search'] ?? false;
  
         $query->when($search, function ($query, $search) {
+            $search = preg_replace('/\s+/', ' ', trim($search));
             $query->where('name', 'like', "%$search%");
         });
 
