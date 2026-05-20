@@ -28,11 +28,23 @@ class UnifiedApiAuth
     {
         // Try Passport/SyncEmail first
         return $this->passportAuth->handle($request, function ($request) use ($next) {
-            if (!auth()->check()) {
-                return $this->legacyAuth->handle($request, $next);
+            if (auth()->check()) {
+                return $next($request);
             }
 
-            return $next($request);
+            // Fallback to Legacy Signature
+            return $this->legacyAuth->handle($request, function ($request) use ($next) {
+                if (auth()->check()) {
+                    return $next($request);
+                }
+
+                // If both failed or neither provided credentials
+                return response()->json([
+                    'status' => 'Error',
+                    'message' => 'Unauthenticated.',
+                    'data' => null
+                ], 401);
+            });
         });
     }
 }
