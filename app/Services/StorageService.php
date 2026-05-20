@@ -66,10 +66,12 @@ class StorageService
 
         // Prioritize GCS temporary URLs if configured
         $gcsConfig = config('filesystems.disks.gcs');
-        if (!empty($gcsConfig['bucket']) && ($gcsConfig['driver'] ?? '') === 'gcs' && !empty($gcsConfig['keyFile'])) {
+        if (!empty($gcsConfig['bucket']) && ($gcsConfig['driver'] ?? '') === 'gcs') {
+            $keyPath = $gcsConfig['keyFilePath'] ?? $gcsConfig['keyFile'] ?? null;
+            
             try {
-                // Only attempt if keyFile is an array (decoded JSON) or a valid existing file path
-                if (is_array($gcsConfig['keyFile']) || (is_string($gcsConfig['keyFile']) && file_exists($gcsConfig['keyFile']))) {
+                // Only attempt if key is an array (decoded JSON) or a valid existing file path
+                if (is_array($keyPath) || (is_string($keyPath) && file_exists($keyPath))) {
                     return Storage::disk('gcs')->temporaryUrl($path, now()->addMinutes(60));
                 }
             } catch (\Throwable $e) {
