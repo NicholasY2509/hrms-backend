@@ -48,6 +48,7 @@ class EmployeeOverviewResource extends JsonResource
             ] : null,
             'annual_leave_2' => $this->annual_leave_2,
             'annual_leave_3' => $this->annual_leave_3,
+            'is_get_annual_leaves' => (bool) $this->is_get_annual_leave,
         ];
     }
 }

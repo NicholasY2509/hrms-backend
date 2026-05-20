@@ -16,6 +16,29 @@ class UpdateEmployeeDetailRequest extends FormRequest
         $type = $this->route('type');
         $employeeId = $this->route('id');
 
+        if ($type === 'insurance') {
+            if (is_array($this->all()) && isset($this->all()[0])) {
+                return [
+                    '*.id' => ['nullable', 'integer'],
+                    '*.insurance_name' => ['required', 'string', 'max:255'],
+                    '*.card_number' => ['required', 'string', 'max:50'],
+                ];
+            }
+
+            return [
+                'is_bpjs_ketenagakerjaan' => ['nullable', 'boolean'],
+                'is_bpjs_kesehatan' => ['nullable', 'boolean'],
+                'insurances' => ['nullable', 'array'],
+                'insurances.*.id' => ['nullable', 'integer'],
+                'insurances.*.insurance_name' => ['required_with:insurances', 'string', 'max:255'],
+                'insurances.*.card_number' => ['required_with:insurances', 'string', 'max:50'],
+                'insurance' => ['nullable', 'array'],
+                'insurance.*.id' => ['nullable', 'integer'],
+                'insurance.*.insurance_name' => ['required_with:insurance', 'string', 'max:255'],
+                'insurance.*.card_number' => ['required_with:insurance', 'string', 'max:50'],
+            ];
+        }
+
         return match ($type) {
             'overview' => [
                 'employee_id_number' => ['sometimes', 'required', 'string', 'max:255', 'unique:employees,employee_id_number,' . $employeeId],
@@ -30,6 +53,8 @@ class UpdateEmployeeDetailRequest extends FormRequest
                 'work_employee_status_id' => ['nullable', 'exists:work_employee_statuses,id'],
                 'annual_leave_2' => ['nullable', 'integer'],
                 'annual_leave_3' => ['nullable', 'integer'],
+                'is_get_annual_leaves' => ['nullable', 'boolean'],
+                'is_get_annual_leave' => ['nullable', 'boolean'],
             ],
             'personal' => [
                 'full_name' => ['required', 'string', 'max:255'],
@@ -85,11 +110,6 @@ class UpdateEmployeeDetailRequest extends FormRequest
                 '*.license_number' => ['required', 'string', 'max:50'],
                 '*.driver_license_type_id' => ['required', 'exists:driver_license_types,id'],
             ],
-            'insurance' => [
-                '*.id' => ['nullable', 'integer'],
-                '*.insurance_name' => ['required', 'string', 'max:255'],
-                '*.card_number' => ['required', 'string', 'max:50'],
-            ],
             'bank' => [
                 '*.id' => ['nullable', 'integer'],
                 '*.bank_name' => ['required', 'string', 'max:255'],
@@ -99,6 +119,11 @@ class UpdateEmployeeDetailRequest extends FormRequest
             'training', 'performance', 'inventory', 'warning', 'contract', 'emergency', 'attachment', 'social_security' => [
                 'id' => ['nullable', 'integer'],
                 '*' => ['sometimes', 'required'],
+            ],
+            'tax-profile' => [
+                'npwp_number' => ['nullable', 'string', 'max:255'],
+                'ptkp_setting_id' => ['nullable', 'exists:tax_ptkp_settings,id'],
+                'tax_method' => ['nullable'],
             ],
             default => [],
         };

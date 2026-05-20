@@ -65,6 +65,7 @@ Route::middleware(['api.auth'])->group(function () {
 
             Route::controller(ZktecoAttendanceManagementController::class)->group(function () {
                 Route::get('/zkteco-attendances', 'index');
+                Route::post('/zkteco-attendances/sync', 'sync');
             });
 
             Route::controller(ZktecoUserManagementController::class)->group(function () {

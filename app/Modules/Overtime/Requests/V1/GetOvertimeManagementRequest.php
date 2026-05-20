@@ -22,6 +22,7 @@ class GetOvertimeManagementRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'search' => 'nullable|string|max:255',
             'employee_id' => 'nullable|integer',
             'department_id' => 'nullable|integer',
             'work_position_id' => 'nullable|integer',
@@ -40,6 +41,10 @@ class GetOvertimeManagementRequest extends FormRequest
     public function queryParameters(): array
     {
         return [
+            'search' => [
+                'description' => 'Search by employee name or ID number.',
+                'example' => 'rianto',
+            ],
             'employee_id' => [
                 'description' => 'Filter by employee ID.',
                 'example' => 1,

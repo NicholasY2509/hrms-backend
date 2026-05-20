@@ -10,9 +10,9 @@ class EmployeeInsuranceResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'insurance_name' => $this->insurance_name,
-            'card_number' => $this->card_number,
+            'is_bpjs_kesehatan' => (bool) $this->is_bpjs_kesehatan,
+            'is_bpjs_ketenagakerjaan' => (bool) $this->is_bpjs_ketenagakerjaan,
+            'insurances' => EmployeeInsuranceDetailResource::collection($this->insurances),
         ];
     }
 }

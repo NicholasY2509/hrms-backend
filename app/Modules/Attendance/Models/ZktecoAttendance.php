@@ -34,12 +34,22 @@ class ZktecoAttendance extends Model
     public function scopeFilter($query, array $filters)
     {
         $uid = $filters['uid'] ?? false;
+        $search = $filters['search'] ?? false;
         $zkteco_machine_id = $filters['zkteco_machine_id'] ?? false;
         $start_date = $filters['start_date'] ?? false;
         $end_date = $filters['end_date'] ?? false;
 
         $query->when($uid, function ($query, $uid) {
             $query->where('uid', $uid);
+        });
+
+        $query->when($search, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('uid', 'like', "%{$search}%")
+                  ->orWhereHas('attendance_user', function ($sq) use ($search) {
+                      $sq->filter(['search' => $search]);
+                  });
+            });
         });
 
         $query->when($zkteco_machine_id, function ($query, $zkteco_machine_id) {

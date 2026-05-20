@@ -7,6 +7,7 @@ use App\Modules\Employee\Repositories\EmployeeRepository;
 use App\Modules\Employee\Models\EmployeeAttachment;
 use App\Modules\Employee\Models\UserEmployee;
 use App\Modules\Organization\Models\WorkPosition;
+use App\Modules\Payroll\Models\TaxPtkpSetting;
 use App\Modules\User\Models\User;
 use App\Services\StorageService;
 use Illuminate\Support\Facades\DB;
@@ -200,6 +201,56 @@ class EmployeeService
     {
         $employee = $this->employeeRepository->findById($id);
 
+        if ($type === 'insurance') {
+            // Specifically handle insurance type to update both Employee fields and insurances relationship
+            
+            // 1. Update Employee table fields if present
+            $employeeUpdates = [];
+            if (isset($data['is_bpjs_ketenagakerjaan'])) {
+                $employeeUpdates['is_bpjs_ketenagakerjaan'] = $data['is_bpjs_ketenagakerjaan'];
+            }
+            if (isset($data['is_bpjs_kesehatan'])) {
+                $employeeUpdates['is_bpjs_kesehatan'] = $data['is_bpjs_kesehatan'];
+            }
+            if (!empty($employeeUpdates)) {
+                $employee->update($employeeUpdates);
+            }
+
+            // 2. Extract the insurance records array (support both 'insurances' and 'insurance' keys)
+            $insuranceRecords = null;
+            if (isset($data['insurances'])) {
+                $insuranceRecords = $data['insurances'];
+            } elseif (isset($data['insurance'])) {
+                $insuranceRecords = $data['insurance'];
+            }
+
+            // If the incoming payload itself is a flat array, treat it as the insurance records list
+            if (is_array($data) && isset($data[0]) && is_array($data[0])) {
+                $insuranceRecords = $data;
+            }
+
+            // 3. Update the insurances relationship if records are provided
+            if (!is_null($insuranceRecords)) {
+                $incomingIds = collect($insuranceRecords)->pluck('id')->filter()->toArray();
+                
+                // Delete items not in incoming payload
+                $employee->insurances()->whereNotIn('id', $incomingIds)->delete();
+                
+                // Update or Create
+                foreach ($insuranceRecords as $item) {
+                    if (isset($item['id'])) {
+                        $detailId = $item['id'];
+                        unset($item['id']);
+                        $employee->insurances()->where('id', $detailId)->update($item);
+                    } else {
+                        $employee->insurances()->create($item);
+                    }
+                }
+            }
+
+            return $employee->fresh();
+        }
+
         // Unwrap data if it's nested under the type or relation key (from validated request)
         if (isset($data[$type])) {
             $data = $data[$type];
@@ -216,6 +267,10 @@ class EmployeeService
             if (isset($data['birth_date'])) {
                 $data['date_birth'] = $data['birth_date'];
                 unset($data['birth_date']);
+            }
+            if (isset($data['is_get_annual_leaves'])) {
+                $data['is_get_annual_leave'] = $data['is_get_annual_leaves'];
+                unset($data['is_get_annual_leaves']);
             }
 
             // Handle user email update if provided
@@ -235,7 +290,7 @@ class EmployeeService
 
             if ($isSingle) {
                 if ($type === 'tax-profile' && isset($data['ptkp_status'])) {
-                    $ptkp = \App\Modules\Payroll\Models\TaxPtkpSetting::where('code', $data['ptkp_status'])->first();
+                    $ptkp = TaxPtkpSetting::where('code', $data['ptkp_status'])->first();
                     if ($ptkp) {
                         $data['ptkp_setting_id'] = $ptkp->id;
                     }

@@ -66,7 +66,8 @@ class EmployeeDetailController extends Controller
             'gender',
             'families.relationship',
             'families.gender',
-            'warnings'
+            'warnings',
+            'insurances'
         ])->find($id);
 
         if (!$employee) {
@@ -206,7 +207,7 @@ class EmployeeDetailController extends Controller
             ],
             'insurance' => [
                 'resource' => EmployeeInsuranceResource::class,
-                'relation' => 'insurances'
+                'is_relation' => false
             ],
             'tax-profile' => [
                 'resource' => EmployeeTaxProfileResource::class,

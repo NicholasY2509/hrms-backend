@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 
 // Standard System Routes
 Route::get('/test-passport', [SystemController::class, 'testPassport']);
+Route::get('/app-config', [SystemController::class, 'appConfig']);
 
 // Auth Routes
 Route::middleware(['api.auth'])->group(function () {

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TaxPtkpSetting extends Model
 {
+    protected $table = 'tax_ptkp_settings';
+
     protected $fillable = ['code', 'name', 'amount', 'ter_category_id'];
 
     public function ter_category(): BelongsTo

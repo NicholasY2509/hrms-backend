@@ -2,6 +2,9 @@
 
 namespace App\Modules\Attendance\Services;
 
+use App\Modules\Attendance\Jobs\SyncZktecoAttendancesJob;
+use App\Modules\System\Services\TaskService;
+use App\Modules\System\Models\Task;
 use App\Modules\Attendance\Models\ZktecoMachine;
 use App\Modules\Attendance\Models\ZktecoAttendance;
 use App\Modules\System\Traits\HasTaskProgress;
@@ -13,6 +16,39 @@ use Carbon\Carbon;
 class ZktecoLogService
 {
     use HasTaskProgress;
+
+    protected $taskService;
+
+    public function __construct(TaskService $taskService)
+    {
+        $this->taskService = $taskService;
+    }
+
+    /**
+     * Initiate a background logs synchronization.
+     *
+     * @param ZktecoMachine $machine
+     * @param string $startDate
+     * @param string $endDate
+     * @return Task
+     */
+    public function initiateSync(ZktecoMachine $machine, string $startDate, string $endDate): Task
+    {
+        $task = $this->taskService->createTask(
+            'zkteco_attendance_sync',
+            "Menunggu antrian sinkronisasi log absensi dari {$machine->name}...",
+            [
+                'zkteco_machine_id' => $machine->id,
+                'machine_name' => $machine->name,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ]
+        );
+
+        SyncZktecoAttendancesJob::dispatch($machine, $startDate, $endDate, $task);
+
+        return $task;
+    }
 
     /**
      * Synchronize attendance logs from a ZKTeco machine for a specific date range.
@@ -39,14 +75,15 @@ class ZktecoLogService
             
             $this->updateProgress(30, "Mengambil log absensi ({$startDate} s/d {$endDate})...");
             
-            // TADPHP filtering is often unreliable depending on machine version, 
-            // but we'll try it. Fallback is usually fetching all and filtering in PHP.
-            $response = $tad->get_att_log([
-                'start_date' => $startDate,
-                'end_date' => $endDate
+            // TADPHP does not accept start_date/end_date parameters directly in get_att_log().
+            // We fetch the logs first, and then filter by date range using filter_by_date().
+            $attLogs = $tad->get_att_log();
+            $filteredLogs = $attLogs->filter_by_date([
+                'start' => $startDate,
+                'end'   => $endDate,
             ]);
             
-            $logs = $response->to_array();
+            $logs = $filteredLogs->to_array();
 
             if (!isset($logs['Row']) || empty($logs['Row'])) {
                 return ['upserted' => 0];
@@ -81,7 +118,7 @@ class ZktecoLogService
 
             $this->updateProgress(80, "Menyimpan data ke database...");
 
-            return DB::transaction(function () use ($upsertData) {
+            $result = DB::transaction(function () use ($upsertData) {
                 $chunks = array_chunk($upsertData, 500);
                 $upsertedCount = 0;
                 foreach ($chunks as $chunk) {
@@ -95,6 +132,12 @@ class ZktecoLogService
 
                 return ['upserted' => $upsertedCount];
             });
+
+            if ($this->task) {
+                $this->completeTask("Sinkronisasi log selesai. Berhasil menyinkronkan {$result['upserted']} data log absensi.");
+            }
+
+            return $result;
 
         } catch (Throwable $e) {
             if ($this->task) {

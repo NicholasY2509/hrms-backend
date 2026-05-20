@@ -22,7 +22,9 @@ class EmployeeSalaryComponentController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $components = $this->service->getEmployeeComponents($request->employee_id);
+        $request->validate(['employee_id' => 'required|integer']);
+        
+        $components = $this->service->getEmployeeComponents((int) $request->query('employee_id'));
         return $this->successResponse($components, 'Employee salary components retrieved successfully');
     }
 
@@ -35,9 +37,14 @@ class EmployeeSalaryComponentController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $request->validate([
+            'employee_id' => 'required|integer',
+            'salary_component_id' => 'required|integer|exists:salary_components,id',
+        ]);
+
         $assignment = $this->service->assignComponent(
-            $request->employee_id, 
-            $request->salary_component_id, 
+            (int) $request->employee_id, 
+            (int) $request->salary_component_id, 
             $request->all()
         );
         return $this->successResponse($assignment, 'Salary component assigned successfully', 201);
