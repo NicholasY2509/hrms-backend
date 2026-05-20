@@ -62,14 +62,7 @@ return [
 
         'gcs' => [
             'driver' => 'gcs',
-            'keyFile' => (function($file) {
-                $path = $file ?: storage_path('app/gcs-key.json');
-                $fullPath = (str_starts_with($path, '/') || str_contains($path, ':')) ? $path : base_path($path);
-                if (file_exists($fullPath)) {
-                    return json_decode(file_get_contents($fullPath), true);
-                }
-                return $fullPath;
-            })(env('GOOGLE_CLOUD_KEY_FILE')),
+            'keyFilePath' => env('GOOGLE_CLOUD_KEY_FILE', storage_path('app/gcs-key.json')),
             'projectId' => env('GOOGLE_CLOUD_PROJECT_ID', 'ddms-366407'),
             'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET', 'deltamas-storage'),
             'pathPrefix' => env('GOOGLE_CLOUD_STORAGE_PATH_PREFIX', ''),
