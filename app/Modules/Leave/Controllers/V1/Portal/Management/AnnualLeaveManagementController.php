@@ -4,9 +4,11 @@ namespace App\Modules\Leave\Controllers\V1\Portal\Management;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Leave\Repositories\AnnualLeaveRepository;
+use App\Modules\Leave\Requests\AnnualLeaveAdjustRequest;
 use App\Modules\Leave\Requests\AnnualLeaveIndexRequest;
 use App\Modules\Leave\Resources\AnnualLeaveResource;
 use App\Modules\Leave\Services\AnnualLeaveService;
+use App\Modules\Employee\Models\Employee;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 
@@ -81,6 +83,35 @@ class AnnualLeaveManagementController extends Controller
         return $this->successResponse(
             AnnualLeaveResource::collection($annualLeaves)->response()->getData(true),
             'Annual leaves retrieved successfully'
+        );
+    }
+
+    /**
+     * Adjust Employee Annual Leave
+     * 
+     * Manually adjust the balance of annual_leave_2 and annual_leave_3 for an employee.
+     * Records any discrepancies as addition/deduction logs.
+     * 
+     * @response {
+     *  "success": true,
+     *  "message": "Annual leave balance adjusted successfully",
+     *  "data": null
+     * }
+     */
+    public function adjust(AnnualLeaveAdjustRequest $request, Employee $employee): JsonResponse
+    {
+        $data = $request->validated();
+
+        $this->service->adjustBalance(
+            $employee,
+            $data['annual_leave_2'],
+            $data['annual_leave_3'],
+            $data['keterangan']
+        );
+
+        return $this->successResponse(
+            null,
+            'Annual leave balance adjusted successfully'
         );
     }
 }

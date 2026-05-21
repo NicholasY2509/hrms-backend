@@ -4,6 +4,8 @@ namespace App\Modules\Payroll\Controllers\V1\Portal\Management;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Payroll\Services\EmployeeSalaryComponentService;
+use App\Modules\Payroll\Resources\V1\EmployeeSalaryComponentResource;
+use App\Modules\Payroll\Requests\V1\IndexEmployeeSalaryComponentRequest;
 use App\Traits\ApiResponses;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -20,12 +22,13 @@ class EmployeeSalaryComponentController extends Controller
      * @group Payroll Management
      * @queryParam employee_id int required
      */
-    public function index(Request $request): JsonResponse
+    public function index(IndexEmployeeSalaryComponentRequest $request): JsonResponse
     {
-        $request->validate(['employee_id' => 'required|integer']);
-        
         $components = $this->service->getEmployeeComponents((int) $request->query('employee_id'));
-        return $this->successResponse($components, 'Employee salary components retrieved successfully');
+        return $this->successResponse(
+            EmployeeSalaryComponentResource::collection($components),
+            'Employee salary components retrieved successfully'
+        );
     }
 
     /**

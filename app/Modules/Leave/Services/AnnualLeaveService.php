@@ -25,7 +25,7 @@ class AnnualLeaveService
      */
     public function add(Employee $employee, float $amount, string $keterangan, ?Carbon $date = null): AnnualLeave
     {
-        $date = $date ?: Carbon::now();
+        $date = Carbon::now();
         $currentYear = $date->year;
         $lastYear = $currentYear - 1;
 
@@ -77,7 +77,7 @@ class AnnualLeaveService
      */
     public function deduct(Employee $employee, float $amount, string $keterangan, ?Carbon $date = null): AnnualLeave
     {
-        $date = $date ?: Carbon::now();
+        $date = Carbon::now();
         $currentYear = $date->year;
         $lastYear = $currentYear - 1;
         $remaining = (float) $amount;
@@ -159,6 +159,81 @@ class AnnualLeaveService
 
             // Soft delete the original deduction to avoid duplicate accounting
             $originalDeduction->delete();
+        });
+    }
+
+    /**
+     * Adjust annual leave balance to exact amounts for an employee.
+     * Records the addition or deduction of discarded amounts.
+     *
+     * @param Employee $employee
+     * @param float $newAL2
+     * @param float $newAL3
+     * @param string $keterangan
+     * @param Carbon|null $date
+     * @return void
+     */
+    public function adjustBalance(Employee $employee, float $newAL2, float $newAL3, string $keterangan, ?Carbon $date = null): void
+    {
+        $date = $date ?: Carbon::now();
+        $currentYear = $date->year;
+        $lastYear = $currentYear - 1;
+
+        DB::transaction(function () use ($employee, $newAL2, $newAL3, $keterangan, $date, $currentYear, $lastYear) {
+            $diffAL2 = $newAL2 - (float) $employee->annual_leave_2;
+            $diffAL3 = $newAL3 - (float) $employee->annual_leave_3;
+
+            $employee->annual_leave_2 = $newAL2;
+            $employee->annual_leave_3 = $newAL3;
+            $employee->save();
+
+            // Handle additions
+            $additions = [];
+            $totalAddition = 0;
+            if ($diffAL2 > 0) {
+                $additions[$lastYear] = $diffAL2;
+                $totalAddition += $diffAL2;
+            }
+            if ($diffAL3 > 0) {
+                $additions[$currentYear] = $diffAL3;
+                $totalAddition += $diffAL3;
+            }
+
+            if ($totalAddition > 0) {
+                $this->repository->create([
+                    'employee_id' => $employee->id,
+                    'total' => $totalAddition,
+                    'annual_leave_year' => $currentYear,
+                    'annual_leave_at' => $date,
+                    'status' => 'Tambah',
+                    'keterangan' => $keterangan,
+                    'deduction_details' => $additions,
+                ]);
+            }
+
+            // Handle deductions
+            $deductions = [];
+            $totalDeduction = 0;
+            if ($diffAL2 < 0) {
+                $deductions[$lastYear] = abs($diffAL2);
+                $totalDeduction += abs($diffAL2);
+            }
+            if ($diffAL3 < 0) {
+                $deductions[$currentYear] = abs($diffAL3);
+                $totalDeduction += abs($diffAL3);
+            }
+
+            if ($totalDeduction > 0) {
+                $this->repository->create([
+                    'employee_id' => $employee->id,
+                    'total' => $totalDeduction,
+                    'annual_leave_year' => $currentYear,
+                    'annual_leave_at' => $date,
+                    'status' => 'Potong',
+                    'keterangan' => $keterangan,
+                    'deduction_details' => $deductions,
+                ]);
+            }
         });
     }
 }
