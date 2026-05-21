@@ -39,6 +39,7 @@ Route::middleware(['api.auth'])->group(function () {
             Route::controller(AttendanceManagementController::class)->group(function () {
                 Route::get('/attendances', 'index');
                 Route::post('/attendances/calculate', 'calculate');
+                Route::put('/attendances/{attendance}/status', 'updateStatus');
             });
 
             Route::controller(AttendanceExportController::class)->group(function () {

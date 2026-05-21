@@ -99,4 +99,20 @@ class AttendanceService
         $attendanceWorkingHour->update($data);
         return $attendanceWorkingHour->load(['employee', 'working_hour', 'attendance']);
     }
+
+    /**
+     * Update the attendance status of an attendance record.
+     */
+    public function updateStatus(int $attendanceId, int $attendanceStatusId): \App\Modules\Attendance\Models\Attendance
+    {
+        $attendance = $this->attendanceRepository->findById($attendanceId);
+
+        if (!$attendance) {
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException('Attendance not found.');
+        }
+
+        $attendance->update(['attendance_status_id' => $attendanceStatusId]);
+
+        return $attendance->load('attendance_status');
+    }
 }

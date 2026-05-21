@@ -239,5 +239,19 @@ class AttendanceRepository
             ->whereIn('attendance_working_hour_id', $workingHourIds)
             ->get();
     }
+
+    /**
+     * Find an attendance by ID.
+     */
+    public function findById(int $id): ?Attendance
+    {
+        return Attendance::with([
+            'attendance_status',
+            'attendance_working_hour.employee',
+            'attendance_working_hour.working_hour',
+            'incoming_location',
+            'outgoing_location',
+        ])->find($id);
+    }
 }
 

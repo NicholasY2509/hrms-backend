@@ -5,6 +5,7 @@ namespace App\Modules\Attendance\Controllers\V1\Portal\Management;
 use App\Http\Controllers\Controller;
 use App\Modules\Attendance\Requests\AttendanceCalculateRequest;
 use App\Modules\Attendance\Requests\AttendanceIndexRequest;
+use App\Modules\Attendance\Requests\UpdateAttendanceStatusRequest;
 use App\Modules\Attendance\Resources\AttendanceManagementResource;
 use App\Modules\Attendance\Services\AttendanceCalculationService;
 use App\Modules\Attendance\Services\AttendanceService;
@@ -107,4 +108,38 @@ class AttendanceManagementController extends Controller
             'status' => $task->status,
         ], 'Attendance calculation started');
     }
+
+    /**
+     * Update Attendance Status
+     * 
+     * Updates the attendance status for a specific attendance record.
+     * 
+     * @urlParam attendance int required The attendance ID. Example: 1
+     * @bodyParam attendance_status_id int required The new attendance status ID. Example: 2
+     * 
+     * @response {
+     *  "success": true,
+     *  "message": "Attendance status updated successfully",
+     *  "data": {
+     *    "id": 1,
+     *    "attendance_status": {
+     *      "id": 2,
+     *      "name": "Present"
+     *    }
+     *  }
+     * }
+     */
+    public function updateStatus(int $attendance, UpdateAttendanceStatusRequest $request): JsonResponse
+    {
+        $updated = $this->service->updateStatus(
+            $attendance,
+            $request->input('attendance_status_id')
+        );
+
+        return $this->successResponse(
+            new AttendanceManagementResource($updated),
+            'Attendance status updated successfully'
+        );
+    }
 }
+

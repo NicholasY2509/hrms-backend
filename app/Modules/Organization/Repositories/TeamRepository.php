@@ -11,7 +11,7 @@ class TeamRepository
     public function getPaginated(array $filters, int $perPage = 15): LengthAwarePaginator
     {
         return Team::query()
-            ->with(['head', 'workLocation', 'employees'])
+            ->with(['head', 'workLocation', 'employees', 'workLocation'])
             ->withCount(['employees'])
             ->filter($filters)
             ->orderBy('name')

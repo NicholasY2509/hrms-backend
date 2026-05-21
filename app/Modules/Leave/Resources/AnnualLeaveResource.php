@@ -17,6 +17,8 @@ class AnnualLeaveResource extends JsonResource
                     'id' => $this->employee->id,
                     'name' => $this->employee->full_name,
                     'nik' => $this->employee->employee_id_number,
+                    'annual_leave_2' => $this->employee->annual_leave_2,
+                    'annual_leave_3' => $this->employee->annual_leave_3,
                 ];
             }),
             'annual_leave_at' => $this->annual_leave_at?->format('Y-m-d'),
