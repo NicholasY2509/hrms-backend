@@ -3,6 +3,7 @@
 namespace App\Modules\Attendance\Resources;
 
 use App\Modules\Attendance\Services\MobileAttendanceService;
+use App\Services\StorageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -83,10 +84,10 @@ class AttendanceResource extends JsonResource
             'is_locked' => $isLocked,
             'lock_title' => $lockTitle,
             'lock_message' => $lockMessage,
-            'mobile_scans' => $this->mobile_scans,
+            'mobile_scans' => MobileScanResource::collection(collect($this->mobile_scans ?? [])),
             'all_scans' => $this->all_scans,
-            'incoming_photo' => $this->incoming_photo,
-            'outgoing_photo' => $this->outgoing_photo,
+            'incoming_photo' => StorageService::url($this->incoming_photo),
+            'outgoing_photo' => StorageService::url($this->outgoing_photo),
         ];
     }
 }

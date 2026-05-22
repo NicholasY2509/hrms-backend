@@ -44,7 +44,7 @@ class AttendanceManagementResource extends JsonResource
                 'name' => $this->outgoing_location->name,
             ] : null,
             'all_scans' => $this->all_scans,
-            'mobile_scans' => $this->mobile_scans,
+            'mobile_scans' => MobileScanResource::collection(collect($this->mobile_scans ?? [])),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
