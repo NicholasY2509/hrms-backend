@@ -26,6 +26,7 @@ use App\Modules\Employee\Resources\EmployeeAttachmentResource;
 use App\Modules\Employee\Resources\EmployeeInsuranceResource;
 use App\Modules\Employee\Resources\V1\EmployeeTaxProfileResource;
 use App\Modules\Employee\Requests\UpdateEmployeeDetailRequest;
+use App\Modules\Employee\Resources\EmployeeAttendanceUserResource;
 use App\Modules\Employee\Services\EmployeeService;
 
 /**
@@ -144,6 +145,10 @@ class EmployeeDetailController extends Controller
             'overview' => [
                 'resource' => EmployeeOverviewResource::class,
                 'is_relation' => false
+            ],
+            'attendance-user' => [
+                'resource' => EmployeeAttendanceUserResource::class,
+                'relation' => 'attendance_users'
             ],
             'personal' => [
                 'resource' => EmployeePersonalResource::class,

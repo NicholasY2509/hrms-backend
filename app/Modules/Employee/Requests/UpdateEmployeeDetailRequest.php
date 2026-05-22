@@ -125,6 +125,11 @@ class UpdateEmployeeDetailRequest extends FormRequest
                 'ptkp_setting_id' => ['nullable', 'exists:tax_ptkp_settings,id'],
                 'tax_method' => ['nullable'],
             ],
+            'attendance-user' => [
+                '*.id' => ['nullable', 'integer'],
+                '*.uid' => ['required', 'integer', 'max:255'],
+                '*.zkteco_machine_id' => ['required', 'integer'],
+            ],
             default => [],
         };
     }
