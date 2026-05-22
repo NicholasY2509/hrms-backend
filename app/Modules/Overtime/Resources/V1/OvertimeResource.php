@@ -30,6 +30,7 @@ class OvertimeResource extends JsonResource
             'estimated_overtime_price' => $this->estimated_overtime_price,
             'real_overtime_price' => $this->real_overtime_price,
             'note' => $this->note,
+            'attachment_urls' => $this->overtime_attachments->map(fn($attachment) => StorageService::url($attachment->path)),
             'attachments' => $this->overtime_attachments->map(function ($attachment) {
                 return [
                     'id' => $attachment->id,
