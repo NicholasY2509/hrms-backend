@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ZktecoUser extends Model
 {
+    use \Awobaz\Compoships\Compoships;
+
     protected $table = 'zkteco_users';
     protected $guarded = [];
     public $incrementing = false;
@@ -25,7 +27,7 @@ class ZktecoUser extends Model
      */
     public function attendance_user(): BelongsTo
     {
-        return $this->belongsTo(AttendanceUser::class, 'uid', 'uid')->where('zkteco_machine_id', 'zkteco_machine_id');
+        return $this->belongsTo(AttendanceUser::class, ['uid', 'zkteco_machine_id'], ['uid', 'zkteco_machine_id']);
     }
 
     /**

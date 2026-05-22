@@ -10,6 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "awobaz/compoships": "^3.0",
         "barryvdh/laravel-dompdf": "^3.1",
         "dedoc/scramble": "^0.13.20",
         "intervention/image": "^3.0",

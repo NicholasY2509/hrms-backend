@@ -4,8 +4,71 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "863aa930c7c8be6e8345b28f291a03c2",
+    "content-hash": "055e09753878d1c812dd3c21c54f7573",
     "packages": [
+        {
+            "name": "awobaz/compoships",
+            "version": "3.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/topclaudy/compoships.git",
+                "reference": "617d2a7fb308dbec7738a570d9afad4dabae4236"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/topclaudy/compoships/zipball/617d2a7fb308dbec7738a570d9afad4dabae4236",
+                "reference": "617d2a7fb308dbec7738a570d9afad4dabae4236",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/database": "^12.0|^13.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "ext-sqlite3": "*",
+                "fakerphp/faker": "^1.18",
+                "phpunit/phpunit": "^11.0|^12.0"
+            },
+            "suggest": {
+                "awobaz/blade-active": "Blade directives for the Laravel 'Active' package",
+                "awobaz/eloquent-auto-append": "Automatically append accessors to model serialization",
+                "awobaz/eloquent-mutators": "Reusable mutators (getters/setters) for Laravel 5's Eloquent",
+                "awobaz/syntactic": "Syntactic sugar for named and indexed parameters call."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Awobaz\\Compoships\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Claudin J. Daniel",
+                    "email": "cdaniel@awobaz.com"
+                }
+            ],
+            "description": "Laravel relationships with support for composite/multiple keys",
+            "keywords": [
+                "laravel",
+                "laravel composite keys",
+                "laravel relationships"
+            ],
+            "support": {
+                "issues": "https://github.com/topclaudy/compoships/issues",
+                "source": "https://github.com/topclaudy/compoships/tree/3.0.1"
+            },
+            "funding": [
+                {
+                    "url": "https://paypal.me/awobaz",
+                    "type": "custom"
+                }
+            ],
+            "time": "2026-04-29T16:47:31+00:00"
+        },
         {
             "name": "barryvdh/laravel-dompdf",
             "version": "v3.1.2",

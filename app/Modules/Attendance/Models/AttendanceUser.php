@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AttendanceUser extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, \Awobaz\Compoships\Compoships;
 
     protected $table = 'attendance_users';
     protected $guarded = ['id'];
