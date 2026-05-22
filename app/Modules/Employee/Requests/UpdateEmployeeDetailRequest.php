@@ -127,7 +127,7 @@ class UpdateEmployeeDetailRequest extends FormRequest
             ],
             'attendance-user' => [
                 '*.id' => ['nullable', 'integer'],
-                '*.uid' => ['required', 'integer', 'max:255'],
+                '*.uid' => ['required', 'integer'],
                 '*.zkteco_machine_id' => ['required', 'integer'],
             ],
             default => [],
