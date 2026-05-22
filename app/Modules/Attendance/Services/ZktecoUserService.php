@@ -79,7 +79,7 @@ class ZktecoUserService
                 ];
             }
 
-            $rows = is_array($users['Row']) && isset($users['Row']['PIN2']) ? [$users['Row']] : $users['Row'];
+            $rows = is_array($users['Row']) && (isset($users['Row']['PIN2']) || isset($users['Row']['PIN'])) ? [$users['Row']] : $users['Row'];
             $total = count($rows);
             
             $this->updateProgress(50, "Memproses {$total} data user...");
@@ -89,7 +89,12 @@ class ZktecoUserService
             $now = now();
 
             foreach ($rows as $item) {
-                $uid = $item['PIN2'];
+                $uid = $item['PIN2'] ?? $item['PIN'] ?? null;
+                
+                if (!$uid) {
+                    continue;
+                }
+
                 $uids[$uid] = $uid;
                 
                 $upsertData[$uid] = [

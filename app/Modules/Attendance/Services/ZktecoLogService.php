@@ -86,10 +86,13 @@ class ZktecoLogService
             $logs = $filteredLogs->to_array();
 
             if (!isset($logs['Row']) || empty($logs['Row'])) {
+                if ($this->task) {
+                    $this->completeTask("Tidak ada data log absensi yang ditemukan pada periode tersebut.");
+                }
                 return ['upserted' => 0];
             }
 
-            $rows = is_array($logs['Row']) && isset($logs['Row']['PIN']) ? [$logs['Row']] : $logs['Row'];
+            $rows = is_array($logs['Row']) && (isset($logs['Row']['PIN']) || isset($logs['Row']['PIN2'])) ? [$logs['Row']] : $logs['Row'];
             $total = count($rows);
             
             $this->updateProgress(60, "Memproses {$total} log absensi...");
@@ -98,7 +101,16 @@ class ZktecoLogService
             $now = now();
 
             foreach ($rows as $item) {
-                $timestamp = $item['DateTime'];
+                $uid = $item['PIN'] ?? $item['PIN2'] ?? null;
+                if (!$uid) {
+                    continue;
+                }
+
+                $timestamp = $item['DateTime'] ?? null;
+                if (!$timestamp) {
+                    continue;
+                }
+
                 $dt = Carbon::parse($timestamp);
                 
                 // Final safeguard filtering
@@ -107,7 +119,7 @@ class ZktecoLogService
                 }
 
                 $upsertData[] = [
-                    'uid' => $item['PIN'],
+                    'uid' => $uid,
                     'timestamp' => $timestamp,
                     'attendance_at' => $dt->format('Y-m-d'),
                     'zkteco_machine_id' => $machine->id,
