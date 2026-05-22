@@ -1,4 +1,4 @@
-<?php
+s<?php
 
 namespace App\Modules\Attendance\Models;
 
@@ -25,7 +25,7 @@ class ZktecoUser extends Model
      */
     public function attendance_user(): BelongsTo
     {
-        return $this->belongsTo(AttendanceUser::class, 'uid', 'uid');
+        return $this->belongsTo(AttendanceUser::class, 'uid', 'uid')->where('zkteco_machine_id', 'zkteco_machine_id');
     }
 
     /**
