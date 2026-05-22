@@ -2,6 +2,7 @@
 
 namespace App\Modules\Attendance\Resources;
 
+use App\Services\StorageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -32,8 +33,8 @@ class AttendanceManagementResource extends JsonResource
             'check_out' => $this->outgoing_scan,
             'attendance_status_id' => $this->attendance_status_id,
             'status' => $this->attendance_status?->name,
-            'incoming_photo' => $this->incoming_photo,
-            'outgoing_photo' => $this->outgoing_photo,
+            'incoming_photo' => $this->incoming_photo ? StorageService::url($this->incoming_photo) : null,
+            'outgoing_photo' => $this->outgoing_photo ? StorageService::url($this->outgoing_photo) : null,
             'incoming_location' => $this->incoming_location ? [
                 'id' => $this->incoming_location->id,
                 'name' => $this->incoming_location->name,

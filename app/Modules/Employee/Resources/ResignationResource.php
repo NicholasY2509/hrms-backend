@@ -2,6 +2,7 @@
 
 namespace App\Modules\Employee\Resources;
 
+use App\Modules\ApprovalWorkflow\Resources\V1\ApprovalRequestStepResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
@@ -32,7 +33,7 @@ class ResignationResource extends JsonResource
             'settled_at' => $this->settled_at,
             'status' => $this->status,
             'approvals' => $this->whenLoaded('approvalRequest', function () {
-                return \App\Modules\ApprovalWorkflow\Resources\V1\ApprovalRequestStepResource::collection($this->approvalRequest?->steps ?? collect([]));
+                return ApprovalRequestStepResource::collection($this->approvalRequest?->steps ?? collect([]));
             }),
             
             'created_at' => $this->created_at,
