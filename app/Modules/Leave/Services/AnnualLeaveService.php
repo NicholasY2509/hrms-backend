@@ -158,7 +158,7 @@ class AnnualLeaveService
             ]);
 
             // Soft delete the original deduction to avoid duplicate accounting
-            $originalDeduction->delete();
+            // $originalDeduction->delete();
         });
     }
 

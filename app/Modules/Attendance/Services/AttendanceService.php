@@ -3,6 +3,7 @@
 namespace App\Modules\Attendance\Services;
 
 use App\Modules\Attendance\Jobs\ImportAttendanceWorkingHourJob;
+use App\Modules\Attendance\Models\Attendance;
 use App\Modules\Attendance\Models\AttendanceWorkingHour;
 use App\Modules\Attendance\Repositories\AttendanceRepository;
 use App\Modules\System\Models\Task;
@@ -114,5 +115,14 @@ class AttendanceService
         $attendance->update(['attendance_status_id' => $attendanceStatusId]);
 
         return $attendance->load('attendance_status');
+    }
+
+    /**
+     * Batch update the attendance status of multiple attendance records.
+     */
+    public function batchUpdateStatus(array $attendanceIds, int $attendanceStatusId): void
+    {
+        Attendance::whereIn('id', $attendanceIds)
+            ->update(['attendance_status_id' => $attendanceStatusId]);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Modules\Attendance\Controllers\V1\Portal\Management;
 use App\Http\Controllers\Controller;
 use App\Modules\Attendance\Requests\AttendanceCalculateRequest;
 use App\Modules\Attendance\Requests\AttendanceIndexRequest;
+use App\Modules\Attendance\Requests\BatchUpdateAttendanceStatusRequest;
 use App\Modules\Attendance\Requests\UpdateAttendanceStatusRequest;
 use App\Modules\Attendance\Resources\AttendanceManagementResource;
 use App\Modules\Attendance\Services\AttendanceCalculationService;
@@ -139,6 +140,33 @@ class AttendanceManagementController extends Controller
         return $this->successResponse(
             new AttendanceManagementResource($updated),
             'Attendance status updated successfully'
+        );
+    }
+
+    /**
+     * Batch Update Attendance Status
+     * 
+     * Updates the attendance status for multiple attendance records at once.
+     * 
+     * @bodyParam attendance_ids int[] required Array of attendance IDs to update. Example: [1, 2, 3]
+     * @bodyParam attendance_status_id int required The new attendance status ID. Example: 2
+     * 
+     * @response {
+     *  "success": true,
+     *  "message": "Attendance statuses updated successfully",
+     *  "data": null
+     * }
+     */
+    public function batchUpdateStatus(BatchUpdateAttendanceStatusRequest $request): JsonResponse
+    {
+        $this->service->batchUpdateStatus(
+            $request->input('attendance_ids'),
+            $request->input('attendance_status_id')
+        );
+
+        return $this->successResponse(
+            null,
+            'Attendance statuses updated successfully'
         );
     }
 }
