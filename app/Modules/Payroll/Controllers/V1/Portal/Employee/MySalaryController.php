@@ -3,6 +3,7 @@
 namespace App\Modules\Payroll\Controllers\V1\Portal\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Payroll\Resources\V1\EmployeeOldSalaryResouce;
 use App\Modules\Payroll\Services\EmployeeSalaryService;
 use App\Modules\Payroll\Resources\V1\EmployeeSalaryResource;
 use App\Traits\ApiResponses;
@@ -57,6 +58,25 @@ class MySalaryController extends Controller
 
         return $this->successResponse(
             new EmployeeSalaryResource($salary),
+            'Salary details retrieved successfully'
+        );
+    }
+
+    public function indexOld(){
+        $employeeId = Auth::user()?->user_employee?->employee_id;
+
+        if (!$employeeId) {
+            return $this->errorResponse('Employee record not found for this user.', 404);
+        }
+
+        $salary = $this->service->getActiveSalary($employeeId);
+
+        if (!$salary) {
+            return $this->errorResponse('Data gaji tidak ditemukan!', 404);
+        }
+
+        return $this->successResponse(
+            new EmployeeOldSalaryResouce($salary),
             'Salary details retrieved successfully'
         );
     }

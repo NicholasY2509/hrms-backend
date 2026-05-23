@@ -19,7 +19,7 @@ Route::middleware(['api.auth'])->group(function () {
         Route::get('my-salary', [MySalaryController::class, 'index']);
     });
 
-    Route::get('salary-details', [MySalaryController::class, 'index']);
+    Route::get('salary-details', [MySalaryController::class, 'indexOld']);
 
 
     Route::prefix('portal/management')
