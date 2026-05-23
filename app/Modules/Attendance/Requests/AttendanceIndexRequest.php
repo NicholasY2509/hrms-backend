@@ -37,6 +37,7 @@ class AttendanceIndexRequest extends FormRequest
         return [
             'employee_id' => ['nullable', 'integer', 'exists:employees,id'],
             'department_id' => ['nullable', 'integer', 'exists:departments,id'],
+            'team_id' => ['nullable', 'integer', 'exists:teams,id'],
             'work_location_id' => ['nullable', 'integer', 'exists:work_locations,id'],
             'start_date' => ['nullable', 'date', 'date_format:Y-m-d'],
             'end_date' => ['nullable', 'date', 'date_format:Y-m-d', 'after_or_equal:start_date'],
