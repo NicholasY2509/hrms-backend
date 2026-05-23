@@ -3,6 +3,9 @@
 namespace App\Modules\ApprovalWorkflow\Console\Commands;
 
 use App\Modules\ApprovalWorkflow\Models\ApprovalRequest;
+use App\Modules\Overtime\Models\Overtime;
+use App\Modules\System\Models\SystemSetting;
+use App\Modules\UnpaidLeave\Models\UnpaidLeave;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -36,17 +39,16 @@ class AutoRejectStaleRequestsCommand extends Command
         
         // Define mapping between model class and setting key
         $typeMap = [
-            \App\Modules\Overtime\Models\Overtime::class => 'approval_overtime_auto_reject_days',
-            \App\Modules\UnpaidLeave\Models\UnpaidLeave::class => 'approval_unpaid_leave_auto_reject_days',
+           Overtime::class => 'approval_overtime_auto_reject_days',
+            UnpaidLeave::class => 'approval_unpaid_leave_auto_reject_days',
         ];
 
         // Fetch settings once
-        $settings = \App\Modules\System\Models\SystemSetting::whereIn('key', array_values($typeMap))
+        $settings = SystemSetting::whereIn('key', array_values($typeMap))
             ->get()
             ->pluck('value', 'key');
 
-        // Find all pending requests
-        $pendingRequests = ApprovalRequest::where('status', 'pending')->get();
+        $pendingRequests = ApprovalRequest::with('approvable')->where('status', 'pending')->get();
         $count = 0;
 
         foreach ($pendingRequests as $request) {
@@ -55,7 +57,16 @@ class AutoRejectStaleRequestsCommand extends Command
             
             $cutoffDate = Carbon::now()->subDays($limitDays);
 
-            if ($request->created_at->lt($cutoffDate)) {
+            // Determine the reference date for comparison
+            $referenceDate = $request->created_at;
+            if ($request->approvable_type === Overtime::class) {
+                $model = $request->approvable;
+                if ($model && !empty($model->date)) {
+                    $referenceDate = Carbon::parse($model->date);
+                }
+            }
+
+            if ($referenceDate->lt($cutoffDate)) {
                 try {
                     DB::transaction(function () use ($request, $limitDays) {
                         // 1. Update all pending steps to rejected
