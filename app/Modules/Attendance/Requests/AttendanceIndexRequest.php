@@ -21,6 +21,17 @@ class AttendanceIndexRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        if (empty($this->start_date) && empty($this->end_date)) {
+            $today = \Carbon\Carbon::today()->format('Y-m-d');
+            $this->merge([
+                'start_date' => $today,
+                'end_date' => $today,
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
