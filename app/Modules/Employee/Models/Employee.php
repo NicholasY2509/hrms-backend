@@ -385,5 +385,36 @@ class Employee extends Model
         $query->when($filters['work_employee_status_id'] ?? null, function ($query, $statusId) {
             $query->where('work_employee_status_id', $statusId);
         });
+
+        $query->when($filters['supervisor_employee_id'] ?? null, function ($query, $supervisorId) {
+            $supervisor = Employee::find($supervisorId);
+            if ($supervisor) {
+                $matrixRules = \App\Modules\Organization\Models\PositionHierarchyMatrix::where('supervisor_work_position_id', $supervisor->work_position_id)
+                    ->where(function($q) use ($supervisor) {
+                        $q->whereNull('work_location_id')
+                          ->orWhere('work_location_id', $supervisor->work_location_id);
+                    })
+                    ->get(['department_id', 'work_position_id']);
+
+                if ($matrixRules->isNotEmpty()) {
+                    $query->where('work_location_id', $supervisor->work_location_id)
+                          ->where(function ($q) use ($matrixRules) {
+                              foreach ($matrixRules as $rule) {
+                                  $q->orWhere(function ($sq) use ($rule) {
+                                      $sq->where('department_id', $rule->department_id)
+                                         ->where('work_position_id', $rule->work_position_id);
+                                  });
+                              }
+                          });
+
+                    // Only link employees with the same team_id if the supervisor belongs to a team
+                    if ($supervisor->team_id) {
+                        $query->where('team_id', $supervisor->team_id);
+                    }
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+            }
+        });
     }
 }

@@ -112,6 +112,12 @@ class Attendance extends Model
                     $eq->filter(['search' => $filters['search']]);
                 });
             }
+
+            if (!empty($filters['supervisor_employee_id'])) {
+                $q->whereHas('employee', function ($eq) use ($filters) {
+                    $eq->filter(['supervisor_employee_id' => $filters['supervisor_employee_id']]);
+                });
+            }
         });
 
         if (!empty($filters['attendance_status_id'])) {

@@ -4,6 +4,7 @@ use App\Modules\Organization\Controllers\V1\Portal\Management\DepartmentControll
 use App\Modules\Organization\Controllers\V1\Portal\Management\TeamController;
 use App\Modules\Organization\Controllers\V1\Portal\Management\WorkLocationController;
 use App\Modules\Organization\Controllers\V1\Portal\Management\WorkPositionController;
+use App\Modules\Organization\Controllers\V1\Configuration\PositionHierarchyMatrixController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['api.auth'])->group(function () {
@@ -15,6 +16,14 @@ Route::middleware(['api.auth'])->group(function () {
         Route::apiResource('work-positions', WorkPositionController::class);
         Route::apiResource('departments', DepartmentController::class);
         Route::apiResource('teams', TeamController::class);
+
+    });
+
+    Route::prefix('config')
+        ->middleware('role:Admin HRD')
+        ->group(function () {
+            
+        Route::apiResource('position-hierarchy-matrices', PositionHierarchyMatrixController::class);
 
     });
 });

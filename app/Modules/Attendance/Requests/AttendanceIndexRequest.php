@@ -42,6 +42,7 @@ class AttendanceIndexRequest extends FormRequest
             'start_date' => ['nullable', 'date', 'date_format:Y-m-d'],
             'end_date' => ['nullable', 'date', 'date_format:Y-m-d', 'after_or_equal:start_date'],
             'attendance_status_id' => ['nullable', 'integer', 'exists:attendance_statuses,id'],
+            'supervisor_employee_id' => ['nullable', 'integer', 'exists:employees,id'],
             'search' => ['nullable', 'string', 'max:255'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];
