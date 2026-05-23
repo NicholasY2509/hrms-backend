@@ -175,7 +175,7 @@ class AttendanceRepository
     {
         return Employee::query()
             ->with(['attendance_users'])
-            ->where('work_location_id', '!=', 3) // Exclude Suryaraya / Vendor
+            ->where('work_location_id', '!=', 3)
             ->whereNull('resign_date')
             ->get();
     }
