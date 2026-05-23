@@ -394,18 +394,22 @@ class Employee extends Model
                         $q->whereNull('work_location_id')
                           ->orWhere('work_location_id', $supervisor->work_location_id);
                     })
-                    ->get(['department_id', 'work_position_id']);
+                    ->get(['department_id', 'work_position_id', 'work_location_id']);
 
                 if ($matrixRules->isNotEmpty()) {
-                    $query->where('work_location_id', $supervisor->work_location_id)
-                          ->where(function ($q) use ($matrixRules) {
-                              foreach ($matrixRules as $rule) {
-                                  $q->orWhere(function ($sq) use ($rule) {
-                                      $sq->where('department_id', $rule->department_id)
-                                         ->where('work_position_id', $rule->work_position_id);
-                                  });
-                              }
-                          });
+                    $query->where(function ($q) use ($matrixRules, $supervisor) {
+                        foreach ($matrixRules as $rule) {
+                            $q->orWhere(function ($sq) use ($rule, $supervisor) {
+                                $sq->where('department_id', $rule->department_id)
+                                   ->where('work_position_id', $rule->work_position_id);
+                                   
+                                // Only restrict the subordinate to the supervisor's location if the rule is NOT global
+                                if ($rule->work_location_id !== null) {
+                                    $sq->where('work_location_id', $supervisor->work_location_id);
+                                }
+                            });
+                        }
+                    });
 
                     // Only link employees with the same team_id if the supervisor belongs to a team
                     if ($supervisor->team_id) {
