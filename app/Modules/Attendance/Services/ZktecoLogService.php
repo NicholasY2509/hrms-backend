@@ -111,7 +111,7 @@ class ZktecoLogService
                     continue;
                 }
 
-                $dt = Carbon::parse($timestamp);
+                $dt = Carbon::parse($timestamp)->startOfMinute();
                 
                 // Final safeguard filtering
                 if ($dt->format('Y-m-d') < $startDate || $dt->format('Y-m-d') > $endDate) {
@@ -120,7 +120,7 @@ class ZktecoLogService
 
                 $upsertData[] = [
                     'uid' => $uid,
-                    'timestamp' => $timestamp,
+                    'timestamp' => $dt->format('Y-m-d H:i:s'),
                     'attendance_at' => $dt->format('Y-m-d'),
                     'zkteco_machine_id' => $machine->id,
                     'created_at' => $now,
