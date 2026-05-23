@@ -112,7 +112,10 @@ class AttendanceService
             throw new \Illuminate\Database\Eloquent\ModelNotFoundException('Attendance not found.');
         }
 
-        $attendance->update(['attendance_status_id' => $attendanceStatusId]);
+        $attendance->update([
+            'attendance_status_id' => $attendanceStatusId,
+            'is_manual_override' => true
+        ]);
 
         return $attendance->load('attendance_status');
     }
@@ -123,6 +126,9 @@ class AttendanceService
     public function batchUpdateStatus(array $attendanceIds, int $attendanceStatusId): void
     {
         Attendance::whereIn('id', $attendanceIds)
-            ->update(['attendance_status_id' => $attendanceStatusId]);
+            ->update([
+                'attendance_status_id' => $attendanceStatusId,
+                'is_manual_override' => true
+            ]);
     }
 }

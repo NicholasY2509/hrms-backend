@@ -26,7 +26,8 @@ class Attendance extends Model
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
     protected $casts = [
         'all_scans' => 'array',
-        'mobile_scans' => 'array'
+        'mobile_scans' => 'array',
+        'is_manual_override' => 'boolean',
     ];
 
     /**

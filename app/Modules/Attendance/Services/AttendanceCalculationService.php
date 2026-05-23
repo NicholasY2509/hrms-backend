@@ -243,7 +243,7 @@ class AttendanceCalculationService
 
     private function updateExistingAttendance($attendance, $date, $workingHour, $zkLogs, $users, $leaves, $isHoliday, $isRegistered, $isNightShift): void
     {
-        $isStatusChangeAllowed = in_array($attendance->attendance_status_id, [
+        $isStatusChangeAllowed = !$attendance->is_manual_override && in_array($attendance->attendance_status_id, [
             AttendanceSetting::getValue('attendance_status_alpha_id', 2),
             AttendanceSetting::getValue('attendance_status_tap_id', 8),
             AttendanceSetting::getValue('attendance_status_late_id', 9),
