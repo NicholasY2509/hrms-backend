@@ -125,9 +125,7 @@ class AttendanceCalculationService
 
                     $workingHourRecord = $employeeWorkingHours->get($attendanceAt);
                     if (!$workingHourRecord) {
-                        Log::warning("Missing working hour for {$employee->full_name} on {$attendanceAt}");
-                        $currentStep++;
-                        continue;
+                        throw new \Exception("Data Jam Kerja untuk {$employee->full_name} pada tanggal {$attendanceAt} tidak ditemukan");
                     }
 
                     $isHoliday = in_array($attendanceAt, $holidays);
@@ -179,8 +177,12 @@ class AttendanceCalculationService
             $this->completeTask('Attendance calculation completed.');
         } catch (Throwable $e) {
             DB::rollBack();
-            Log::error("Attendance Calculation Error: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            $this->failTask("Calculation failed: " . $e->getMessage());
+            try {
+                Log::error("Attendance Calculation Error: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            } catch (Throwable $logE) {
+                // Ignore log errors so the task failure can be recorded
+            }
+            $this->failTask($e->getMessage());
             throw $e;
         }
     }
