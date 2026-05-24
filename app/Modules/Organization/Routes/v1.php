@@ -5,6 +5,7 @@ use App\Modules\Organization\Controllers\V1\Portal\Management\TeamController;
 use App\Modules\Organization\Controllers\V1\Portal\Management\WorkLocationController;
 use App\Modules\Organization\Controllers\V1\Portal\Management\WorkPositionController;
 use App\Modules\Organization\Controllers\V1\Configuration\PositionHierarchyMatrixController;
+use App\Modules\Organization\Controllers\V1\Configuration\OrganizationChartController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['api.auth'])->group(function () {
@@ -24,6 +25,8 @@ Route::middleware(['api.auth'])->group(function () {
         ->group(function () {
             
         Route::apiResource('position-hierarchy-matrices', PositionHierarchyMatrixController::class);
+        Route::get('org-chart', [OrganizationChartController::class, 'index']);
+        Route::get('org-chart/{positionId}/employees', [OrganizationChartController::class, 'employees']);
 
     });
 });

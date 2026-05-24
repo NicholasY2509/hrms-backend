@@ -3,6 +3,7 @@
 namespace App\Modules\UnpaidLeave\Services;
 
 use App\Exceptions\ApplicationException;
+use App\Modules\Attendance\Models\AttendanceWorkingHour;
 use App\Modules\UnpaidLeave\Models\Holiday;
 use App\Modules\UnpaidLeave\Models\UnpaidLeaveType;
 use App\Modules\UnpaidLeave\Repositories\UnpaidLeaveRepository;
@@ -233,6 +234,28 @@ class UnpaidLeaveService
 
             $leave->settled_at = $now->format('Y-m-d');
             $leave->save();
+
+            // Update attendance statuses for backdated records
+            $attendanceStatusId = match ((int) $leave->unpaid_leave_type_id) {
+                10 => 3,
+                21 => 7,
+                9 => 5,
+                default => 4,
+            };
+
+           AttendanceWorkingHour::where('employee_id', $leave->employee_id)
+                ->where('attendance_at', '>=', $leave->start_date)
+                ->where('attendance_at', '<=', $leave->end_date)
+                ->where('attendance_at', '<=', $now->format('Y-m-d'))
+                ->with('attendance')
+                ->get()
+                ->each(function ($workingHour) use ($attendanceStatusId) {
+                    if ($workingHour->attendance) {
+                        $workingHour->attendance->update([
+                            'attendance_status_id' => $attendanceStatusId
+                        ]);
+                    }
+                });
 
             return $leave->fresh();
         });
