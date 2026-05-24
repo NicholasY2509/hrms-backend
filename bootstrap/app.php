@@ -48,7 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('activitylog:clean')->daily();
 
         // Automated Request Cleanup
-        $schedule->command('approval:auto-reject-stale')->dailyAt('00:00');
+        $schedule->command('approval:auto-reject-stale')->dailyAt('00:10');
 
         // Critical Business Rules
         $schedule->command('leave:grant-monthly')->lastDayOfMonth('00:00');

@@ -73,7 +73,7 @@ class AutoRejectStaleRequestsCommand extends Command
                         // 1. Update all pending steps to rejected
                         $request->steps()->where('status', 'pending')->update([
                             'status' => 'rejected',
-                            'notes' => "Auto-rejected by system (Older than {$limitDays} days)",
+                            'notes' => "Auto-reject oleh system (Lebih dari {$limitDays} hari)",
                             'actioned_at' => now(),
                         ]);
 
