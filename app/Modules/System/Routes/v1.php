@@ -2,6 +2,7 @@
 
 use App\Modules\System\Controllers\V1\AuthController;
 use App\Modules\System\Controllers\V1\Configuration\SystemSettingController;
+use App\Modules\System\Controllers\V1\Configuration\TaskController;
 use App\Modules\System\Controllers\V1\MobileDashboardController;
 use App\Modules\System\Controllers\V1\Portal\Employee\MyDashboardController;
 use App\Modules\System\Controllers\V1\Portal\Management\ManagementDashboardController;
@@ -33,11 +34,16 @@ Route::middleware(['api.auth'])->group(function () {
     });
 
     Route::prefix('configuration')
-        ->controller(SystemSettingController::class)
         ->middleware('role:Admin HRD')
         ->group(function () {
-            Route::get('/settings', 'index');
-            Route::post('/settings/bulk', 'bulkUpdate');
+            Route::controller(SystemSettingController::class)->group(function () {
+                Route::get('/settings', 'index');
+                Route::post('/settings/bulk', 'bulkUpdate');
+            });
+            
+            Route::controller(TaskController::class)->group(function () {
+                Route::get('/tasks', 'index');
+            });
         });
 
     Route::prefix('portal/management')

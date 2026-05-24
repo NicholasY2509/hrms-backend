@@ -51,4 +51,16 @@ class TaskService
             'metadata' => $metadata,
         ]);
     }
+
+    /**
+     * Get paginated tasks with filters.
+     *
+     * @param array $filters
+     * @param int $perPage
+     * @return \Illuminate\Pagination\LengthAwarePaginator
+     */
+    public function getPaginated(array $filters, int $perPage = 15)
+    {
+        return $this->repository->getPaginated($filters, $perPage);
+    }
 }

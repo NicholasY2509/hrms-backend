@@ -21,6 +21,8 @@ class AnnualLeaveIndexRequest extends FormRequest
     {
         return [
             'employee_id' => ['nullable', 'integer', 'exists:employees,id'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
             'status' => ['nullable', 'string', 'max:50'],
             'search' => ['nullable', 'string', 'max:255'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],

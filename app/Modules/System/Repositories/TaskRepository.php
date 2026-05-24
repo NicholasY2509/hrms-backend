@@ -44,4 +44,19 @@ class TaskRepository
 
         return $task->update($data);
     }
+
+    /**
+     * Get paginated tasks with filters.
+     *
+     * @param array $filters
+     * @param int $perPage
+     * @return \Illuminate\Pagination\LengthAwarePaginator
+     */
+    public function getPaginated(array $filters, int $perPage = 15)
+    {
+        $query = Task::with('user.user_employee.employee')
+            ->filter($filters);
+
+        return $query->latest()->paginate($perPage);
+    }
 }

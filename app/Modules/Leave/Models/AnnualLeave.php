@@ -60,6 +60,14 @@ class AnnualLeave extends Model
             });
         });
 
+        $query->when($filters['start_date'] ?? null, function ($q, $startDate) {
+            $q->whereDate('annual_leave_at', '>=', $startDate);
+        });
+
+        $query->when($filters['end_date'] ?? null, function ($q, $endDate) {
+            $q->whereDate('annual_leave_at', '<=', $endDate);
+        });
+
         return $query;
     }
 }
