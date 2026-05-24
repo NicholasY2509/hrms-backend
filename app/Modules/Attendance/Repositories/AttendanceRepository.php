@@ -176,6 +176,7 @@ class AttendanceRepository
         return Employee::query()
             ->with(['attendance_users'])
             ->where('work_location_id', '!=', 3)
+            ->where('work_employee_status_id', 1)
             ->whereNull('resign_date')
             ->get();
     }
