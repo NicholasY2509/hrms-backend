@@ -9,6 +9,7 @@ use Carbon\Carbon;
 
 class NotifyMissingAttendanceLogs extends Command
 {
+    use \App\Traits\TracksCommandTask;
     protected $signature = 'attendance:notify-missing-logs';
     protected $description = 'Notify employees about missing attendance logs for yesterday';
 

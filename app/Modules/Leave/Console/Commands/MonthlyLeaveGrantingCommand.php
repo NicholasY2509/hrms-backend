@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class MonthlyLeaveGrantingCommand extends Command
 {
+    use \App\Traits\TracksCommandTask;
     /**
      * The name and signature of the console command.
      *

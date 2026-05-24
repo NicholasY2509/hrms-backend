@@ -9,6 +9,7 @@ use Carbon\Carbon;
 
 class NotifyEmployeeBirthdays extends Command
 {
+    use \App\Traits\TracksCommandTask;
     protected $signature = 'employee:notify-birthdays';
     protected $description = 'Check for employee birthdays and dispatch events';
 

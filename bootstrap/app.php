@@ -45,49 +45,18 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withSchedule(function ($schedule) {
-        $trackTask = function (Event $event, string $type) {
-            $taskId = null;
-            $event->before(function () use (&$taskId, $type) {
-                $task = Task::create([
-                    'type' => $type,
-                    'status' => 'processing',
-                    'message' => 'Scheduled command started',
-                    'user_id' => null,
-                ]);
-                $taskId = $task->id;
-            })->onSuccess(function () use (&$taskId) {
-                if ($taskId) {
-                    Task::where('id', $taskId)->update([
-                        'status' => 'completed',
-                        'message' => 'Scheduled command executed successfully',
-                        'progress' => 100,
-                        'completed_at' => now(),
-                    ]);
-                }
-            })->onFailure(function () use (&$taskId) {
-                if ($taskId) {
-                    Task::where('id', $taskId)->update([
-                        'status' => 'failed',
-                        'message' => 'Scheduled command failed',
-                        'completed_at' => now(),
-                    ]);
-                }
-            });
-            return $event;
-        };
-
-        $trackTask($schedule->command('activitylog:clean')->daily(), 'activitylog:clean');
+        $schedule->command('activitylog:clean')->daily();
 
         // Automated Request Cleanup
-        $trackTask($schedule->command('approval:auto-reject-stale')->dailyAt('00:00'), 'approval:auto-reject-stale');
+        $schedule->command('approval:auto-reject-stale')->dailyAt('00:00');
 
         // Critical Business Rules
-        $trackTask($schedule->command('leave:grant-monthly')->lastDayOfMonth('00:00'), 'leave:grant-monthly');
-        $trackTask($schedule->command('attendance:daily-absence-penalty')->dailyAt('00:05')->timezone('Asia/Jakarta'), 'attendance:daily-absence-penalty');
+        $schedule->command('leave:grant-monthly')->lastDayOfMonth('00:00');
+        $schedule->command('attendance:daily-absence-penalty')->dailyAt('00:05')->timezone('Asia/Jakarta');
 
         // Notification Alerts
-        $trackTask($schedule->command('employee:notify-birthdays')->dailyAt('08:00')->timezone('Asia/Jakarta'), 'employee:notify-birthdays');
-        $trackTask($schedule->command('attendance:notify-missing-logs')->dailyAt('09:00')->timezone('Asia/Jakarta'), 'attendance:notify-missing-logs');
+        $schedule->command('employee:notify-birthdays')->dailyAt('08:00')->timezone('Asia/Jakarta');
+        $schedule->command('attendance:notify-missing-logs')->dailyAt('09:00')->timezone('Asia/Jakarta');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
