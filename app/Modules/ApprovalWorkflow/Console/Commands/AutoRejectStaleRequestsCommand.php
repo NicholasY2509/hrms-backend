@@ -18,7 +18,7 @@ class AutoRejectStaleRequestsCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'approval:auto-reject-stale';
+    protected $signature = 'approval:auto-reject-stale {days?}';
 
     /**
      * The console command description.
@@ -100,15 +100,5 @@ class AutoRejectStaleRequestsCommand extends Command
         return Command::SUCCESS;
     }
 
-    /**
-     * Get the console command arguments.
-     *
-     * @return array
-     */
-    protected function getArguments()
-    {
-        return [
-            ['days', \Symfony\Component\Console\Input\InputArgument::OPTIONAL, 'Number of days before a request is considered stale'],
-        ];
-    }
+
 }

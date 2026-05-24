@@ -42,7 +42,7 @@ class DailyAbsencePenaltyCommand extends Command
         Log::info("DailyAbsencePenaltyCommand: Started for {$targetDate}");
 
         // --- STEP 1: SYNC LOGS FROM MACHINES ---
-        $machines = ZktecoMachine::where('is_active', true)->get();
+        $machines = ZktecoMachine::all();
         $this->info("Syncing logs from " . $machines->count() . " active machines...");
         
         foreach ($machines as $machine) {
