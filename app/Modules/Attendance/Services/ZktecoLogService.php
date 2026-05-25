@@ -103,6 +103,9 @@ class ZktecoLogService
             $unfilteredArray = $attLogs->to_array();
             $unfilteredCount = isset($unfilteredArray['Row']) ? count(is_array($unfilteredArray['Row']) && isset($unfilteredArray['Row']['PIN']) ? [$unfilteredArray['Row']] : $unfilteredArray['Row']) : 0;
 
+            // GRAB RAW XML TO SEE IF THERE IS A SOAP FAULT OR ERROR MESSAGE!
+            $rawXml = method_exists($attLogs, 'to_xml') ? $attLogs->to_xml() : (string)$attLogs;
+
             $filteredLogs = $attLogs->filter_by_date([
                 'start' => $startDate,
                 'end'   => $endDate,
@@ -114,7 +117,7 @@ class ZktecoLogService
             \Illuminate\Support\Facades\Log::warning("TADPHP Raw Logs Output for {$machine->name}:", [
                 'unfiltered_count' => $unfilteredCount,
                 'filtered_count' => isset($logs['Row']) ? count(is_array($logs['Row']) && isset($logs['Row']['PIN']) ? [$logs['Row']] : $logs['Row']) : 0,
-                'raw_array' => empty($logs['Row']) ? $unfilteredArray : '...data...', // If empty after filter, print unfiltered to see what dates are in there!
+                'raw_xml' => $rawXml, // ADDING RAW XML HERE!
                 'is_soap' => class_exists('SoapClient') // verify soap is actually available
             ]);
 
