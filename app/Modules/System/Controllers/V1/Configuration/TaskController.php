@@ -69,7 +69,14 @@ class TaskController extends Controller
      */
     public function restartQueue(): JsonResponse
     {
-        \Illuminate\Support\Facades\Artisan::call('queue:restart');
-        return $this->successResponse([], 'Queue workers restarted successfully.');
+        // We use exec to run the supervisorctl command. 
+        // Note: The web server user (e.g. www-data) must have sudo privileges without a password for this command.
+        exec('sudo supervisorctl restart hrms-api-queue:* 2>&1', $output, $return_var);
+
+        if ($return_var !== 0) {
+            return $this->errorResponse('Failed to restart queue workers: ' . implode("\n", $output), 500);
+        }
+
+        return $this->successResponse([], 'Queue workers restarted successfully via supervisor.');
     }
 }

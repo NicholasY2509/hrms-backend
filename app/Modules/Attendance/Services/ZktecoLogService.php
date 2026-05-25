@@ -34,6 +34,25 @@ class ZktecoLogService
      */
     public function initiateSync(ZktecoMachine $machine, string $startDate, string $endDate): Task
     {
+        try {
+            $tadFactory = new TADFactory([
+                'ip'        => $machine->ip_address,
+                'udp_port'  => $machine->port,
+                'soap_port' => $machine->soap_port,
+                'encoding'  => 'utf-8',
+            ]);
+            
+            $tad = $tadFactory->get_instance();
+            
+            if ($tad->is_alive()) {
+                \Illuminate\Support\Facades\Log::info("Connection to ZKTeco machine {$machine->name} ({$machine->ip_address}) was successful.");
+            } else {
+                \Illuminate\Support\Facades\Log::warning("Connection to ZKTeco machine {$machine->name} ({$machine->ip_address}) failed: Machine is not alive.");
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Connection to ZKTeco machine {$machine->name} ({$machine->ip_address}) failed with error: " . $e->getMessage());
+        }
+
         $task = $this->taskService->createTask(
             'zkteco_attendance_sync',
             "Menunggu antrian sinkronisasi log absensi dari {$machine->name}...",
