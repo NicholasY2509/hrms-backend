@@ -40,7 +40,7 @@ class EmployeeRepository
                 'user_employee.user', 
                 'supervisor.employee', 
                 'work_employee_status', 
-                'work_employee_type'
+                // 'work_employee_type'
             ])
             ->filter($filters)
             ->paginate($perPage);
