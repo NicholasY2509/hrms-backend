@@ -25,7 +25,7 @@ class AnnualLeaveService
      */
     public function add(Employee $employee, float $amount, string $keterangan, ?Carbon $date = null): AnnualLeave
     {
-        $date = Carbon::now();
+        $date = $date ?? Carbon::now();
         $currentYear = $date->year;
         $lastYear = $currentYear - 1;
 
@@ -77,7 +77,7 @@ class AnnualLeaveService
      */
     public function deduct(Employee $employee, float $amount, string $keterangan, ?Carbon $date = null): AnnualLeave
     {
-        $date = Carbon::now();
+        $date = $date ?? Carbon::now();
         $currentYear = $date->year;
         $lastYear = $currentYear - 1;
         $remaining = (float) $amount;
