@@ -107,6 +107,12 @@ class ZktecoLogService
             
             $logs = $filteredLogs->to_array();
 
+            // DEBUG LOG: What exactly is TADPHP returning?
+            \Illuminate\Support\Facades\Log::debug("TADPHP Raw Logs Output for {$machine->name}:", [
+                'raw_array' => $logs,
+                'is_soap' => class_exists('SoapClient') // verify soap is actually available
+            ]);
+
             if (!isset($logs['Row']) || empty($logs['Row'])) {
                 if ($this->task) {
                     $this->completeTask("Tidak ada data log absensi yang ditemukan pada periode tersebut.");
