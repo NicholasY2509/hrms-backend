@@ -12,6 +12,7 @@ use TADPHP\TADFactory;
 use Throwable;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ZktecoLogService
 {
@@ -46,12 +47,12 @@ class ZktecoLogService
             $tad = $tadFactory->get_instance();
             
             if ($tad->is_alive()) {
-                \Illuminate\Support\Facades\Log::info("Connection to ZKTeco machine {$machine->name} ({$machine->ip_address}) was successful.");
+                Log::info("Connection to ZKTeco machine {$machine->name} ({$machine->ip_address}:{$machine->soap_port}) was successful.");
             } else {
-                \Illuminate\Support\Facades\Log::warning("Connection to ZKTeco machine {$machine->name} ({$machine->ip_address}) failed: Machine is not alive.");
+                Log::warning("Connection to ZKTeco machine {$machine->name} ({$machine->ip_address}:{$machine->soap_port}) failed: Machine is not alive.");
             }
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error("Connection to ZKTeco machine {$machine->name} ({$machine->ip_address}) failed with error: " . $e->getMessage());
+        } catch (Throwable $e) {
+            Log::error("Connection to ZKTeco machine {$machine->name} ({$machine->ip_address}:{$machine->soap_port}) failed with error: " . $e->getMessage());
         }
 
         $task = $this->taskService->createTask(
@@ -81,7 +82,7 @@ class ZktecoLogService
      */
     public function syncLogs(ZktecoMachine $machine, string $startDate, string $endDate): array
     {
-        $this->updateProgress(10, "Menghubungkan ke mesin {$machine->name} ({$machine->ip_address})...");
+        $this->updateProgress(10, "Menghubungkan ke mesin {$machine->name} ({$machine->ip_address}:{$machine->soap_port})...");
 
         try {
             $tadFactory = new TADFactory([
