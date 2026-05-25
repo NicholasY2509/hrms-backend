@@ -43,6 +43,8 @@ Route::middleware(['api.auth'])->group(function () {
             
             Route::controller(TaskController::class)->group(function () {
                 Route::get('/tasks', 'index');
+                Route::post('/tasks/queue/clear', 'clearQueue');
+                Route::post('/tasks/queue/restart', 'restartQueue');
             });
         });
 

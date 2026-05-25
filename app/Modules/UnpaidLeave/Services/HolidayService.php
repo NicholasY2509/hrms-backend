@@ -25,21 +25,10 @@ class HolidayService
      */
     public function getPaginatedHolidays(array $filters = [], int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        $query = Holiday::query();
-
-        if (isset($filters['search'])) {
-            $query->where('name', 'like', '%' . $filters['search'] . '%');
-        }
-
-        if (isset($filters['start_date'])) {
-            $query->where('date', '>=', $filters['start_date']);
-        }
-
-        if (isset($filters['end_date'])) {
-            $query->where('date', '<=', $filters['end_date']);
-        }
-
-        return $query->orderBy('date', 'desc')->paginate($perPage);
+        return Holiday::query()
+            ->filter($filters)
+            ->orderBy('date', 'desc')
+            ->paginate($perPage);
     }
 
     /**

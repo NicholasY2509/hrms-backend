@@ -63,4 +63,20 @@ class TaskService
     {
         return $this->repository->getPaginated($filters, $perPage);
     }
+
+    /**
+     * Cancel all pending and processing tasks.
+     *
+     * @param string $message
+     * @return int Number of affected rows
+     */
+    public function cancelPendingTasks(string $message = 'Task cancelled because the queue was cleared.'): int
+    {
+        return Task::whereIn('status', ['pending', 'processing'])
+            ->update([
+                'status' => 'failed',
+                'message' => $message,
+                'metadata' => ['cancelled_at' => now()->toDateTimeString()],
+            ]);
+    }
 }

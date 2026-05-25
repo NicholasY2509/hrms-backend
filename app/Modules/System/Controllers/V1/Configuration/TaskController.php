@@ -45,4 +45,31 @@ class TaskController extends Controller
 
         return $this->successResponse($data, 'Tasks retrieved successfully.');
     }
+
+    /**
+     * Clear Queue
+     *
+     * Clear all pending jobs in the queue.
+     *
+     * @return JsonResponse
+     */
+    public function clearQueue(): JsonResponse
+    {
+        \Illuminate\Support\Facades\Artisan::call('queue:clear');
+        $this->taskService->cancelPendingTasks();
+        return $this->successResponse([], 'Queue cleared and pending tasks marked as failed.');
+    }
+
+    /**
+     * Restart Queue
+     *
+     * Restart the queue workers.
+     *
+     * @return JsonResponse
+     */
+    public function restartQueue(): JsonResponse
+    {
+        \Illuminate\Support\Facades\Artisan::call('queue:restart');
+        return $this->successResponse([], 'Queue workers restarted successfully.');
+    }
 }
