@@ -7,6 +7,7 @@ use App\Modules\System\Resources\UserResource;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @group Authentication
@@ -41,9 +42,12 @@ class AuthController extends Controller
             return $this->errorResponse('Unauthenticated', 401);
         }
 
-        // Eager load the employee shortcut relationship
-        $user->load(['employee', 'user_employee']);
+        $cachedData = Cache::remember('auth_me_user_' . $user->id, 3600, function () use ($user) {
+            $user->load(['employee', 'user_employee']);
+            $resource = new UserResource($user);
+            return $resource->resolve();
+        });
 
-        return $this->successResponse(new UserResource($user), 'User details retrieved');
+        return $this->successResponse($cachedData, 'User details retrieved');
     }
 }

@@ -16,7 +16,20 @@ class OvertimeRepository
     public function paginate(array $filters = [], int $perPage = 15)
     {
         return Overtime::query()
-            ->with(['employee', 'overtime_type', 'approvalRequest.steps.actor', 'approvalRequest.steps.approver', 'approvalRequest.steps.group.employees', 'overtime_attachments'])
+            ->with([
+                'employee.department',
+                'employee.position',
+                'employee.work_location',
+                'employee.work_employee_status',
+                'employee.work_employee_type',
+                'employee.user_employee.user',
+                'employee.supervisor.employee',
+                'overtime_type',
+                'approvalRequest.steps.actor',
+                'approvalRequest.steps.approver',
+                'approvalRequest.steps.group.employees',
+                'overtime_attachments'
+            ])
             ->filter($filters)
             ->orderByDesc('date')
             ->orderByDesc('id')
@@ -51,7 +64,19 @@ class OvertimeRepository
      */
     public function find(int $id)
     {
-        return Overtime::with(['employee', 'overtime_type', 'approvalRequest.steps.actor', 'approvalRequest.steps.approver', 'approvalRequest.steps.group.employees', 'overtime_attachments'])
-            ->find($id);
+        return Overtime::with([
+            'employee.department',
+            'employee.position',
+            'employee.work_location',
+            'employee.work_employee_status',
+            'employee.work_employee_type',
+            'employee.user_employee.user',
+            'employee.supervisor.employee',
+            'overtime_type',
+            'approvalRequest.steps.actor',
+            'approvalRequest.steps.approver',
+            'approvalRequest.steps.group.employees',
+            'overtime_attachments'
+        ])->find($id);
     }
 }

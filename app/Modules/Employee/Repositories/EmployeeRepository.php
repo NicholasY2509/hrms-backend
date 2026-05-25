@@ -3,6 +3,7 @@
 namespace App\Modules\Employee\Repositories;
 
 use App\Modules\Employee\Models\Employee;
+use Illuminate\Support\Facades\DB;
 
 class EmployeeRepository
 {
@@ -32,7 +33,15 @@ class EmployeeRepository
     public function paginate(int $perPage = 15, array $filters = [])
     {
         return Employee::query()
-            ->with(['position', 'department', 'work_location', 'user_employee.user'])
+            ->with([
+                'position', 
+                'department', 
+                'work_location', 
+                'user_employee.user', 
+                'supervisor.employee', 
+                'work_employee_status', 
+                'work_employee_type'
+            ])
             ->filter($filters)
             ->paginate($perPage);
     }
@@ -45,11 +54,11 @@ class EmployeeRepository
     public function getSummary()
     {
         $counts = Employee::query()
-            ->select('work_employee_status_id', \DB::raw('count(*) as total'))
+            ->select('work_employee_status_id', DB::raw('count(*) as total'))
             ->groupBy('work_employee_status_id')
             ->get();
 
-        $statuses = \DB::table('work_employee_statuses')->get();
+        $statuses = DB::table('work_employee_statuses')->get();
 
         return $statuses->map(function ($status) use ($counts) {
             $count = $counts->where('work_employee_status_id', $status->id)->first();
@@ -134,7 +143,7 @@ class EmployeeRepository
     {
         return Employee::query()
             ->whereNotIn('work_position_id', $excludeWorkPositionIds)
-            ->orderByDesc(\DB::raw('CAST(employee_id_number AS UNSIGNED)'))
+            ->orderByDesc(DB::raw('CAST(employee_id_number AS UNSIGNED)'))
             ->first();
     }
 }

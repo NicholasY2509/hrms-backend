@@ -72,7 +72,12 @@ class StorageService
             try {
                 // Only attempt if key is an array (decoded JSON) or a valid existing file path
                 if (is_array($keyPath) || (is_string($keyPath) && file_exists($keyPath))) {
-                    return Storage::disk('gcs')->temporaryUrl($path, now()->addMinutes(60));
+                    $cacheKey = 'gcs_temp_url_' . md5($path);
+                    return \Illuminate\Support\Facades\Cache::remember($cacheKey, now()->addMinutes(55), function () use ($path) {
+                        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+                        $disk = Storage::disk('gcs');
+                        return $disk->temporaryUrl($path, now()->addMinutes(60));
+                    });
                 }
             } catch (\Throwable $e) {
                 // Fallback to default behavior if GCS fails

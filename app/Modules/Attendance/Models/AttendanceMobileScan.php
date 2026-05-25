@@ -49,11 +49,11 @@ class AttendanceMobileScan extends Model
         });
 
         $query->when($filters['start_date'] ?? null, function ($q, $startDate) {
-            $q->whereDate('created_at', '>=', $startDate);
+            $q->where('created_at', '>=', \Carbon\Carbon::parse($startDate)->startOfDay());
         });
 
         $query->when($filters['end_date'] ?? null, function ($q, $endDate) {
-            $q->whereDate('created_at', '<=', $endDate);
+            $q->where('created_at', '<=', \Carbon\Carbon::parse($endDate)->endOfDay());
         });
 
         $query->when($filters['scan_type'] ?? null, function ($q, $scanType) {

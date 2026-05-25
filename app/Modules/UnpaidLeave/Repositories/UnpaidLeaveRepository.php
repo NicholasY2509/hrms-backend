@@ -50,8 +50,19 @@ class UnpaidLeaveRepository
      */
     public function find(int $id): ?UnpaidLeave
     {
-        return UnpaidLeave::with(['unpaid_leave_type', 'employee', 'approvalRequest.steps.actor', 'approvalRequest.steps.approver', 'approvalRequest.steps.group.employees'])
-            ->find($id);
+        return UnpaidLeave::with([
+            'unpaid_leave_type', 
+            'employee.department', 
+            'employee.position',
+            'employee.work_location',
+            'employee.work_employee_status',
+            'employee.work_employee_type',
+            'employee.user_employee.user',
+            'employee.supervisor.employee',
+            'approvalRequest.steps.actor', 
+            'approvalRequest.steps.approver', 
+            'approvalRequest.steps.group.employees'
+        ])->find($id);
     }
 
     /**

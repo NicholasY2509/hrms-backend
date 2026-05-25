@@ -12,6 +12,7 @@ use App\Modules\User\Models\User;
 use App\Services\StorageService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class EmployeeService
@@ -247,6 +248,10 @@ class EmployeeService
                     }
                 }
             }
+            
+            if ($userId = $employee->user_employee?->user_id) {
+                Cache::forget('auth_me_user_' . $userId);
+            }
 
             return $employee->fresh();
         }
@@ -332,6 +337,10 @@ class EmployeeService
                     $employee->{$relationship}()->create($data);
                 }
             }
+        }
+        
+        if ($userId = $employee->user_employee?->user_id) {
+            Cache::forget('auth_me_user_' . $userId);
         }
 
         return $employee->fresh();

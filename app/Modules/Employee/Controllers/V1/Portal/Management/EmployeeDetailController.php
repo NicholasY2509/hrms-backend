@@ -51,25 +51,7 @@ class EmployeeDetailController extends Controller
      */
     public function show(int $id, string $type): JsonResponse
     {
-        $employee = Employee::with([
-            'position',
-            'department',
-            'work_location',
-            'team',
-            'user_employee.user',
-            'work_employee_status',
-            'employee_status',
-            'supervisor.employee',
-            'gender',
-            'religion',
-            'marital_status',
-            'blood_group',
-            'gender',
-            'families.relationship',
-            'families.gender',
-            'warnings',
-            'insurances'
-        ])->find($id);
+        $employee = Employee::find($id);
 
         if (!$employee) {
             return $this->errorResponse('Employee not found', 404);
@@ -83,6 +65,34 @@ class EmployeeDetailController extends Controller
 
         $config = $typeConfigs[$type];
         $resourceClass = $config['resource'];
+
+        // Conditionally load relationships based on type
+        if ($type === 'overview') {
+            $employee->load([
+                'position',
+                'department',
+                'work_location',
+                'work_employee_status',
+                'employee_status',
+                'team',
+                'supervisor.employee'
+            ]);
+        } elseif ($type === 'personal') {
+            $employee->load([
+                'gender',
+                'religion',
+                'marital_status',
+                'blood_group'
+            ]);
+        } elseif ($type === 'insurance') {
+            $employee->load('insurances');
+        } elseif (isset($config['relation'])) {
+            if ($config['relation'] === 'families') {
+                $employee->load(['families.relationship', 'families.gender']);
+            } else {
+                $employee->load($config['relation']);
+            }
+        }
 
         if (isset($config['is_relation']) && $config['is_relation'] === false) {
             return $this->successResponse(
@@ -206,10 +216,10 @@ class EmployeeDetailController extends Controller
                 'resource' => EmployeeAttachmentResource::class,
                 'relation' => 'attachments'
             ],
-            'social_security' => [
-                'resource' => EmployeeBpjsResource::class,
-                'relation' => 'employee_bpjs'
-            ],
+            // 'social_security' => [
+            //     'resource' => EmployeeBpjsResource::class,
+            //     'relation' => 'employee_bpjs'
+            // ],
             'insurance' => [
                 'resource' => EmployeeInsuranceResource::class,
                 'is_relation' => false

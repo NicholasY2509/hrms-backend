@@ -8,6 +8,7 @@ use App\Modules\System\Services\MyDashboardService;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @group Dashboard
@@ -49,7 +50,10 @@ class MyDashboardController extends Controller
     public function index(): JsonResponse
     {
         $userId = Auth::id();
-        $data = $this->dashboardService->getDashboardData($userId);
+
+        $data = Cache::remember('employee_dashboard_' . $userId, 300, function () use ($userId) {
+            return $this->dashboardService->getDashboardData($userId);
+        });
 
         return $this->successResponse(new MyDashboardResource($data), 'Web dashboard data retrieved successfully');
     }

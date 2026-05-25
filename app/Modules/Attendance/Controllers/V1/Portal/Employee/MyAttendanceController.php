@@ -13,6 +13,7 @@ use App\Modules\Attendance\Services\MobileAttendanceService;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @group Attendance
@@ -204,7 +205,10 @@ class MyAttendanceController extends Controller
      */
     public function clockIn(ClockInRequest $request): JsonResponse
     {
-        $attendance = $this->mobileAttendanceService->clockIn(Auth::id(), $request->validated());
+        $userId = Auth::id();
+        $attendance = $this->mobileAttendanceService->clockIn($userId, $request->validated());
+
+        Cache::forget('employee_dashboard_' . $userId);
 
         return $this->successResponse(new AttendanceResource($attendance), 'Berhasil melakukan absensi masuk!');
     }
@@ -224,7 +228,10 @@ class MyAttendanceController extends Controller
      */
     public function clockOut(ClockOutRequest $request): JsonResponse
     {
-        $attendance = $this->mobileAttendanceService->clockOut(Auth::id(), $request->validated());
+        $userId = Auth::id();
+        $attendance = $this->mobileAttendanceService->clockOut($userId, $request->validated());
+
+        Cache::forget('employee_dashboard_' . $userId);
 
         return $this->successResponse(new AttendanceResource($attendance), 'Berhasil melakukan absensi pulang!');
     }

@@ -5,6 +5,7 @@ namespace App\Modules\UnpaidLeave\Services;
 use App\Modules\UnpaidLeave\Models\Holiday;
 use App\Modules\UnpaidLeave\Repositories\HolidayRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class HolidayService
 {
@@ -36,7 +37,9 @@ class HolidayService
      */
     public function getAllHolidays(): Collection
     {
-        return $this->repository->all();
+        return Cache::rememberForever('all_holidays', function () {
+            return $this->repository->all();
+        });
     }
 
     /**
@@ -52,7 +55,9 @@ class HolidayService
      */
     public function createHoliday(array $data): Holiday
     {
-        return $this->repository->create($data);
+        $holiday = $this->repository->create($data);
+        Cache::forget('all_holidays');
+        return $holiday;
     }
 
     /**
@@ -60,7 +65,11 @@ class HolidayService
      */
     public function updateHoliday(int $id, array $data): bool
     {
-        return $this->repository->update($id, $data);
+        $updated = $this->repository->update($id, $data);
+        if ($updated) {
+            Cache::forget('all_holidays');
+        }
+        return $updated;
     }
 
     /**
@@ -68,7 +77,11 @@ class HolidayService
      */
     public function deleteHoliday(int $id): bool
     {
-        return $this->repository->delete($id);
+        $deleted = $this->repository->delete($id);
+        if ($deleted) {
+            Cache::forget('all_holidays');
+        }
+        return $deleted;
     }
 
     /**
@@ -95,6 +108,10 @@ class HolidayService
                 }
             }
             $start->addDay();
+        }
+
+        if ($insertedCount > 0) {
+            Cache::forget('all_holidays');
         }
 
         return $insertedCount;

@@ -8,6 +8,7 @@ use App\Modules\Attendance\Requests\UpdateAttendanceSettingsRequest;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Throwable;
 
 /**
@@ -25,7 +26,9 @@ class AttendanceCalculationSettingController extends Controller
      */
     public function index(): JsonResponse
     {
-        $settings = AttendanceSetting::where('group', 'calculation')->get();
+        $settings = Cache::rememberForever('attendance_settings_calculation', function () {
+            return AttendanceSetting::where('group', 'calculation')->get();
+        });
 
         return $this->successResponse(
             $settings,
@@ -57,6 +60,8 @@ class AttendanceCalculationSettingController extends Controller
             }
 
             DB::commit();
+            
+            Cache::forget('attendance_settings_calculation');
 
             return $this->successResponse(
                 $updatedSettings,

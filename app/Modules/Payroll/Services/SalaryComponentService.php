@@ -5,6 +5,7 @@ namespace App\Modules\Payroll\Services;
 use App\Modules\Payroll\Repositories\SalaryComponentRepository;
 use App\Modules\Payroll\Models\SalaryComponent;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class SalaryComponentService
 {
@@ -14,21 +15,33 @@ class SalaryComponentService
 
     public function getAllComponents(): Collection
     {
-        return $this->repository->all();
+        return Cache::rememberForever('payroll_salary_components', function () {
+            return $this->repository->all();
+        });
     }
 
     public function createComponent(array $data): SalaryComponent
     {
-        return $this->repository->create($data);
+        $component = $this->repository->create($data);
+        Cache::forget('payroll_salary_components');
+        return $component;
     }
 
     public function updateComponent(int $id, array $data): bool
     {
-        return $this->repository->update($id, $data);
+        $updated = $this->repository->update($id, $data);
+        if ($updated) {
+            Cache::forget('payroll_salary_components');
+        }
+        return $updated;
     }
 
     public function deleteComponent(int $id): bool
     {
-        return $this->repository->delete($id);
+        $deleted = $this->repository->delete($id);
+        if ($deleted) {
+            Cache::forget('payroll_salary_components');
+        }
+        return $deleted;
     }
 }

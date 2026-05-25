@@ -69,7 +69,9 @@ class CertificateOfEmploymentManagementController extends Controller
             new CertificateOfEmploymentResource($certificateOfEmployment->load([
                 'employee',
                 'work_position',
-                'approvalRequest.steps'
+                'approvalRequest.steps.actor',
+                'approvalRequest.steps.approver',
+                'approvalRequest.steps.group.employees'
             ])),
             'Certificate of Employment details retrieved'
         );
