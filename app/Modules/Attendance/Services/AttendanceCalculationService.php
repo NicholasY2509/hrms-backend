@@ -363,6 +363,30 @@ class AttendanceCalculationService
             }
         }
 
+        if ($attendance && $attendance->incoming_scan) {
+            $all->push((object)[
+                'timestamp' => $attendance->incoming_scan,
+                'attendance_at' => $date,
+                'is_synthetic' => true,
+                'location_id' => $attendance->incoming_location_id,
+                'zkteco_machine_id' => $attendance->incoming_machine_id ?? null,
+            ]);
+        }
+
+        if ($attendance && $attendance->outgoing_scan) {
+            $outgoingDate = $date;
+            if ($isNightShift && $attendance->outgoing_scan < AttendanceSetting::getValue('attendance_calc_night_midpoint', '12:00:00')) {
+                $outgoingDate = Carbon::parse($date)->addDay()->format('Y-m-d');
+            }
+            $all->push((object)[
+                'timestamp' => $attendance->outgoing_scan,
+                'attendance_at' => $outgoingDate,
+                'is_synthetic' => true,
+                'location_id' => $attendance->outgoing_location_id,
+                'zkteco_machine_id' => $attendance->outgoing_machine_id ?? null,
+            ]);
+        }
+
         if ($isNightShift) {
             $midpoint = AttendanceSetting::getValue('attendance_calc_night_midpoint', '12:00:00');
             $endBuffer = AttendanceSetting::getValue('attendance_calc_night_end_buffer', '15:00:00');
@@ -378,13 +402,14 @@ class AttendanceCalculationService
         if ($sorted->isNotEmpty()) {
             $attendance->all_scans = $sorted->map(function($s) {
                 $isMobile = isset($s->is_mobile) && $s->is_mobile;
+                $isSynthetic = isset($s->is_synthetic) && $s->is_synthetic;
                 return [
                     'time' => $s->timestamp,
-                    'machine_name' => $isMobile ? 'Mobile App' : ($s->zkteco_machine?->name ?? 'Unknown Machine'),
+                    'machine_name' => $isMobile ? 'Mobile App' : ($isSynthetic ? 'Manual Entry' : ($s->zkteco_machine?->name ?? 'Unknown Machine')),
                     'is_mobile' => $isMobile,
-                    'location_id' => $isMobile ? ($s->location_id ?? null) : ($s->zkteco_machine?->work_location_id == 1 ? 9 : 10),
+                    'location_id' => $isMobile || $isSynthetic ? ($s->location_id ?? null) : ($s->zkteco_machine?->work_location_id == 1 ? 9 : 10),
                 ];
-            })->toArray();
+            })->unique('time')->values()->toArray();
         }
 
         return $sorted;

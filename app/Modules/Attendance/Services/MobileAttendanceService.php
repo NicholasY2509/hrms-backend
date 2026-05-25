@@ -118,7 +118,7 @@ class MobileAttendanceService
             $attendance->attendance_status_id = self::STATUS_LATE;
             
             event(new EmployeeLateArrival($attendance));
-        } elseif (!$attendance->attendance_status_id) {
+        } elseif (!$attendance->attendance_status_id || $attendance->attendance_status_id == AttendanceSetting::getValue('attendance_status_alpha_id', 2)) {
             $attendance->attendance_status_id = self::STATUS_PRESENT;
         }
 
