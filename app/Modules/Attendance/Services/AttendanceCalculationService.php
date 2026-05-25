@@ -277,7 +277,8 @@ class AttendanceCalculationService
         if (!$attendance->outgoing_scan && $attendance->incoming_scan && $isStatusChangeAllowed) {
             $checkDate = $isNightShift ? Carbon::parse($date)->addDay()->format('Y-m-d') : $date;
             $now = Carbon::now();
-            if ($now->format('Y-m-d') > $checkDate || ($now->format('Y-m-d') == $checkDate && $now->format('H:i:s') > '12:00:00')) {
+            $tapCutoff = AttendanceSetting::getValue('attendance_calc_tap_cutoff', '12:00:00');
+            if ($now->format('Y-m-d') > $checkDate || ($now->format('Y-m-d') == $checkDate && $now->format('H:i:s') > $tapCutoff)) {
                 if ($attendance->attendance_status_id != AttendanceSetting::getValue('attendance_status_off_id', 11)) {
                     $attendance->attendance_status_id = $attendance->late_time 
                         ? AttendanceSetting::getValue('attendance_status_late_tap_id', 13) 
