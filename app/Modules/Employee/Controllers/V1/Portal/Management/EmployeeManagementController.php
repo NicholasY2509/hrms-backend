@@ -42,11 +42,11 @@ class EmployeeManagementController extends Controller
         $perPage = $request->input('per_page', 15);
 
         $employees = $this->employeeService->listEmployees($perPage, $filters);
-        $summary = $this->employeeService->getEmployeeSummary();
+        // $summary = $this->employeeService->getEmployeeSummary();
 
         $resource = EmployeeResource::collection($employees);
         $data = $resource->response()->getData(true);
-        $data['summary'] = $summary;
+        // $data['summary'] = $summary;
 
         return $this->successResponse(
             $data,

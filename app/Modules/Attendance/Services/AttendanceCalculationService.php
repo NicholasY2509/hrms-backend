@@ -289,13 +289,9 @@ class AttendanceCalculationService
 
         // Final status correction
         if ($isStatusChangeAllowed && $attendance->incoming_scan && $attendance->outgoing_scan) {
-            if ($leaves['any'] || $isHoliday) {
-                $this->setStatusByLeave($attendance, $leaves, $isHoliday, $isRegistered);
-            } else {
-                $attendance->attendance_status_id = $attendance->late_time 
-                    ? AttendanceSetting::getValue('attendance_status_late_id', 9) 
-                    : AttendanceSetting::getValue('attendance_status_present_id', 12);
-            }
+            $attendance->attendance_status_id = $attendance->late_time 
+                ? AttendanceSetting::getValue('attendance_status_late_id', 9) 
+                : AttendanceSetting::getValue('attendance_status_present_id', 12);
         }
     }
 
