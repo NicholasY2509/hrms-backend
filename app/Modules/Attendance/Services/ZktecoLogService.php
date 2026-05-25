@@ -36,10 +36,11 @@ class ZktecoLogService
     {
         try {
             $tadFactory = new TADFactory([
-                'ip'        => $machine->ip_address,
-                'udp_port'  => $machine->port,
-                'soap_port' => $machine->soap_port,
-                'encoding'  => 'utf-8',
+                'ip'              => $machine->ip_address,
+                'udp_port'        => $machine->port,
+                'soap_port'       => $machine->soap_port,
+                'encoding'        => 'utf-8',
+                'connection_type' => 'soap',
             ]);
             
             $tad = $tadFactory->get_instance();
@@ -84,10 +85,11 @@ class ZktecoLogService
 
         try {
             $tadFactory = new TADFactory([
-                'ip'        => $machine->ip_address,
-                'udp_port'  => $machine->port,
-                'soap_port' => $machine->soap_port,
-                'encoding'  => 'utf-8',
+                'ip'              => $machine->ip_address,
+                'udp_port'        => $machine->port,
+                'soap_port'       => $machine->soap_port,
+                'encoding'        => 'utf-8',
+                'connection_type' => 'soap', // Force SOAP (TCP) to avoid UDP fragmentation
             ]);
 
             $tad = $tadFactory->get_instance();
