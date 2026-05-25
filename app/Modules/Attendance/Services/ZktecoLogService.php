@@ -100,6 +100,9 @@ class ZktecoLogService
             // TADPHP does not accept start_date/end_date parameters directly in get_att_log().
             // We fetch the logs first, and then filter by date range using filter_by_date().
             $attLogs = $tad->get_att_log();
+            $unfilteredArray = $attLogs->to_array();
+            $unfilteredCount = isset($unfilteredArray['Row']) ? count(is_array($unfilteredArray['Row']) && isset($unfilteredArray['Row']['PIN']) ? [$unfilteredArray['Row']] : $unfilteredArray['Row']) : 0;
+
             $filteredLogs = $attLogs->filter_by_date([
                 'start' => $startDate,
                 'end'   => $endDate,
@@ -109,7 +112,9 @@ class ZktecoLogService
 
             // DEBUG LOG: What exactly is TADPHP returning? (Using warning so it bypasses production log filters)
             \Illuminate\Support\Facades\Log::warning("TADPHP Raw Logs Output for {$machine->name}:", [
-                'raw_array' => $logs,
+                'unfiltered_count' => $unfilteredCount,
+                'filtered_count' => isset($logs['Row']) ? count(is_array($logs['Row']) && isset($logs['Row']['PIN']) ? [$logs['Row']] : $logs['Row']) : 0,
+                'raw_array' => empty($logs['Row']) ? $unfilteredArray : '...data...', // If empty after filter, print unfiltered to see what dates are in there!
                 'is_soap' => class_exists('SoapClient') // verify soap is actually available
             ]);
 
