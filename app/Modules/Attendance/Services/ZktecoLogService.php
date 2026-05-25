@@ -107,8 +107,8 @@ class ZktecoLogService
             
             $logs = $filteredLogs->to_array();
 
-            // DEBUG LOG: What exactly is TADPHP returning?
-            \Illuminate\Support\Facades\Log::info("TADPHP Raw Logs Output for {$machine->name}:", [
+            // DEBUG LOG: What exactly is TADPHP returning? (Using warning so it bypasses production log filters)
+            \Illuminate\Support\Facades\Log::warning("TADPHP Raw Logs Output for {$machine->name}:", [
                 'raw_array' => $logs,
                 'is_soap' => class_exists('SoapClient') // verify soap is actually available
             ]);
