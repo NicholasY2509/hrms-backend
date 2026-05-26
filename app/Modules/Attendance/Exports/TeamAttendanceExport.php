@@ -83,9 +83,15 @@ class TeamAttendanceExport implements FromQuery, WithHeadings, WithStyles, WithM
         )->groupByRaw($groupCase)
          ->orderByRaw($groupCase);
 
+        DB::statement("SET SESSION group_concat_max_len = 1000000");
+
         foreach ($statuses as $status) {
             $alias = str_replace(' ', '_', $status);
             $query->addSelect(DB::raw("COUNT(CASE WHEN attendance_statuses.name = '{$status}' THEN 1 END) as `{$alias}`"));
+            
+            if ($status !== 'Hadir') {
+                $query->addSelect(DB::raw("GROUP_CONCAT(DISTINCT CASE WHEN attendance_statuses.name = '{$status}' THEN employees.name END SEPARATOR '\n') as `list_{$alias}`"));
+            }
         }
 
         return $query;
@@ -97,12 +103,19 @@ class TeamAttendanceExport implements FromQuery, WithHeadings, WithStyles, WithM
             'Nama Tim',
             'Total Karyawan',
             'Terlambat',
+            'List Terlambat',
             'Izin',
+            'List Izin',
             'Absen',
+            'List Absen',
             'Sakit',
+            'List Sakit',
             'Cuti',
+            'List Cuti',
             'Training',
+            'List Training',
             'Dinas Luar Kota',
+            'List Dinas Luar Kota',
             'Hadir'
         ];
     }
@@ -115,18 +128,28 @@ class TeamAttendanceExport implements FromQuery, WithHeadings, WithStyles, WithM
             $row->group_name,
             $row->headcount,
             $row->Terlambat,
+            $row->list_Terlambat ?? '',
             $row->Izin,
+            $row->list_Izin ?? '',
             $row->Absen,
+            $row->list_Absen ?? '',
             $row->Sakit,
+            $row->list_Sakit ?? '',
             $row->Cuti,
+            $row->list_Cuti ?? '',
             $row->Training,
+            $row->list_Training ?? '',
             $row->Dinas_Luar_Kota,
+            $row->list_Dinas_Luar_Kota ?? '',
             $row->Hadir
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
+        $sheet->getStyle('A:Q')->getAlignment()->setWrapText(true);
+        $sheet->getStyle('A:Q')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
+
         return [
             1 => ['font' => ['bold' => true]],
         ];
