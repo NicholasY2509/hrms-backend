@@ -90,7 +90,7 @@ class TeamAttendanceExport implements FromQuery, WithHeadings, WithStyles, WithM
             $query->addSelect(DB::raw("COUNT(CASE WHEN attendance_statuses.name = '{$status}' THEN 1 END) as `{$alias}`"));
             
             if ($status !== 'Hadir') {
-                $query->addSelect(DB::raw("GROUP_CONCAT(DISTINCT CASE WHEN attendance_statuses.name = '{$status}' THEN employees.name END SEPARATOR '\n') as `list_{$alias}`"));
+                $query->addSelect(DB::raw("GROUP_CONCAT(DISTINCT CASE WHEN attendance_statuses.name = '{$status}' THEN employees.full_name END SEPARATOR '\n') as `list_{$alias}`"));
             }
         }
 
