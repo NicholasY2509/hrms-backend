@@ -54,6 +54,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('leave:grant-monthly')->lastDayOfMonth('00:00');
         $schedule->command('attendance:daily-absence-penalty')->dailyAt('00:05')->timezone('Asia/Jakarta');
 
+        // Data Management & Archiving
+        $schedule->command('attendance:archive-zkteco --months=6')->monthlyOn(1, '01:00')->timezone('Asia/Jakarta');
+
         // Notification Alerts
         $schedule->command('employee:notify-birthdays')->dailyAt('08:00')->timezone('Asia/Jakarta');
         $schedule->command('attendance:notify-missing-logs')->dailyAt('09:00')->timezone('Asia/Jakarta');
