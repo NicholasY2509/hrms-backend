@@ -4,6 +4,7 @@ namespace App\Modules\UnpaidLeave\Controllers\V1\Portal\Management;
 
 use App\Http\Controllers\Controller;
 use App\Modules\UnpaidLeave\Requests\V1\GetUnpaidLeaveManagementRequest;
+use App\Modules\UnpaidLeave\Requests\V1\StoreUnpaidLeaveManagementRequest;
 use App\Modules\UnpaidLeave\Requests\V1\GetUnpaidLeaveCalendarRequest;
 use App\Modules\UnpaidLeave\Resources\V1\UnpaidLeaveResource;
 use App\Modules\UnpaidLeave\Resources\V1\UnpaidLeaveCalendarResource;
@@ -39,6 +40,28 @@ class UnpaidLeaveManagementController extends Controller
         return $this->successResponse(
             UnpaidLeaveResource::collection($leaves)->response()->getData(true),
             'All employee unpaid leave requests retrieved successfully.'
+        );
+    }
+
+    /**
+     * Create an unpaid leave request for an employee.
+     * 
+     * @response 201 {
+     *  "status": "Success",
+     *  "message": "Unpaid leave request created successfully.",
+     *  "data": {...}
+     * }
+     */
+    public function store(StoreUnpaidLeaveManagementRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+
+        $leave = $this->unpaidLeaveService->createUnpaidLeave($data, $request->file('attachment'));
+
+        return $this->successResponse(
+            new UnpaidLeaveResource($leave),
+            'Unpaid leave request created successfully.',
+            201
         );
     }
 
