@@ -37,12 +37,22 @@ class TeamAttendanceExport implements FromQuery, WithHeadings, WithStyles, WithM
         $query = DB::table('attendances')
             ->join('attendance_working_hours', 'attendances.attendance_working_hour_id', '=', 'attendance_working_hours.id')
             ->join('employees', 'attendance_working_hours.employee_id', '=', 'employees.id')
-            ->join('teams', 'employees.team_id', '=', 'teams.id')
+            ->leftJoin('teams', 'employees.team_id', '=', 'teams.id')
+            ->leftJoin('departments', 'employees.department_id', '=', 'departments.id')
             ->join('attendance_statuses', 'attendances.attendance_status_id', '=', 'attendance_statuses.id')
             ->whereBetween('attendance_working_hours.attendance_at', [$startDate, $endDate])
             ->whereNull('attendances.deleted_at')
             ->whereNull('employees.deleted_at')
-            ->whereNull('teams.deleted_at');
+            ->where(function($q) {
+                $q->whereNull('teams.deleted_at')
+                  ->orWhereNull('teams.id');
+            })
+            ->where(function($q) {
+                $q->whereNotNull('employees.team_id')
+                  ->orWhere('departments.name', 'GR')
+                  ->orWhere('departments.name', 'BP')
+                  ->orWhereIn('employees.work_position_id', [26, 62, 63]);
+            });
 
         if (!empty($this->filters['team_id'])) {
             $query->whereIn('employees.team_id', $this->filters['team_id']);
@@ -59,10 +69,17 @@ class TeamAttendanceExport implements FromQuery, WithHeadings, WithStyles, WithM
 
         $query->select(
             DB::raw("'Team' as group_type"),
-            'teams.name as group_name',
+            DB::raw("
+                CASE 
+                    WHEN employees.work_position_id IN (26, 62, 63) THEN 'Department Security'
+                    WHEN departments.name = 'GR' THEN 'Department GR'
+                    WHEN departments.name = 'BP' THEN 'Department BP'
+                    ELSE teams.name 
+                END as group_name
+            "),
             DB::raw("COUNT(DISTINCT employees.id) as headcount")
-        )->groupBy('teams.name')
-         ->orderBy('teams.name');
+        )->groupBy('group_name')
+         ->orderBy('group_name');
 
         foreach ($statuses as $status) {
             $alias = str_replace(' ', '_', $status);
