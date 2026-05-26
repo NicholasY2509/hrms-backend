@@ -56,7 +56,6 @@ class UnpaidLeaveRepository
             'employee.position',
             'employee.work_location',
             'employee.work_employee_status',
-            'employee.work_employee_type',
             'employee.user_employee.user',
             'employee.supervisor.employee',
             'approvalRequest.steps.actor', 
