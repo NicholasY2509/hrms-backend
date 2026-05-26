@@ -67,19 +67,21 @@ class TeamAttendanceExport implements FromQuery, WithHeadings, WithStyles, WithM
             $query->whereIn('attendances.attendance_status_id', $this->filters['attendance_status_id']);
         }
 
+        $groupCase = "
+            CASE 
+                WHEN employees.work_position_id IN (26, 62, 63) THEN 'Department Security'
+                WHEN departments.name = 'GR' THEN 'Department GR'
+                WHEN departments.name = 'BP' THEN 'Department BP'
+                ELSE teams.name 
+            END
+        ";
+
         $query->select(
             DB::raw("'Team' as group_type"),
-            DB::raw("
-                CASE 
-                    WHEN employees.work_position_id IN (26, 62, 63) THEN 'Department Security'
-                    WHEN departments.name = 'GR' THEN 'Department GR'
-                    WHEN departments.name = 'BP' THEN 'Department BP'
-                    ELSE teams.name 
-                END as group_name
-            "),
+            DB::raw("{$groupCase} as group_name"),
             DB::raw("COUNT(DISTINCT employees.id) as headcount")
-        )->groupBy('group_name')
-         ->orderBy('group_name');
+        )->groupByRaw($groupCase)
+         ->orderByRaw($groupCase);
 
         foreach ($statuses as $status) {
             $alias = str_replace(' ', '_', $status);
