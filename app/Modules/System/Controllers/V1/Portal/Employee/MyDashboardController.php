@@ -52,9 +52,11 @@ class MyDashboardController extends Controller
         $userId = Auth::id();
 
         $data = Cache::remember('employee_dashboard_' . $userId, 300, function () use ($userId) {
-            return $this->dashboardService->getDashboardData($userId);
+            $raw = $this->dashboardService->getDashboardData($userId);
+            // Resolve the resource into a plain array before caching to prevent __PHP_Incomplete_Class errors
+            return (new MyDashboardResource($raw))->resolve();
         });
 
-        return $this->successResponse(new MyDashboardResource($data), 'Web dashboard data retrieved successfully');
+        return $this->successResponse($data, 'Web dashboard data retrieved successfully');
     }
 }
