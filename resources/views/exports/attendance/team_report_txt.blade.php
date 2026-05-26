@@ -15,4 +15,13 @@ Dicetak pada: {{ now()->format('d/m/Y H:i') }}
 {{ str_pad(str_replace('_', ' ', $status), 18) }} : {{ $row->$status }}
 @endforeach
 {{ str_pad('Hadir', 18) }} : {{ $row->Hadir }}
+
+@foreach($statuses as $status)
+@php $listProp = 'list_' . $status; @endphp
+@if(!empty($row->$listProp))
+List {{ str_replace('_', ' ', $status) }}:
+{!! $row->$listProp !!}
+
+@endif
+@endforeach
 @endforeach
