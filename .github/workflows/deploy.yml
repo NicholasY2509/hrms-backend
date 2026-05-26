@@ -76,6 +76,7 @@ jobs:
           # ==============================
           # Laravel optimize
           # ==============================
+          php artisan cache:clear
           php artisan migrate --force
           php artisan config:cache
           php artisan route:cache
