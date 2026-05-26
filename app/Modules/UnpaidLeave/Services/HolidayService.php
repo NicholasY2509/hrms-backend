@@ -37,9 +37,11 @@ class HolidayService
      */
     public function getAllHolidays(): Collection
     {
-        return Cache::rememberForever('all_holidays', function () {
-            return $this->repository->all();
+        $holidayArrays = Cache::rememberForever('all_holidays_array', function () {
+            return $this->repository->all()->toArray();
         });
+
+        return Holiday::hydrate($holidayArrays);
     }
 
     /**
@@ -56,7 +58,7 @@ class HolidayService
     public function createHoliday(array $data): Holiday
     {
         $holiday = $this->repository->create($data);
-        Cache::forget('all_holidays');
+        Cache::forget('all_holidays_array');
         return $holiday;
     }
 
@@ -67,7 +69,7 @@ class HolidayService
     {
         $updated = $this->repository->update($id, $data);
         if ($updated) {
-            Cache::forget('all_holidays');
+            Cache::forget('all_holidays_array');
         }
         return $updated;
     }
@@ -79,7 +81,7 @@ class HolidayService
     {
         $deleted = $this->repository->delete($id);
         if ($deleted) {
-            Cache::forget('all_holidays');
+            Cache::forget('all_holidays_array');
         }
         return $deleted;
     }
@@ -111,7 +113,7 @@ class HolidayService
         }
 
         if ($insertedCount > 0) {
-            Cache::forget('all_holidays');
+            Cache::forget('all_holidays_array');
         }
 
         return $insertedCount;

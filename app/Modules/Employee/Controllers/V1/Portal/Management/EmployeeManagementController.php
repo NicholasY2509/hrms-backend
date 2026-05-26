@@ -62,8 +62,7 @@ class EmployeeManagementController extends Controller
     {
         $summary = $this->employeeService->getEmployeeSummary();
 
-        return $this->successResponse(
-            ['summary' => $summary],
+        return $this->successResponse($summary,
             'Employee summary retrieved'
         );
     }
