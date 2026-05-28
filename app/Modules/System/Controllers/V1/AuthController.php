@@ -50,4 +50,22 @@ class AuthController extends Controller
 
         return $this->successResponse($cachedData, 'User details retrieved');
     }
+
+    /**
+     * Logout and invalidate user cache
+     */
+    public function logout(): JsonResponse
+    {
+        $user = Auth::user();
+        if ($user) {
+            Cache::forget('auth_me_user_' . $user->id);
+            // Invalidate the current passport token if using Passport
+            $token = $user->token();
+            if ($token) {
+                $token->revoke();
+            }
+        }
+
+        return $this->successResponse(null, 'Logged out successfully');
+    }
 }

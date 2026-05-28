@@ -17,6 +17,7 @@ Route::get('/app-config', [SystemController::class, 'appConfig']);
 // Auth Routes
 Route::middleware(['api.auth'])->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/mobile-dashboard', [MobileDashboardController::class, 'index']);
 
     // Employee Portal Routes (Web Dashboard)

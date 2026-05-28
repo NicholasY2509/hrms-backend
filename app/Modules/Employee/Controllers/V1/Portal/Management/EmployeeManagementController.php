@@ -39,6 +39,13 @@ class EmployeeManagementController extends Controller
     {
         $filters = $request->validated();
         $filters['work_employee_status_id'] = $request->input('work_employee_status_id', 1);
+        
+        $user = $request->user();
+        $userRoles = (array) ($user->remote_roles ?? []);
+        if (in_array('Department Head', $userRoles) && $user->employee) {
+            $filters['department_id'] = $user->employee->department_id;
+        }
+
         $perPage = $request->input('per_page', 15);
 
         $employees = $this->employeeService->listEmployees($perPage, $filters);
