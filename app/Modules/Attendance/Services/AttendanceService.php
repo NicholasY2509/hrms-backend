@@ -131,4 +131,12 @@ class AttendanceService
                 'is_manual_override' => true
             ]);
     }
+
+    /**
+     * Get attendance status for an employee within a date range.
+     */
+    public function getEmployeeAttendanceStatus(int $employeeId, string $startDate, string $endDate): Collection
+    {
+        return $this->attendanceRepository->getStatusByEmployeeIdAndDateRange($employeeId, $startDate, $endDate);
+    }
 }

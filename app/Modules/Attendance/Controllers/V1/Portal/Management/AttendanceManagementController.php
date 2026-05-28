@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Attendance\Requests\AttendanceCalculateRequest;
 use App\Modules\Attendance\Requests\AttendanceIndexRequest;
 use App\Modules\Attendance\Requests\BatchUpdateAttendanceStatusRequest;
+use App\Modules\Attendance\Requests\EmployeeAttendanceStatusRequest;
 use App\Modules\Attendance\Requests\UpdateAttendanceStatusRequest;
 use App\Modules\Attendance\Resources\AttendanceManagementResource;
 use App\Modules\Attendance\Services\AttendanceCalculationService;
@@ -108,6 +109,49 @@ class AttendanceManagementController extends Controller
             'task_id' => $task->id,
             'status' => $task->status,
         ], 'Attendance calculation started');
+    }
+
+    /**
+     * Get Employee Attendance Status
+     * 
+     * Retrieves the attendance status of a specific employee throughout a date range.
+     * 
+     * @urlParam employee int required The employee ID. Example: 1
+     * @bodyParam start_date date required The start date. Example: 2024-05-01
+     * @bodyParam end_date date required The end date. Example: 2024-05-31
+     * 
+     * @response {
+     *  "success": true,
+     *  "message": "Employee attendance status retrieved successfully",
+     *  "data": [
+     *    {
+     *      "id": 1,
+     *      "employee_id": 1,
+     *      "attendance_at": "2024-05-01",
+     *      "status": "Present"
+     *    }
+     *  ]
+     * }
+     */
+    public function employeeStatus(int $employee, EmployeeAttendanceStatusRequest $request): JsonResponse
+    {
+        $attendances = $this->service->getEmployeeAttendanceStatus(
+            $employee,
+            $request->input('start_date'),
+            $request->input('end_date')
+        );
+
+        $simpleData = $attendances->map(function ($attendance) {
+            return [
+                'attendance_at' => $attendance->attendance_working_hour?->attendance_at,
+                'status' => $attendance->attendance_status?->name,
+            ];
+        });
+
+        return $this->successResponse(
+            $simpleData,
+            'Employee attendance status retrieved successfully'
+        );
     }
 
     /**

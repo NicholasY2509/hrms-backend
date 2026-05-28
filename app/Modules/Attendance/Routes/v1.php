@@ -38,6 +38,7 @@ Route::middleware(['api.auth'])->group(function () {
 
             Route::controller(AttendanceManagementController::class)->group(function () {
                 Route::get('/attendances', 'index');
+                Route::post('/attendances/employee/{employee}/status', 'employeeStatus');
                 Route::post('/attendances/calculate', 'calculate');
                 Route::put('/attendances/status/batch', 'batchUpdateStatus');
                 Route::put('/attendances/{attendance}/status', 'updateStatus');

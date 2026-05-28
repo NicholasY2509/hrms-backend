@@ -242,6 +242,21 @@ class AttendanceRepository
     }
 
     /**
+     * Get attendance status for an employee within a date range.
+     */
+    public function getStatusByEmployeeIdAndDateRange(int $employeeId, string $startDate, string $endDate): \Illuminate\Database\Eloquent\Collection
+    {
+        return Attendance::query()
+            ->join('attendance_working_hours', 'attendances.attendance_working_hour_id', '=', 'attendance_working_hours.id')
+            ->whereBetween('attendance_working_hours.attendance_at', [$startDate, $endDate])
+            ->where('attendance_working_hours.employee_id', $employeeId)
+            ->with(['attendance_status', 'attendance_working_hour.working_hour'])
+            ->orderBy('attendance_working_hours.attendance_at', 'asc')
+            ->select('attendances.*')
+            ->get();
+    }
+
+    /**
      * Find an attendance by ID.
      */
     public function findById(int $id): ?Attendance
