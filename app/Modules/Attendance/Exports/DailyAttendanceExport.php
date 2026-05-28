@@ -3,7 +3,7 @@
 namespace App\Modules\Attendance\Exports;
 
 use App\Modules\Attendance\Repositories\AttendanceRepository;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -92,23 +92,21 @@ class DailyAttendanceExport implements FromQuery, WithHeadings, WithMapping, Wit
                 
             // Use SQL aggregation instead of fetching all records into memory
             $summary = $this->query()
-                ->join('attendance_working_hours', 'attendances.attendance_working_hour_id', '=', 'attendance_working_hours.id')
-                ->join('employees', 'attendance_working_hours.employee_id', '=', 'employees.id')
-                ->join('departments', 'employees.department_id', '=', 'departments.id')
-                ->select('departments.name', DB::raw('count(*) as total'))
-                ->groupBy('departments.name')
-                ->orderBy('departments.name')
-                ->pluck('total', 'name');
+                ->leftJoin('attendance_statuses', 'attendances.attendance_status_id', '=', 'attendance_statuses.id')
+                ->select(DB::raw('COALESCE(attendance_statuses.name, "Tanpa Status") as status_name'), DB::raw('count(*) as total'))
+                ->groupBy('status_name')
+                ->orderBy('status_name')
+                ->pluck('total', 'status_name');
             
-            $totalRecords = $summary->sum();
-            $lastRow = $totalRecords + 2; 
+            // Getting highest row correctly is more reliable
+            $lastRow = $sheet->getHighestRow() + 2; 
             
-            $sheet->setCellValue('A' . $lastRow, 'RINGKASAN PER DEPARTEMEN');
+            $sheet->setCellValue('A' . $lastRow, 'RINGKASAN STATUS KEHADIRAN');
             $sheet->getStyle('A' . $lastRow)->getFont()->setBold(true);
             
             $rowNum = $lastRow + 1;
-            foreach ($summary as $dept => $count) {
-                $sheet->setCellValue('A' . $rowNum, $dept);
+            foreach ($summary as $status => $count) {
+                $sheet->setCellValue('A' . $rowNum, $status);
                 $sheet->setCellValue('B' . $rowNum, $count);
                 $rowNum++;
             }

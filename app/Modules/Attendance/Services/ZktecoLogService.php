@@ -35,26 +35,6 @@ class ZktecoLogService
      */
     public function initiateSync(ZktecoMachine $machine, string $startDate, string $endDate): Task
     {
-        try {
-            $tadFactory = new TADFactory([
-                'ip'              => $machine->ip_address,
-                'udp_port'        => $machine->port,
-                'soap_port'       => $machine->soap_port,
-                'encoding'        => 'utf-8',
-                'connection_type' => 'soap',
-            ]);
-            
-            $tad = $tadFactory->get_instance();
-            
-            if ($tad->is_alive()) {
-                Log::info("Connection to ZKTeco machine {$machine->name} ({$machine->ip_address}:{$machine->soap_port}) was successful.");
-            } else {
-                Log::warning("Connection to ZKTeco machine {$machine->name} ({$machine->ip_address}:{$machine->soap_port}) failed: Machine is not alive.");
-            }
-        } catch (Throwable $e) {
-            Log::error("Connection to ZKTeco machine {$machine->name} ({$machine->ip_address}:{$machine->soap_port}) failed with error: " . $e->getMessage());
-        }
-
         $task = $this->taskService->createTask(
             'zkteco_attendance_sync',
             "Menunggu antrian sinkronisasi log absensi dari {$machine->name}...",
@@ -100,11 +80,6 @@ class ZktecoLogService
             // TADPHP does not accept start_date/end_date parameters directly in get_att_log().
             // We fetch the logs first, and then filter by date range using filter_by_date().
             $attLogs = $tad->get_att_log();
-            $unfilteredArray = $attLogs->to_array();
-            $unfilteredCount = isset($unfilteredArray['Row']) ? count(is_array($unfilteredArray['Row']) && isset($unfilteredArray['Row']['PIN']) ? [$unfilteredArray['Row']] : $unfilteredArray['Row']) : 0;
-
-            // GRAB RAW XML TO SEE IF THERE IS A SOAP FAULT OR ERROR MESSAGE!
-            $rawXml = method_exists($attLogs, 'to_xml') ? $attLogs->to_xml() : (string)$attLogs;
 
             $filteredLogs = $attLogs->filter_by_date([
                 'start' => $startDate,
@@ -112,14 +87,6 @@ class ZktecoLogService
             ]);
             
             $logs = $filteredLogs->to_array();
-
-            // DEBUG LOG: What exactly is TADPHP returning? (Using warning so it bypasses production log filters)
-            \Illuminate\Support\Facades\Log::warning("TADPHP Raw Logs Output for {$machine->name}:", [
-                'unfiltered_count' => $unfilteredCount,
-                'filtered_count' => isset($logs['Row']) ? count(is_array($logs['Row']) && isset($logs['Row']['PIN']) ? [$logs['Row']] : $logs['Row']) : 0,
-                'raw_xml' => $rawXml, // ADDING RAW XML HERE!
-                'is_soap' => class_exists('SoapClient') // verify soap is actually available
-            ]);
 
             if (!isset($logs['Row']) || empty($logs['Row'])) {
                 if ($this->task) {

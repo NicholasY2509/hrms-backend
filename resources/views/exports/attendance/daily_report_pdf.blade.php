@@ -45,8 +45,9 @@
                 @php
                     $employee = $row->attendance_working_hour->employee ?? null;
                     $deptName = $employee->department->name ?? 'Tanpa Departemen';
-                    if (!isset($summary[$deptName])) $summary[$deptName] = 0;
-                    $summary[$deptName]++;
+                    $statusName = $row->attendance_status ? $row->attendance_status->name : 'Tanpa Status';
+                    if (!isset($summary[$statusName])) $summary[$statusName] = 0;
+                    $summary[$statusName]++;
                 @endphp
                 <tr>
                     <td>{{ $employee ? $employee->nik : '-' }}</td>
@@ -63,18 +64,18 @@
     </table>
 
     <div class="summary-section">
-        <div class="summary-title">RINGKASAN PER DEPARTEMEN</div>
+        <div class="summary-title">RINGKASAN STATUS KEHADIRAN</div>
         <table class="summary-table">
             <thead>
                 <tr>
-                    <th>Departemen</th>
-                    <th class="text-center">Total Kehadiran</th>
+                    <th>Status</th>
+                    <th class="text-center">Total</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($summary as $dept => $count)
+                @foreach($summary as $status => $count)
                 <tr>
-                    <td>{{ $dept }}</td>
+                    <td>{{ $status }}</td>
                     <td class="text-center">{{ $count }}</td>
                 </tr>
                 @endforeach
