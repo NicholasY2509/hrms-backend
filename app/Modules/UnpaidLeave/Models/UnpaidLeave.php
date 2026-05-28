@@ -76,6 +76,12 @@ class UnpaidLeave extends Model
             $q->where('unpaid_leave_type_id', $typeId);
         });
 
+        $query->when($filters['supervisor_employee_id'] ?? null, function ($q, $supervisorId) {
+            $q->whereHas('employee', function ($sq) use ($supervisorId) {
+                $sq->filter(['supervisor_employee_id' => $supervisorId]);
+            });
+        });
+
         return $query;
     }
 

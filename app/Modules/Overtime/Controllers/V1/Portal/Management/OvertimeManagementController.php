@@ -38,6 +38,13 @@ class OvertimeManagementController extends Controller
     public function index(GetOvertimeManagementRequest $request): JsonResponse
     {
         $filters = $request->validated();
+        
+        $user = $request->user();
+        $userRoles = (array) ($user->remote_roles ?? []);
+        if (in_array('Department Head', $userRoles) && $user->employee) {
+            $filters['department_id'] = $user->employee->department_id;
+        }
+
         $perPage = $request->query('per_page', 15);
 
         $overtimes = $this->repository->paginate($filters, $perPage);
@@ -134,6 +141,12 @@ class OvertimeManagementController extends Controller
     {
         $filters = $request->validated();
         $filters['is_settled'] = true;
+
+        $user = $request->user();
+        $userRoles = (array) ($user->remote_roles ?? []);
+        if (in_array('Department Head', $userRoles) && $user->employee) {
+            $filters['department_id'] = $user->employee->department_id;
+        }
         
         $report = $this->reportService->requestReport([
             'type' => 'overtime',

@@ -33,6 +33,13 @@ class UnpaidLeaveManagementController extends Controller
     public function index(GetUnpaidLeaveManagementRequest $request): JsonResponse
     {
         $filters = $request->validated();
+        
+        $user = $request->user();
+        $userRoles = (array) ($user->remote_roles ?? []);
+        if (in_array('Department Head', $userRoles) && $user->employee) {
+            $filters['department_id'] = $user->employee->department_id;
+        }
+        
         $perPage = $request->query('per_page', 15);
 
         $leaves = $this->unpaidLeaveService->getPaginatedLeaves($filters, $perPage);
