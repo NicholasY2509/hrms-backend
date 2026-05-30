@@ -31,6 +31,7 @@ class AttendanceExportRequest extends FormRequest
             'team_id' => 'nullable|exists:teams,id',
             'work_position_id' => 'nullable|exists:work_positions,id',
             'attendance_status_id' => 'nullable|exists:attendance_statuses,id',
+            'work_location_id' => 'nullable|exists:work_locations,id',
         ];
     }
 }

@@ -4,6 +4,7 @@ namespace App\Modules\Payroll\Services;
 
 use App\Modules\Payroll\Repositories\EmployeeSalaryRepository;
 use App\Modules\Payroll\Models\EmployeeSalary;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class EmployeeSalaryService
@@ -22,6 +23,11 @@ class EmployeeSalaryService
         return $this->repository->findActive($employeeId);
     }
 
+    public function getAllLatestSalariesPaginated(int $perPage = 15, ?string $search = null): LengthAwarePaginator
+    {
+        return $this->repository->getAllLatestSalariesPaginated($perPage, $search);
+    }
+
     public function updateBaseSalary(int $employeeId, array $data): EmployeeSalary
     {
         return DB::transaction(function () use ($employeeId, $data) {
@@ -34,5 +40,20 @@ class EmployeeSalaryService
                 'is_active' => true
             ]));
         });
+    }
+
+    public function getById(int $id): ?EmployeeSalary
+    {
+        return $this->repository->findById($id);
+    }
+
+    public function updateSalary(int $id, array $data): ?EmployeeSalary
+    {
+        return $this->repository->update($id, $data);
+    }
+
+    public function deleteSalary(int $id): bool
+    {
+        return $this->repository->delete($id);
     }
 }

@@ -25,8 +25,8 @@ Route::middleware(['api.auth'])->group(function () {
     Route::prefix('portal/management')
         ->middleware('role:Admin HRD')
         ->group(function () {
-            Route::get('employee-salaries', [EmployeeSalaryController::class, 'index']);
-            Route::post('employee-salaries', [EmployeeSalaryController::class, 'store']);
+            Route::get('employee-salaries/history', [EmployeeSalaryController::class, 'history']);
+            Route::apiResource('employee-salaries', EmployeeSalaryController::class);
 
             Route::apiResource('employee-salary-components', EmployeeSalaryComponentController::class);
         });

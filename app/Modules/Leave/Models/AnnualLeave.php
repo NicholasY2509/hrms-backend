@@ -27,6 +27,8 @@ class AnnualLeave extends Model
 
     protected $casts = [
         'deduction_details' => 'array',
+        'balance_before' => 'array',
+        'balance_after' => 'array',
         'annual_leave_at' => 'date',
     ];
 

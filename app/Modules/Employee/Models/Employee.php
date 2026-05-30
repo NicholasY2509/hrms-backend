@@ -5,6 +5,7 @@ namespace App\Modules\Employee\Models;
 use App\Modules\Attendance\Models\AttendanceWorkingHour;
 use App\Modules\Attendance\Models\AttendanceUser;
 use App\Modules\Disciplinary\Models\WarningLetter;
+use App\Modules\Payroll\Models\EmployeeSalary;
 use App\Modules\Payroll\Models\EmployeeTaxProfile;
 use App\Modules\User\Models\User;
 use App\Modules\Organization\Models\Department;
@@ -264,6 +265,16 @@ class Employee extends Model
     public function latestResignation(): HasOne
     {
         return $this->hasOne(Resignation::class)->latestOfMany();
+    }
+
+    /**
+     * Get the active salary for the employee.
+     */
+    public function activeSalary(): HasOne
+    {
+        return $this->hasOne(EmployeeSalary::class, 'employee_id')
+            ->where('is_active', true)
+            ->latestOfMany('effective_date');
     }
 
     /**

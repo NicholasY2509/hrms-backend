@@ -30,6 +30,11 @@ class AnnualLeaveService
         $lastYear = $currentYear - 1;
 
         return DB::transaction(function () use ($employee, $amount, $keterangan, $date, $currentYear, $lastYear) {
+            $balanceBefore = [
+                $lastYear => (float) $employee->annual_leave_2,
+                $currentYear => (float) $employee->annual_leave_3,
+            ];
+
             $remaining = (float) $amount;
             $details = [];
 
@@ -49,6 +54,11 @@ class AnnualLeaveService
 
             $employee->save();
 
+            $balanceAfter = [
+                $lastYear => (float) $employee->annual_leave_2,
+                $currentYear => (float) $employee->annual_leave_3,
+            ];
+
             return $this->repository->create([
                 'employee_id' => $employee->id,
                 'total' => $amount,
@@ -57,6 +67,8 @@ class AnnualLeaveService
                 'status' => 'Tambah',
                 'keterangan' => $keterangan,
                 'deduction_details' => $details,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
             ]);
         });
     }
@@ -80,6 +92,12 @@ class AnnualLeaveService
         $date = $date ?? Carbon::now();
         $currentYear = $date->year;
         $lastYear = $currentYear - 1;
+
+        $balanceBefore = [
+            $lastYear => (float) $employee->annual_leave_2,
+            $currentYear => (float) $employee->annual_leave_3,
+        ];
+
         $remaining = (float) $amount;
         $details = [];
 
@@ -106,8 +124,13 @@ class AnnualLeaveService
             $remaining = 0;
         }
 
-        return DB::transaction(function () use ($employee, $amount, $keterangan, $date, $details, $currentYear) {
+        return DB::transaction(function () use ($employee, $amount, $keterangan, $date, $details, $currentYear, $lastYear, $balanceBefore) {
             $employee->save();
+
+            $balanceAfter = [
+                $lastYear => (float) $employee->annual_leave_2,
+                $currentYear => (float) $employee->annual_leave_3,
+            ];
 
             return $this->repository->create([
                 'employee_id' => $employee->id,
@@ -117,6 +140,8 @@ class AnnualLeaveService
                 'status' => 'Potong',
                 'keterangan' => $keterangan,
                 'deduction_details' => $details,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
             ]);
         });
     }
@@ -134,6 +159,12 @@ class AnnualLeaveService
             $employee = $originalDeduction->employee;
             $details = $originalDeduction->deduction_details;
             $currentYear = Carbon::now()->year;
+            $lastYear = $currentYear - 1;
+
+            $balanceBefore = [
+                $lastYear => (float) $employee->annual_leave_2,
+                $currentYear => (float) $employee->annual_leave_3,
+            ];
 
             foreach ($details as $year => $amount) {
                 if ((int)$year === $currentYear) {
@@ -146,6 +177,11 @@ class AnnualLeaveService
 
             $employee->save();
 
+            $balanceAfter = [
+                $lastYear => (float) $employee->annual_leave_2,
+                $currentYear => (float) $employee->annual_leave_3,
+            ];
+
             // Create reversal history record
             $this->repository->create([
                 'employee_id' => $employee->id,
@@ -155,6 +191,8 @@ class AnnualLeaveService
                 'status' => 'Tambah',
                 'keterangan' => "Pengembalian: " . $reason . " (Ref: #" . $originalDeduction->id . ")",
                 'deduction_details' => $details,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
             ]);
 
             // Soft delete the original deduction to avoid duplicate accounting
@@ -180,12 +218,22 @@ class AnnualLeaveService
         $lastYear = $currentYear - 1;
 
         DB::transaction(function () use ($employee, $newAL2, $newAL3, $keterangan, $date, $currentYear, $lastYear) {
+            $balanceBefore = [
+                $lastYear => (float) $employee->annual_leave_2,
+                $currentYear => (float) $employee->annual_leave_3,
+            ];
+
             $diffAL2 = $newAL2 - (float) $employee->annual_leave_2;
             $diffAL3 = $newAL3 - (float) $employee->annual_leave_3;
 
             $employee->annual_leave_2 = $newAL2;
             $employee->annual_leave_3 = $newAL3;
             $employee->save();
+
+            $balanceAfter = [
+                $lastYear => (float) $employee->annual_leave_2,
+                $currentYear => (float) $employee->annual_leave_3,
+            ];
 
             // Handle additions
             $additions = [];
@@ -208,6 +256,8 @@ class AnnualLeaveService
                     'status' => 'Tambah',
                     'keterangan' => $keterangan,
                     'deduction_details' => $additions,
+                    'balance_before' => $balanceBefore,
+                    'balance_after' => $balanceAfter,
                 ]);
             }
 
@@ -232,6 +282,8 @@ class AnnualLeaveService
                     'status' => 'Potong',
                     'keterangan' => $keterangan,
                     'deduction_details' => $deductions,
+                    'balance_before' => $balanceBefore,
+                    'balance_after' => $balanceAfter,
                 ]);
             }
         });

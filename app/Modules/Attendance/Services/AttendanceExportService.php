@@ -35,6 +35,7 @@ class AttendanceExportService
                 'team_id' => isset($params['team_id']) ? [$params['team_id']] : ($params['team_ids'] ?? []),
                 'work_position_id' => isset($params['work_position_id']) ? [$params['work_position_id']] : ($params['work_position_ids'] ?? []),
                 'attendance_status_id' => isset($params['attendance_status_id']) ? [$params['attendance_status_id']] : ($params['attendance_status_ids'] ?? []),
+                'work_location_id' => isset($params['work_location_id']) ? [$params['work_location_id']] : ($params['work_location_ids'] ?? []),
             ]
         ];
 

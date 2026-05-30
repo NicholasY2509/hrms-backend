@@ -37,6 +37,7 @@ class AttendanceExportController extends Controller
      * @bodyParam team_ids int[] Optional team IDs to filter.
      * @bodyParam work_position_ids int[] Optional work position IDs to filter.
      * @bodyParam attendance_status_ids int[] Optional attendance status IDs to filter.
+     * @bodyParam work_location_id int Optional work location ID to filter.
      * 
      * @response 202 {
      *  "success": true,

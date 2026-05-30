@@ -37,6 +37,7 @@ class ListEmployeeRequest extends FormRequest
             'department_id' => ['nullable', 'integer', 'exists:departments,id'],
             'work_location_id' => ['nullable', 'integer', 'exists:work_locations,id'],
             'work_employee_status_id' => ['nullable', 'integer', 'exists:work_employee_statuses,id'],
+            'supervisor_employee_id' => ['nullable', 'integer', 'exists:employees,id'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];
     }
