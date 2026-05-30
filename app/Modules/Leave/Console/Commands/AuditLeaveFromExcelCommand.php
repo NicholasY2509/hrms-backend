@@ -100,32 +100,52 @@ class AuditLeaveFromExcelCommand extends Command
                 ->orderBy('created_at', 'asc')
                 ->get();
 
-            $totalTambah = 0;
-            $totalPotong = 0;
+            $tambah2025 = 0;
+            $tambah2026 = 0;
+            $potong2025 = 0;
+            $potong2026 = 0;
 
             foreach ($logs as $log) {
-                if (strtolower($log->status) === 'tambah') {
-                    $totalTambah += (float)$log->total;
-                } elseif (strtolower($log->status) === 'potong') {
-                    $totalPotong += (float)$log->total;
+                $details = is_array($log->deduction_details) ? $log->deduction_details : json_decode($log->deduction_details, true);
+                if (!is_array($details)) continue;
+
+                foreach ($details as $year => $amount) {
+                    $amount = (float) $amount;
+                    if (strtolower($log->status) === 'tambah') {
+                        if ((int)$year === 2025) $tambah2025 += $amount;
+                        if ((int)$year === 2026) $tambah2026 += $amount;
+                    } elseif (strtolower($log->status) === 'potong') {
+                        if ((int)$year === 2025) $potong2025 += $amount;
+                        if ((int)$year === 2026) $potong2026 += $amount;
+                    }
                 }
             }
 
-            $expectedBalance = $startBalance + $totalTambah - $totalPotong;
-            $actualBalance = (float) $employee->annual_leave_2 + (float) $employee->annual_leave_3;
-            $diff = $actualBalance - $expectedBalance;
+            $expected2025 = $startBalance + $tambah2025 - $potong2025;
+            $expected2026 = 0 + $tambah2026 - $potong2026;
+            
+            $actual2025 = (float) $employee->annual_leave_2;
+            $actual2026 = (float) $employee->annual_leave_3;
+            
+            $diff2025 = $actual2025 - $expected2025;
+            $diff2026 = $actual2026 - $expected2026;
 
-            if (abs($diff) > 0.01) { // Tolerance for floating point comparison
+            if (abs($diff2025) > 0.01 || abs($diff2026) > 0.01) { // Tolerance for floating point comparison
                 $hasDiscrepancy = true;
                 $results[] = [
                     'NIK' => $nik,
                     'Name' => $employee->full_name ?? $employee->name,
                     'Excel Start' => $startBalance,
-                    '+ Logs' => $totalTambah,
-                    '- Logs' => $totalPotong,
-                    'Expected' => $expectedBalance,
-                    'Actual' => $actualBalance,
-                    'Diff' => $diff
+                    '+ 2025' => $tambah2025,
+                    '- 2025' => $potong2025,
+                    '+ 2026' => $tambah2026,
+                    '- 2026' => $potong2026,
+                    'Exp 2025' => $expected2025,
+                    'Act 2025' => $actual2025,
+                    'Diff 2025' => $diff2025,
+                    'Exp 2026' => $expected2026,
+                    'Act 2026' => $actual2026,
+                    'Diff 2026' => $diff2026
                 ];
             }
         }
@@ -139,7 +159,7 @@ class AuditLeaveFromExcelCommand extends Command
 
         $this->error("\nFound " . count($results) . " employee(s) with balance discrepancies:");
         $this->table(
-            ['NIK', 'Name', 'Excel Start', '+ Logs', '- Logs', 'Expected', 'Actual', 'Diff'],
+            ['NIK', 'Name', 'Start', '+25', '-25', '+26', '-26', 'Exp25', 'Act25', 'Diff25', 'Exp26', 'Act26', 'Diff26'],
             $results
         );
 
@@ -150,7 +170,7 @@ class AuditLeaveFromExcelCommand extends Command
         
         $reportPath = storage_path('logs/leave_discrepancy_report_' . date('Ymd_His') . '.csv');
         $handle = fopen($reportPath, 'w');
-        fputcsv($handle, ['NIK', 'Name', 'Excel Start', '+ Logs', '- Logs', 'Expected', 'Actual', 'Diff']);
+        fputcsv($handle, ['NIK', 'Name', 'Excel Start', '+ 2025', '- 2025', '+ 2026', '- 2026', 'Expected 2025', 'Actual 2025', 'Diff 2025', 'Expected 2026', 'Actual 2026', 'Diff 2026']);
         foreach ($results as $r) {
             fputcsv($handle, $r);
         }
