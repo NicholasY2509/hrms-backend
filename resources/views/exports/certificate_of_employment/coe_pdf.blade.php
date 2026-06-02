@@ -172,7 +172,7 @@
                     <tr>
                         <td style="padding: 0; padding-right: 10px; vertical-align: bottom;">
                             @php
-                                $qrUrl = config('app.url') . '/api/v1/public/verify/certificate-of-employments/' . $coe->id;
+                                $qrUrl = config('app.url') . '/api/v1/certificateofemployment/public/verify/certificate-of-employments/' . $coe->id;
                             @endphp
                             <img src="data:image/svg+xml;base64,{!! base64_encode(QrCode::format('svg')->size(60)->margin(0)->generate($qrUrl)) !!}"
                                 alt="QR Code" style="width: 50px; height: 50px;">
