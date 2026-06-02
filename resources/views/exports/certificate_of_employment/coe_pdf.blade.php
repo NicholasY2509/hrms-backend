@@ -171,10 +171,13 @@
                 <table style="border: none; padding: 0; margin: 0; border-spacing: 0;">
                     <tr>
                         <td style="padding: 0; padding-right: 10px; vertical-align: bottom;">
-                            @if($coe->attachment)
-                                <img src="data:image/png;base64,{!! base64_encode(QrCode::format('png')->size(60)->margin(0)->generate(\Illuminate\Support\Facades\Storage::disk('gcs')->url($coe->attachment))) !!}"
-                                    alt="QR Code" style="width: 50px; height: 50px;">
-                            @endif
+                            @php
+                                $qrUrl = $coe->attachment
+                                    ? \Illuminate\Support\Facades\Storage::disk('gcs')->url($coe->attachment)
+                                    : 'https://storage.googleapis.com/' . config('filesystems.disks.gcs.bucket') . '/certificate_of_employments/' . $coe->id . '.pdf';
+                            @endphp
+                            <img src="data:image/png;base64,{!! base64_encode(QrCode::format('png')->size(60)->margin(0)->generate($qrUrl)) !!}"
+                                alt="QR Code" style="width: 50px; height: 50px;">
                         </td>
                         <td style="padding: 0; vertical-align: bottom; padding-bottom: 2px;">
                             ID Sertifikat: {{ $coe->id }}<br>
