@@ -102,6 +102,8 @@ class AttendanceCalculationService
             $this->updateProgress(20, 'Memetakan tanggal registrasi karyawan...');
             $registrationMap = $this->preCalculateRegistrationMap($employees, $startDate, $endDate);
 
+            $errors = [];
+
             foreach ($employees as $employee) {
                 $attendanceUsers = $employee->attendance_users;
                 $employeeLeaves = $unpaidLeaves->get($employee->id, collect());
@@ -125,7 +127,9 @@ class AttendanceCalculationService
 
                     $workingHourRecord = $employeeWorkingHours->get($attendanceAt);
                     if (!$workingHourRecord) {
-                        throw new \Exception("Data Jam Kerja untuk {$employee->full_name} pada tanggal {$attendanceAt} tidak ditemukan");
+                        $errors[] = "Data Jam Kerja untuk {$employee->full_name} pada tanggal {$attendanceAt} tidak ditemukan";
+                        $currentStep++;
+                        continue;
                     }
 
                     $isHoliday = in_array($attendanceAt, $holidays);
@@ -174,7 +178,17 @@ class AttendanceCalculationService
             }
 
             DB::commit();
-            $this->completeTask('Attendance calculation completed.');
+
+            if (!empty($errors)) {
+                $uniqueErrors = array_unique($errors);
+                $errorMessage = implode("\n", array_slice($uniqueErrors, 0, 5));
+                if (count($uniqueErrors) > 5) {
+                    $errorMessage .= "\n(dan " . (count($uniqueErrors) - 5) . " error lainnya)";
+                }
+                $this->failTask($errorMessage, ['errors' => $uniqueErrors]);
+            } else {
+                $this->completeTask('Attendance calculation completed.');
+            }
         } catch (Throwable $e) {
             DB::rollBack();
             try {
