@@ -12,13 +12,32 @@ class VerifyCertificateOfEmploymentController extends Controller
     {
         $coe = CertificateOfEmployment::find($id);
 
-        if (!$coe || !$coe->attachment) {
-            return response()->json(['message' => 'Sertifikat tidak ditemukan atau belum memiliki lampiran dokumen.'], 404);
+        if (!$coe) {
+            return response()->json(['message' => 'Sertifikat tidak ditemukan.'], 404);
+        }
+
+        $filePath = $coe->attachment;
+
+        // If no direct attachment, try to find the latest exported report for this COE
+        if (!$filePath) {
+            $report = \App\Modules\System\Models\Report::where('type', 'certificate_of_employment')
+                ->where('status', 'completed')
+                ->where('filters->id', $id)
+                ->latest()
+                ->first();
+
+            if ($report && $report->file_path) {
+                $filePath = $report->file_path;
+            }
+        }
+
+        if (!$filePath) {
+            return response()->json(['message' => 'Sertifikat belum memiliki lampiran dokumen.'], 404);
         }
 
         // Generate a 15-minute temporary signed URL for the private GCS bucket
         $signedUrl = Storage::disk('gcs')->temporaryUrl(
-            $coe->attachment,
+            $filePath,
             now()->addMinutes(15)
         );
 
