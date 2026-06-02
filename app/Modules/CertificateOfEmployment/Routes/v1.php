@@ -4,6 +4,11 @@ use App\Modules\CertificateOfEmployment\Controllers\V1\Portal\Employee\Certifica
 use App\Modules\CertificateOfEmployment\Controllers\V1\Portal\Management\CertificateOfEmploymentManagementController;
 use Illuminate\Support\Facades\Route;
 
+// Public Routes
+Route::prefix('public')->group(function () {
+    Route::get('verify/certificate-of-employments/{id}', [\App\Modules\CertificateOfEmployment\Controllers\V1\VerifyCertificateOfEmploymentController::class, 'verify']);
+});
+
 Route::middleware(['api.auth'])->group(function () {
     // Portal Routes
     Route::prefix('portal')->group(function () {

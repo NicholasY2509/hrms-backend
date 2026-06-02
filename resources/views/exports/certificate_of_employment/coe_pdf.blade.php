@@ -172,9 +172,7 @@
                     <tr>
                         <td style="padding: 0; padding-right: 10px; vertical-align: bottom;">
                             @php
-                                $qrUrl = $coe->attachment
-                                    ? \Illuminate\Support\Facades\Storage::disk('gcs')->url($coe->attachment)
-                                    : 'https://storage.googleapis.com/' . config('filesystems.disks.gcs.bucket') . '/certificate_of_employments/' . $coe->id . '.pdf';
+                                $qrUrl = config('app.url') . '/api/v1/public/verify/certificate-of-employments/' . $coe->id;
                             @endphp
                             <img src="data:image/svg+xml;base64,{!! base64_encode(QrCode::format('svg')->size(60)->margin(0)->generate($qrUrl)) !!}"
                                 alt="QR Code" style="width: 50px; height: 50px;">
