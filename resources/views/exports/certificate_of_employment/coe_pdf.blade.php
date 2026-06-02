@@ -168,8 +168,20 @@
             </div>
 
             <div class="footer-info">
-                ID Sertifikat: {{ $coe->id }}<br>
-                Dicetak pada: {{ \Carbon\Carbon::now()->translatedFormat('d F Y H:i') }}
+                <table style="border: none; padding: 0; margin: 0; border-spacing: 0;">
+                    <tr>
+                        <td style="padding: 0; padding-right: 10px; vertical-align: bottom;">
+                            @if($coe->attachment)
+                                <img src="data:image/png;base64,{!! base64_encode(QrCode::format('png')->size(60)->margin(0)->generate(\Illuminate\Support\Facades\Storage::disk('gcs')->url($coe->attachment))) !!}"
+                                    alt="QR Code" style="width: 50px; height: 50px;">
+                            @endif
+                        </td>
+                        <td style="padding: 0; vertical-align: bottom; padding-bottom: 2px;">
+                            ID Sertifikat: {{ $coe->id }}<br>
+                            Dicetak pada: {{ \Carbon\Carbon::now()->translatedFormat('d F Y H:i') }}
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
         @if(!$loop->last)

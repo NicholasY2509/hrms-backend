@@ -31,8 +31,8 @@ class AnnualLeaveResource extends JsonResource
                     'amount' => $amount
                 ];
             })->values(),
-            'balance_before' => $this->balance_before,
-            'balance_after' => $this->balance_after,
+            'balance_before' => $this->balance_before ? (object) $this->balance_before : null,
+            'balance_after' => $this->balance_after ? (object) $this->balance_after : null,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
