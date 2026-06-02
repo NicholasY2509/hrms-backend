@@ -111,7 +111,7 @@ class Attendance extends Model
                 $q->whereHas('employee', function ($eq) use ($filters) {
                     $ids = is_array($filters['work_location_id']) ? $filters['work_location_id'] : explode(',', $filters['work_location_id']);
                     $eq->whereIn('work_location_id', $ids);
-                });
+                }); 
             }
 
             if (!empty($filters['search'])) {

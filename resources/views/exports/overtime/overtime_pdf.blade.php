@@ -59,9 +59,9 @@
         .data-table th,
         .data-table td {
             border: 1px solid #000;
-            padding: 5px;
+            padding: 2px 3px;
             text-align: left;
-            font-size: 9pt;
+            font-size: 7.5pt;
         }
 
         .data-table th {
@@ -201,7 +201,9 @@
             <tr>
                 <td>
                     <div class="signature-space"></div>
-                    <div class="signature-name">{{ $meta['dept_head_name'] ?? '..........................' }}</div>
+                    <div class="signature-name">
+                        {{ $template['signatures']['dept_head'] ?? $meta['dept_head_name'] ?? '..........................' }}
+                    </div>
                     <div>Dept Head</div>
                 </td>
                 <td>

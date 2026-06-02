@@ -94,9 +94,9 @@ class AuditLeaveFromExcelCommand extends Command
                 continue; // Employee not found in system
             }
 
-            // Get all logs for this year (since the Excel is the starting balance for this year)
+            // Get all logs starting from Feb 3rd of this year (when the Excel was uploaded to the system)
             $logs = AnnualLeave::where('employee_id', $employee->id)
-                ->whereYear('created_at', $currentYear)
+                ->where('created_at', '>=', $currentYear . '-02-03 00:00:00')
                 ->orderBy('created_at', 'asc')
                 ->get();
 
@@ -104,48 +104,65 @@ class AuditLeaveFromExcelCommand extends Command
             $tambah2026 = 0;
             $potong2025 = 0;
             $potong2026 = 0;
+            
+            $expected2025 = $startBalance;
+            $expected2026 = 1; // Mulai dari bulan 2, hak cuti 2026 sudah bernilai 1
 
             foreach ($logs as $log) {
                 $details = is_array($log->deduction_details) ? $log->deduction_details : json_decode($log->deduction_details, true);
-                if (!is_array($details)) continue;
+                $amountTotal = (float)$log->total;
+                $status = strtolower($log->status);
 
-                foreach ($details as $year => $amount) {
-                    $amount = (float) $amount;
-                    if (strtolower($log->status) === 'tambah') {
-                        if ((int)$year === 2025) $tambah2025 += $amount;
-                        if ((int)$year === 2026) $tambah2026 += $amount;
-                    } elseif (strtolower($log->status) === 'potong') {
-                        if ((int)$year === 2025) $potong2025 += $amount;
-                        if ((int)$year === 2026) $potong2026 += $amount;
+                if (!empty($details)) {
+                    foreach ($details as $year => $amount) {
+                        $amount = (float) $amount;
+                        if ($status === 'tambah') {
+                            if ((int)$year === 2025) { $tambah2025 += $amount; $expected2025 += $amount; }
+                            if ((int)$year === 2026) { $tambah2026 += $amount; $expected2026 += $amount; }
+                        } elseif ($status === 'potong') {
+                            if ((int)$year === 2025) { $potong2025 += $amount; $expected2025 -= $amount; }
+                            if ((int)$year === 2026) { $potong2026 += $amount; $expected2026 -= $amount; }
+                        }
+                    }
+                } else {
+                    // Fallback for logs without deduction_details
+                    if ($status === 'tambah') {
+                        // Tambah default to current year (2026)
+                        $tambah2026 += $amountTotal;
+                        $expected2026 += $amountTotal;
+                    } elseif ($status === 'potong') {
+                        // Potong defaults to older year first (2025)
+                        if ($expected2025 > 0) {
+                            $deduct25 = min($amountTotal, $expected2025);
+                            $potong2025 += $deduct25;
+                            $expected2025 -= $deduct25;
+                            $amountTotal -= $deduct25;
+                        }
+                        if ($amountTotal > 0) {
+                            $potong2026 += $amountTotal;
+                            $expected2026 -= $amountTotal;
+                        }
                     }
                 }
             }
 
-            $expected2025 = $startBalance + $tambah2025 - $potong2025;
-            $expected2026 = 0 + $tambah2026 - $potong2026;
-            
             $actual2025 = (float) $employee->annual_leave_2;
             $actual2026 = (float) $employee->annual_leave_3;
             
             $diff2025 = $actual2025 - $expected2025;
             $diff2026 = $actual2026 - $expected2026;
 
-            if (abs($diff2025) > 0.01 || abs($diff2026) > 0.01) { // Tolerance for floating point comparison
+            if (abs($diff2025) > 0.01) { // Focus solely on annual_leave_2 (2025) discrepancy
                 $hasDiscrepancy = true;
                 $results[] = [
                     'NIK' => $nik,
                     'Name' => $employee->full_name ?? $employee->name,
-                    'Excel Start' => $startBalance,
+                    'Start (AL2)' => $startBalance,
                     '+ 2025' => $tambah2025,
                     '- 2025' => $potong2025,
-                    '+ 2026' => $tambah2026,
-                    '- 2026' => $potong2026,
                     'Exp 2025' => $expected2025,
                     'Act 2025' => $actual2025,
-                    'Diff 2025' => $diff2025,
-                    'Exp 2026' => $expected2026,
-                    'Act 2026' => $actual2026,
-                    'Diff 2026' => $diff2026
+                    'Diff 2025' => $diff2025
                 ];
             }
         }
@@ -153,13 +170,13 @@ class AuditLeaveFromExcelCommand extends Command
         $this->output->progressFinish();
 
         if (!$hasDiscrepancy) {
-            $this->info("\nAll good! No discrepancies found between Excel+Logs and Actual Balances.");
+            $this->info("\nAll good! No discrepancies found between Excel+Logs and Actual Balances for annual_leave_2 (2025).");
             return self::SUCCESS;
         }
 
-        $this->error("\nFound " . count($results) . " employee(s) with balance discrepancies:");
+        $this->error("\nFound " . count($results) . " employee(s) with annual_leave_2 (2025) balance discrepancies:");
         $this->table(
-            ['NIK', 'Name', 'Start', '+25', '-25', '+26', '-26', 'Exp25', 'Act25', 'Diff25', 'Exp26', 'Act26', 'Diff26'],
+            ['NIK', 'Name', 'Start', '+25', '-25', 'Exp25', 'Act25', 'Diff25'],
             $results
         );
 
@@ -168,15 +185,15 @@ class AuditLeaveFromExcelCommand extends Command
             File::makeDirectory(storage_path('logs'), 0777, true, true);
         }
         
-        $reportPath = storage_path('logs/leave_discrepancy_report_' . date('Ymd_His') . '.csv');
+        $reportPath = storage_path('logs/leave_discrepancy_report_al2_' . date('Ymd_His') . '.csv');
         $handle = fopen($reportPath, 'w');
-        fputcsv($handle, ['NIK', 'Name', 'Excel Start', '+ 2025', '- 2025', '+ 2026', '- 2026', 'Expected 2025', 'Actual 2025', 'Diff 2025', 'Expected 2026', 'Actual 2026', 'Diff 2026']);
+        fputcsv($handle, ['NIK', 'Name', 'Start (AL2)', '+ 2025', '- 2025', 'Expected 2025', 'Actual 2025', 'Diff 2025']);
         foreach ($results as $r) {
             fputcsv($handle, $r);
         }
         fclose($handle);
 
-        $this->info("Detailed discrepancy report saved to: {$reportPath}");
+        $this->info("Detailed discrepancy report for AL2 saved to: {$reportPath}");
 
         return self::SUCCESS;
     }

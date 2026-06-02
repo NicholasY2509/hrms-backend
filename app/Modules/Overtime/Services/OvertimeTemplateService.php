@@ -22,7 +22,7 @@ class OvertimeTemplateService
         }, 0);
 
         return [
-            'signatures' => $this->resolveSignatures($deptNames),
+            'signatures' => $this->resolveSignatures($deptNames, $overtimes),
             'totals' => [
                 'count' => $overtimes->count(),
                 'price' => $overtimes->sum(fn($o) => (float)($o->real_overtime_price ?? 0)),
@@ -37,7 +37,7 @@ class OvertimeTemplateService
     /**
      * Resolve the names for signatures based on work positions.
      */
-    protected function resolveSignatures(Collection $deptNames): array
+    protected function resolveSignatures(Collection $deptNames, Collection $overtimes): array
     {
         // Dynamic lookups for key management positions
         $branchHead = Employee::whereHas('position', fn($q) => $q->where('name', 'BRANCH HEAD'))
@@ -56,11 +56,26 @@ class OvertimeTemplateService
             ->where('work_employee_status_id', 1)
             ->first();
 
+        $deptHeadName = null;
+        if ($overtimes->isNotEmpty()) {
+            $employeePositionIds = $overtimes->pluck('employee.work_position_id')->filter()->unique();
+            if ($employeePositionIds->isNotEmpty() && $employeePositionIds->diff([26, 62])->isEmpty()) {
+                $specialDeptHead = Employee::where('work_position_id', 63)
+                    ->where('work_employee_status_id', 1)
+                    ->first();
+                
+                if ($specialDeptHead) {
+                    $deptHeadName = $specialDeptHead->full_name;
+                }
+            }
+        }
+
         return [
             'branch_manager' => $branchHead?->full_name ?? 'NICHOLAS BOEDIMAN', // Fallback to legacy if not found
             'adh' => $adh?->full_name ?? 'YANNY SUGIANTO',
             'hrd' => $hrd?->full_name ?? 'SITI MAHARANI RAMBE',
             'som' => $som?->full_name ?? 'SUWARNO',
+            'dept_head' => $deptHeadName,
         ];
     }
 }
