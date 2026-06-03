@@ -114,4 +114,29 @@ class AnnualLeaveManagementController extends Controller
             'Annual leave balance adjusted successfully'
         );
     }
+
+    /**
+     * Store Annual Leave Log
+     * 
+     * Store a new annual_leaves record directly without affecting the employee's current balances.
+     * 
+     * @response {
+     *  "success": true,
+     *  "message": "Annual leave log created successfully",
+     *  "data": {
+     *      "id": 1,
+     *      "employee_id": 1,
+     *      ...
+     *  }
+     * }
+     */
+    public function store(\App\Modules\Leave\Requests\AnnualLeaveStoreRequest $request): JsonResponse
+    {
+        $annualLeave = $this->service->recordOnly($request->validated());
+
+        return $this->successResponse(
+            new AnnualLeaveResource($annualLeave),
+            'Annual leave log created successfully'
+        );
+    }
 }

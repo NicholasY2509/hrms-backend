@@ -288,4 +288,28 @@ class AnnualLeaveService
             }
         });
     }
+
+    /**
+     * Create an annual leave record without affecting employee balances.
+     *
+     * @param array $data
+     * @return AnnualLeave
+     */
+    public function recordOnly(array $data): AnnualLeave
+    {
+        $date = isset($data['annual_leave_at']) ? Carbon::parse($data['annual_leave_at']) : Carbon::now();
+        $currentYear = $date->year;
+
+        return $this->repository->create([
+            'employee_id' => $data['employee_id'],
+            'total' => $data['total'],
+            'annual_leave_year' => $data['annual_leave_year'] ?? $currentYear,
+            'annual_leave_at' => $date,
+            'status' => $data['status'],
+            'keterangan' => $data['keterangan'],
+            'deduction_details' => $data['deduction_details'] ?? [],
+            'balance_before' => $data['balance_before'] ?? null,
+            'balance_after' => $data['balance_after'] ?? null,
+        ]);
+    }
 }
