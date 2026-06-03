@@ -3,6 +3,7 @@
 namespace App\Modules\Organization\Models;
 
 use App\Modules\Employee\Models\Employee;
+use App\Modules\System\Models\PassportRole;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -41,5 +42,10 @@ class WorkPosition extends Model
     public function employees(): HasMany
     {
         return $this->hasMany(Employee::class, 'work_position_id', 'id');
+    }
+
+    public function passportRoles()
+    {
+        return $this->belongsToMany(PassportRole::class, 'work_position_passport_role', 'work_position_id', 'passport_role_id');
     }
 }

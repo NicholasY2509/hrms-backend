@@ -8,7 +8,9 @@ use App\Modules\Employee\Models\EmployeeAttachment;
 use App\Modules\Employee\Models\UserEmployee;
 use App\Modules\Organization\Models\WorkPosition;
 use App\Modules\Payroll\Models\TaxPtkpSetting;
+use App\Modules\System\Models\PassportClient;
 use App\Modules\User\Models\User;
+use App\Services\PassportApiService;
 use App\Services\StorageService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -128,9 +130,25 @@ class EmployeeService
             // 8. Handle Attachments (KTP, KK, Ijazah, Supporting Files)
             $this->handleAttachments($employee, $attachmentData);
 
-            // 8. Passport API Sync Placeholder
-            // TODO: Setup API endpoint to create a new user in Passport system
-            /*
+            // 9. Passport API Sync
+            $globalRoles = \App\Modules\System\Models\PassportRole::where('is_global', true)->get();
+            $globalRoleIds = $globalRoles->pluck('passport_role_id')->toArray();
+            $globalClientIds = $globalRoles->pluck('passport_client_id')->toArray();
+            
+            $workPositionRoleIds = [];
+            $workPositionClientIds = [];
+            
+            if ($employee->work_position_id) {
+                $workPosition = \App\Modules\Organization\Models\WorkPosition::with('passportRoles')->find($employee->work_position_id);
+                if ($workPosition) {
+                    $workPositionRoleIds = $workPosition->passportRoles->pluck('passport_role_id')->toArray();
+                    $workPositionClientIds = $workPosition->passportRoles->pluck('passport_client_id')->toArray();
+                }
+            }
+            
+            $passportRoles = array_unique(array_merge($globalRoleIds, $workPositionRoleIds));
+            $passportClients = array_unique(array_merge($globalClientIds, $workPositionClientIds));
+
             $passportData = [
                 'employee_id_number' => $employee->employee_id_number,
                 'first_name' => $employee->first_name,
@@ -138,9 +156,12 @@ class EmployeeService
                 'full_name' => $employee->full_name,
                 'email' => $user->email,
                 'password' => $data['password'], // Raw password for passport sync
+                'clients' => $passportClients,
+                'roles' => $passportRoles,
             ];
-            // $this->passportApiService->createUser($passportData);
-            */
+            
+            $passportApiService = app(PassportApiService::class);
+            $passportApiService->createUser($passportData);
 
             return $employee->load(['user_employee.user', 'attachments']);
         });

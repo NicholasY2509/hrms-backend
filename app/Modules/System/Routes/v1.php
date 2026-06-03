@@ -47,6 +47,11 @@ Route::middleware(['api.auth'])->group(function () {
                 Route::post('/tasks/queue/clear', 'clearQueue');
                 Route::post('/tasks/queue/restart', 'restartQueue');
             });
+
+            Route::get('passport-clients', [\App\Modules\System\Controllers\V1\Configuration\PassportDataController::class, 'clients']);
+            Route::get('passport-roles', [\App\Modules\System\Controllers\V1\Configuration\PassportDataController::class, 'roles']);
+            Route::get('global-passport-roles', [\App\Modules\System\Controllers\V1\Configuration\GlobalPassportRoleController::class, 'index']);
+            Route::post('global-passport-roles', [\App\Modules\System\Controllers\V1\Configuration\GlobalPassportRoleController::class, 'store']);
         });
 
     Route::prefix('portal/management')

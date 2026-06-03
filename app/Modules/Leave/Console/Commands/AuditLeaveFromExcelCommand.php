@@ -152,17 +152,16 @@ class AuditLeaveFromExcelCommand extends Command
             $diff2025 = $actual2025 - $expected2025;
             $diff2026 = $actual2026 - $expected2026;
 
-            if (abs($diff2025) > 0.01) { // Focus solely on annual_leave_2 (2025) discrepancy
+            if (abs($diff2026) > 0.01) { // Focus solely on annual_leave_3 (2026) discrepancy
                 $hasDiscrepancy = true;
                 $results[] = [
                     'NIK' => $nik,
                     'Name' => $employee->full_name ?? $employee->name,
-                    'Start (AL2)' => $startBalance,
-                    '+ 2025' => $tambah2025,
-                    '- 2025' => $potong2025,
-                    'Exp 2025' => $expected2025,
-                    'Act 2025' => $actual2025,
-                    'Diff 2025' => $diff2025
+                    '+ 2026' => $tambah2026,
+                    '- 2026' => $potong2026,
+                    'Exp 2026' => $expected2026,
+                    'Act 2026' => $actual2026,
+                    'Diff 2026' => $diff2026
                 ];
             }
         }
@@ -170,13 +169,13 @@ class AuditLeaveFromExcelCommand extends Command
         $this->output->progressFinish();
 
         if (!$hasDiscrepancy) {
-            $this->info("\nAll good! No discrepancies found between Excel+Logs and Actual Balances for annual_leave_2 (2025).");
+            $this->info("\nAll good! No discrepancies found between Excel+Logs and Actual Balances for annual_leave_3 (2026).");
             return self::SUCCESS;
         }
 
-        $this->error("\nFound " . count($results) . " employee(s) with annual_leave_2 (2025) balance discrepancies:");
+        $this->error("\nFound " . count($results) . " employee(s) with annual_leave_3 (2026) balance discrepancies:");
         $this->table(
-            ['NIK', 'Name', 'Start', '+25', '-25', 'Exp25', 'Act25', 'Diff25'],
+            ['NIK', 'Name', '+26', '-26', 'Exp26', 'Act26', 'Diff26'],
             $results
         );
 
@@ -185,15 +184,15 @@ class AuditLeaveFromExcelCommand extends Command
             File::makeDirectory(storage_path('logs'), 0777, true, true);
         }
         
-        $reportPath = storage_path('logs/leave_discrepancy_report_al2_' . date('Ymd_His') . '.csv');
+        $reportPath = storage_path('logs/leave_discrepancy_report_al3_' . date('Ymd_His') . '.csv');
         $handle = fopen($reportPath, 'w');
-        fputcsv($handle, ['NIK', 'Name', 'Start (AL2)', '+ 2025', '- 2025', 'Expected 2025', 'Actual 2025', 'Diff 2025']);
+        fputcsv($handle, ['NIK', 'Name', '+ 2026', '- 2026', 'Expected 2026', 'Actual 2026', 'Diff 2026']);
         foreach ($results as $r) {
             fputcsv($handle, $r);
         }
         fclose($handle);
 
-        $this->info("Detailed discrepancy report for AL2 saved to: {$reportPath}");
+        $this->info("Detailed discrepancy report for AL3 saved to: {$reportPath}");
 
         return self::SUCCESS;
     }
