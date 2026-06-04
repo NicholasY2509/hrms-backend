@@ -444,14 +444,17 @@ class AttendanceCalculationService
         if ($isEarlier || $attendance->incoming_scan === $newTime) {
             $attendance->incoming_scan = $newTime;
             if ($isEarlier || is_null($attendance->incoming_location_id)) {
-                if (isset($scan->is_mobile)) {
-                    $attendance->incoming_location_id = $scan->location_id;
-                    $attendance->incoming_photo = $scan->photo;
-                    $attendance->incoming_latitude = $scan->latitude;
-                    $attendance->incoming_longitude = $scan->longitude;
+                if (isset($scan->is_mobile) && $scan->is_mobile) {
+                    $attendance->incoming_location_id = $scan->location_id ?? null;
+                    $attendance->incoming_photo = $scan->photo ?? null;
+                    $attendance->incoming_latitude = $scan->latitude ?? null;
+                    $attendance->incoming_longitude = $scan->longitude ?? null;
+                } elseif (isset($scan->is_synthetic) && $scan->is_synthetic) {
+                    $attendance->incoming_location_id = $scan->location_id ?? null;
+                    $attendance->incoming_machine_id = $scan->zkteco_machine_id ?? null;
                 } else {
                     $attendance->incoming_location_id = $scan->zkteco_machine?->work_location_id == 1 ? 9 : 10;
-                    $attendance->incoming_machine_id = $scan->zkteco_machine_id;
+                    $attendance->incoming_machine_id = $scan->zkteco_machine_id ?? null;
                 }
             }
 
@@ -490,14 +493,17 @@ class AttendanceCalculationService
         if ($isLater || $attendance->outgoing_scan === $newTime) {
             $attendance->outgoing_scan = $newTime;
             if ($isLater || is_null($attendance->outgoing_location_id)) {
-                if (isset($scan->is_mobile)) {
-                    $attendance->outgoing_location_id = $scan->location_id;
-                    $attendance->outgoing_photo = $scan->photo;
-                    $attendance->outgoing_latitude = $scan->latitude;
-                    $attendance->outgoing_longitude = $scan->longitude;
+                if (isset($scan->is_mobile) && $scan->is_mobile) {
+                    $attendance->outgoing_location_id = $scan->location_id ?? null;
+                    $attendance->outgoing_photo = $scan->photo ?? null;
+                    $attendance->outgoing_latitude = $scan->latitude ?? null;
+                    $attendance->outgoing_longitude = $scan->longitude ?? null;
+                } elseif (isset($scan->is_synthetic) && $scan->is_synthetic) {
+                    $attendance->outgoing_location_id = $scan->location_id ?? null;
+                    $attendance->outgoing_machine_id = $scan->zkteco_machine_id ?? null;
                 } else {
                     $attendance->outgoing_location_id = $scan->zkteco_machine?->work_location_id == 1 ? 9 : 10;
-                    $attendance->outgoing_machine_id = $scan->zkteco_machine_id;
+                    $attendance->outgoing_machine_id = $scan->zkteco_machine_id ?? null;
                 }
             }
 
