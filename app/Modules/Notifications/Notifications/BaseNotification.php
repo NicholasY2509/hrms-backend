@@ -21,7 +21,13 @@ class BaseNotification extends Notification implements ShouldQueue
 
     public function via($notifiable): array
     {
-        return ['database', 'broadcast'];
+        $channels = ['database', 'broadcast'];
+
+        if (isset($this->data['type']) && $this->data['type'] === 'approval_required') {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
     }
 
     public function toArray($notifiable): array
@@ -37,5 +43,26 @@ class BaseNotification extends Notification implements ShouldQueue
             'read_at' => null,
             'created_at' => now()->toIso8601String(),
         ]);
+    }
+
+    public function toMail($notifiable): MailMessage
+    {
+        $frontendUrl = config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:8000'));
+        $actionUrl = $this->data['action_url'] ?? '';
+
+        if (!empty($actionUrl) && !str_starts_with($actionUrl, '/')) {
+            $actionUrl = '/' . $actionUrl;
+        }
+
+        $detailUrl = rtrim($frontendUrl, '/') . $actionUrl;
+        
+        $name = $notifiable->employee->full_name ?? $notifiable->name ?? $notifiable->email ?? 'Pengguna';
+
+        return (new MailMessage)
+            ->subject($this->data['title'] ?? 'Pemberitahuan Sistem')
+            ->greeting("Halo, {$name}")
+            ->line($this->data['message'] ?? 'Anda memiliki pemberitahuan baru.')
+            ->action('Lihat Detail', $detailUrl)
+            ->line('Terima kasih.');
     }
 }
