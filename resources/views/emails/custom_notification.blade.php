@@ -1,194 +1,225 @@
+```blade
 <!DOCTYPE html>
 <html>
 
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: #F3F4F6;
-      margin: 0;
-      padding: 0;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background-color: #ffffff;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-
-    .header {
-      background-color: #023e8a;
-      padding: 40px;
-      color: #ffffff;
-      text-align: left;
-    }
-
-    .header h1 {
-      margin: 0;
-      font-size: 26px;
-      font-weight: bold;
-      color: #ffffff;
-    }
-
-    .header p {
-      margin: 8px 0 0 0;
-      font-size: 15px;
-      color: #E0E7FF;
-    }
-
-    .content {
-      padding: 40px;
-      color: #374151;
-    }
-
-    .greeting-container {
-      margin-bottom: 20px;
-    }
-
-    .message {
-      font-size: 15px;
-      line-height: 1.6;
-      color: #4B5563;
-      margin-top: 20px;
-      margin-bottom: 30px;
-    }
-
-    .panel {
-      background-color: #F9FAFB;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 30px;
-      border: 1px solid #E5E7EB;
-    }
-
-    .button-container {
-      text-align: center;
-      margin-top: 35px;
-      margin-bottom: 35px;
-    }
-
-    .button {
-      background-color: #023e8a;
-      color: #ffffff;
-      padding: 14px 32px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: bold;
-      display: inline-block;
-      font-size: 15px;
-    }
-
-    .subcopy {
-      text-align: center;
-      font-size: 12px;
-      color: #6B7280;
-      margin-top: 30px;
-      border-top: 1px solid #E5E7EB;
-      padding-top: 20px;
-      line-height: 1.5;
-    }
-
-    .subcopy a {
-      color: #023e8a;
-      word-break: break-all;
-    }
-
-    .footer {
-      text-align: center;
-      padding: 25px;
-      color: #9CA3AF;
-      font-size: 12px;
-      line-height: 1.5;
-    }
-  </style>
+  <title>{{ $data['title'] ?? 'Notification' }}</title>
 </head>
 
-<body style="background-color: #F3F4F6; padding: 20px;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F3F4F6;">
+<body style="
+  margin:0;
+  padding:0;
+  background-color:#F3F4F6;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F3F4F6; padding:30px 15px;">
     <tr>
       <td align="center">
-        <!-- Main Card -->
-        <table class="container" width="600" cellpadding="0" cellspacing="0"
-          style="background-color: #ffffff; border-radius: 12px; overflow: hidden; margin: 20px auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); text-align: left;">
 
-          <!-- Header Banner -->
+        <!-- Main Container -->
+        <table width="600" cellpadding="0" cellspacing="0" style="
+          width:100%;
+          max-width:600px;
+          background-color:#ffffff;
+          border-radius:16px;
+          overflow:hidden;
+          box-shadow:0 8px 24px rgba(15,23,42,0.12);
+        ">
+
+          <!-- Banner Image -->
           <tr>
-            <td class="header" style="background-color: #3730A3; padding: 40px;">
-              <table width="100%">
-                <tr>
-                  <td>
-                    <!-- Add your logo here if needed -->
-                    <h1 style="margin: 0; font-size: 26px; font-weight: bold; color: #ffffff;">
-                      {{ $data['title'] ?? 'Notification' }}
-                    </h1>
-                    @if(isset($data['type']) && str_contains($data['type'], 'approval'))
-                      <p style="margin: 8px 0 0 0; font-size: 15px; color: #E0E7FF;">A new request requires your
-                        attention.</p>
-                    @endif
-                  </td>
-                </tr>
-              </table>
+            <td>
+              <img src="{{ asset('images/email-banner.png') }}" alt="Banner" width="600" style="
+                  width:100%;
+                  max-width:600px;
+                  display:block;
+                  border:0;
+                ">
             </td>
           </tr>
 
-          <!-- Body Content -->
+          <!-- Header Content -->
           <tr>
-            <td class="content" style="padding: 40px;">
+            <td style="padding:40px 36px 20px 36px;">
 
-              <!-- Greeting & Avatar -->
+              <!-- Logo -->
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td valign="middle">
-                    <h2 style="margin: 0; font-size: 20px; font-weight: bold; color: #111827;">Halo, {{ $name }} 👋</h2>
+                  <td align="left">
+
+                    <img src="{{ asset('images/logo.png') }}" alt="Deltamas HRMS" width="56" style="
+                        display:block;
+                        margin-bottom:24px;
+                        border-radius:12px;
+                      ">
+
                   </td>
                 </tr>
               </table>
 
-              <!-- Message Details -->
-              <div class="panel"
-                style="background-color: #F9FAFB; border-radius: 8px; padding: 20px; margin-top: 30px; margin-bottom: 30px; border: 1px solid #E5E7EB;">
-                <p class="message" style="margin: 0; font-size: 15px; line-height: 1.6; color: #4B5563;">
-                  {!! nl2br(e($data['message'] ?? 'Anda memiliki pemberitahuan baru.')) !!}
+              <!-- Title -->
+              <h1 style="
+                margin:0;
+                font-size:32px;
+                line-height:1.2;
+                font-weight:700;
+                color:#111827;
+              ">
+                {{ $data['title'] ?? 'Notification' }}
+              </h1>
+
+              <!-- Subtitle -->
+              @if(isset($data['subtitle']))
+                <p
+                  style="
+                                                                                                                                    margin:14px 0 0 0;
+                                                                                                                                    font-size:16px;
+                                                                                                                                    line-height:1.7;
+                                                                                                                                    color:#6B7280;
+                                                                                                                                  ">
+                  {{ $data['subtitle'] }}
                 </p>
-              </div>
-
-              <!-- Call to Action -->
-              <div class="button-container" style="text-align: center; margin-top: 35px; margin-bottom: 35px;">
-                <a href="{{ $detailUrl }}" class="button"
-                  style="background-color: #3730A3; color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; font-size: 15px;">
-                  Lihat Detail &rarr;
-                </a>
-              </div>
-
-              <!-- Subcopy Link -->
-              <div class="subcopy"
-                style="text-align: center; font-size: 12px; color: #6B7280; margin-top: 30px; border-top: 1px solid #E5E7EB; padding-top: 20px; line-height: 1.5;">
-                If the button doesn't work, copy and paste this link in your browser:<br>
-                <a href="{{ $detailUrl }}" style="color: #3730A3;">{{ $detailUrl }}</a>
-              </div>
+              @endif
 
             </td>
           </tr>
-        </table>
 
-        <!-- Footer -->
-        <table width="600" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+          <!-- Body -->
           <tr>
-            <td class="footer" align="center" style="padding: 25px; color: #9CA3AF; font-size: 12px; line-height: 1.5;">
-              &copy; {{ date('Y') }} Deltamas HRMS. All rights reserved.<br>
-              This is an automated email. Please do not reply.
+            <td style="padding:0 36px 36px 36px;">
+
+              <!-- Greeting -->
+              <h2 style="
+                margin:0 0 18px 0;
+                font-size:20px;
+                font-weight:700;
+                color:#111827;
+              ">
+                Halo, <span style="color:#023e8a;">{{ $name }}</span> 👋
+              </h2>
+
+              <!-- Message Panel -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="
+                background-color:#F9FAFB;
+                border:1px solid #E5E7EB;
+                border-radius:12px;
+              ">
+                <tr>
+                  <td style="padding:24px;">
+
+                    <p style="
+                      margin:0;
+                      font-size:15px;
+                      line-height:1.8;
+                      color:#374151;
+                    ">
+                      {!! nl2br(e($data['message'] ?? 'Anda memiliki pemberitahuan baru.')) !!}
+                    </p>
+
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA Button -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:34px;">
+                <tr>
+                  <td align="center">
+
+                    <a href="{{ $detailUrl }}" style="
+                        background:linear-gradient(135deg,#023e8a,#2563EB);
+                        color:#ffffff;
+                        text-decoration:none;
+                        padding:16px 34px;
+                        border-radius:10px;
+                        font-size:15px;
+                        font-weight:700;
+                        display:inline-block;
+                      ">
+                      View Details →
+                    </a>
+
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Divider -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:36px;">
+                <tr>
+                  <td style="
+                    border-top:1px solid #E5E7EB;
+                    font-size:0;
+                    line-height:0;
+                  ">
+                    &nbsp;
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Fallback URL -->
+              <p style="
+                margin:24px 0 0 0;
+                text-align:center;
+                font-size:12px;
+                line-height:1.7;
+                color:#6B7280;
+              ">
+                If the button above doesn’t work, copy and paste this link into your browser:
+                <br>
+
+                <a href="{{ $detailUrl }}" style="
+                    color:#2563EB;
+                    word-break:break-all;
+                    text-decoration:none;
+                  ">
+                  {{ $detailUrl }}
+                </a>
+              </p>
+
             </td>
           </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="
+              background-color:#F8FAFC;
+              border-top:1px solid #E5E7EB;
+              padding:28px 36px;
+              text-align:center;
+            ">
+
+              <p style="
+                margin:0;
+                font-size:14px;
+                font-weight:700;
+                color:#111827;
+              ">
+                Deltamas HRMS
+              </p>
+
+              <p style="
+                margin:10px 0 0 0;
+                font-size:12px;
+                line-height:1.7;
+                color:#9CA3AF;
+              ">
+                © {{ date('Y') }} Deltamas HRMS. All rights reserved.
+                <br>
+                This is an automated email. Please do not reply.
+              </p>
+
+            </td>
+          </tr>
+
         </table>
 
       </td>
     </tr>
   </table>
+
 </body>
 
 </html>
+```
