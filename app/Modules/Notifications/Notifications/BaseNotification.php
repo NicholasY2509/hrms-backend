@@ -60,9 +60,10 @@ class BaseNotification extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject($this->data['title'] ?? 'Pemberitahuan Sistem')
-            ->greeting("Halo, {$name}")
-            ->line($this->data['message'] ?? 'Anda memiliki pemberitahuan baru.')
-            ->action('Lihat Detail', $detailUrl)
-            ->line('Terima kasih.');
+            ->view('emails.custom_notification', [
+                'name' => $name,
+                'data' => $this->data,
+                'detailUrl' => $detailUrl
+            ]);
     }
 }

@@ -1,7 +1,7 @@
 @props(['url'])
 <tr>
     <td class="header"
-        style="background-color: #3730A3; background-color: oklch(0.3803 0.1386 258.03); padding: 40px; border-top-left-radius: 12px; border-top-right-radius: 12px; text-align: left;">
+        style="background-color: #3730A3; padding: 40px; border-top-left-radius: 12px; border-top-right-radius: 12px; text-align: left;">
         <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
             <tr>
                 <td align="left">
