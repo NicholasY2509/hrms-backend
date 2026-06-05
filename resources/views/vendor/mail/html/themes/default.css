@@ -24,7 +24,8 @@ p, ul, ol, blockquote {
 }
 
 a {
-    color: #4F46E5;
+    color: #3730A3;
+    color: oklch(0.3803 0.1386 258.03);
     text-decoration: none;
     font-weight: 500;
 }
@@ -99,7 +100,8 @@ img { max-width: 100%; }
 }
 
 .header a {
-    color: #4F46E5;
+    color: #3730A3;
+    color: oklch(0.3803 0.1386 258.03);
     font-size: 22px;
     font-weight: 800;
     text-decoration: none;
@@ -227,16 +229,26 @@ img { max-width: 100%; }
     text-decoration: none;
     font-weight: 600;
     letter-spacing: 0.025em;
-    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .button-blue,
 .button-primary {
-    background-color: #4F46E5;
-    border-bottom: 12px solid #4F46E5;
-    border-left: 24px solid #4F46E5;
-    border-right: 24px solid #4F46E5;
-    border-top: 12px solid #4F46E5;
+    background-color: #3730A3;
+    background-color: oklch(0.3803 0.1386 258.03);
+    border-bottom: 12px solid #3730A3;
+    border-left: 24px solid #3730A3;
+    border-right: 24px solid #3730A3;
+    border-top: 12px solid #3730A3;
+}
+@supports (border-color: oklch(0.3803 0.1386 258.03)) {
+    .button-blue,
+    .button-primary {
+        border-bottom-color: oklch(0.3803 0.1386 258.03);
+        border-left-color: oklch(0.3803 0.1386 258.03);
+        border-right-color: oklch(0.3803 0.1386 258.03);
+        border-top-color: oklch(0.3803 0.1386 258.03);
+    }
 }
 
 .button-green,
@@ -246,7 +258,6 @@ img { max-width: 100%; }
     border-left: 24px solid #10B981;
     border-right: 24px solid #10B981;
     border-top: 12px solid #10B981;
-    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
 }
 
 .button-red,
@@ -256,13 +267,13 @@ img { max-width: 100%; }
     border-left: 24px solid #EF4444;
     border-right: 24px solid #EF4444;
     border-top: 12px solid #EF4444;
-    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
 }
 
 /* Panels */
 
 .panel {
-    border-left: #4F46E5 solid 4px;
+    border-left: #3730A3 solid 4px;
+    border-left-color: oklch(0.3803 0.1386 258.03);
     margin: 25px 0;
     border-radius: 6px;
     overflow: hidden;
