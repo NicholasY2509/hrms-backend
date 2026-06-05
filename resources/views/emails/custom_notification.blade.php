@@ -22,7 +22,7 @@
     }
 
     .header {
-      background-color: oklch(0.3803 0.1386 258.03);
+      background-color: #3730A3;
       padding: 40px;
       color: #ffffff;
       text-align: left;
@@ -73,7 +73,7 @@
     }
 
     .button {
-      background-color: oklch(0.3803 0.1386 258.03);
+      background-color: #3730A3;
       color: #ffffff;
       padding: 14px 32px;
       border-radius: 8px;
@@ -94,7 +94,7 @@
     }
 
     .subcopy a {
-      color: oklch(0.3803 0.1386 258.03);
+      color: #3730A3;
       word-break: break-all;
     }
 
@@ -118,7 +118,7 @@
 
           <!-- Header Banner -->
           <tr>
-            <td class="header" style="background-color: oklch(0.3803 0.1386 258.03); padding: 40px;">
+            <td class="header" style="background-color: #3730A3; padding: 40px;">
               <table width="100%">
                 <tr>
                   <td>
@@ -160,7 +160,7 @@
               <!-- Call to Action -->
               <div class="button-container" style="text-align: center; margin-top: 35px; margin-bottom: 35px;">
                 <a href="{{ $detailUrl }}" class="button"
-                  style="background-color: oklch(0.3803 0.1386 258.03); color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; font-size: 15px;">
+                  style="background-color: #3730A3; color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; font-size: 15px;">
                   Lihat Detail &rarr;
                 </a>
               </div>
@@ -169,7 +169,7 @@
               <div class="subcopy"
                 style="text-align: center; font-size: 12px; color: #6B7280; margin-top: 30px; border-top: 1px solid #E5E7EB; padding-top: 20px; line-height: 1.5;">
                 If the button doesn't work, copy and paste this link in your browser:<br>
-                <a href="{{ $detailUrl }}" style="color: oklch(0.3803 0.1386 258.03);">{{ $detailUrl }}</a>
+                <a href="{{ $detailUrl }}" style="color: #3730A3;">{{ $detailUrl }}</a>
               </div>
 
             </td>
