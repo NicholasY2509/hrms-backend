@@ -139,4 +139,53 @@ class AnnualLeaveManagementController extends Controller
             'Annual leave log created successfully'
         );
     }
+
+    /**
+     * Annual Leave Summary Report
+     * 
+     * Retrieves a paginated list of employee annual leave summaries including initial balance, current balance, and totals.
+     * 
+     * @response {
+     *  "success": true,
+     *  "message": "Annual leave summary retrieved successfully",
+     *  "data": [
+     *      ...
+     *  ]
+     * }
+     */
+    public function summary(AnnualLeaveIndexRequest $request): JsonResponse
+    {
+        $summaries = $this->repository->getSummaryPaginated(
+            $request->validated(),
+            $request->input('per_page', 15)
+        );
+
+        return $this->successResponse(
+            \App\Modules\Leave\Resources\AnnualLeaveSummaryResource::collection($summaries)->response()->getData(true),
+            'Annual leave summary retrieved successfully'
+        );
+    }
+
+    /**
+     * Annual Leave Summary Report for Employee
+     * 
+     * Retrieves the annual leave summary including initial balance, current balance, and totals for a single employee.
+     * 
+     * @response {
+     *  "success": true,
+     *  "message": "Employee annual leave summary retrieved successfully",
+     *  "data": { ... }
+     * }
+     */
+    public function employeeSummary(int $employee, \Illuminate\Http\Request $request): JsonResponse
+    {
+        $year = $request->input('year', date('Y'));
+        
+        $summary = $this->repository->getEmployeeSummary($employee, $year);
+
+        return $this->successResponse(
+            new \App\Modules\Leave\Resources\AnnualLeaveSummaryResource($summary),
+            'Employee annual leave summary retrieved successfully'
+        );
+    }
 }

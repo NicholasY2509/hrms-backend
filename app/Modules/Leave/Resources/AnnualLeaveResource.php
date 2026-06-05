@@ -31,10 +31,28 @@ class AnnualLeaveResource extends JsonResource
                     'amount' => $amount
                 ];
             })->values(),
-            'balance_before' => $this->balance_before ? (object) $this->balance_before : null,
-            'balance_after' => $this->balance_after ? (object) $this->balance_after : null,
+            'balance_before' => $this->formatBalance($this->balance_before),
+            'balance_after' => $this->formatBalance($this->balance_after),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
+    }
+
+    protected function formatBalance($balance)
+    {
+        if ($balance === null) {
+            return null;
+        }
+
+        if (is_scalar($balance)) {
+            $year = $this->annual_leave_at ? \Carbon\Carbon::parse($this->annual_leave_at)->format('Y') : date('Y');
+            return (object) [$year => $balance];
+        }
+
+        if (is_array($balance)) {
+            return (object) $balance;
+        }
+
+        return $balance;
     }
 }

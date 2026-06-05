@@ -48,9 +48,9 @@ class UpdateEmployeeRequest extends FormRequest
             'handphone' => ['nullable', 'string', 'max:20'],
             'current_address' => ['nullable', 'string'],
             'residence_address' => ['nullable', 'string'],
-            'annual_leave_1' => ['nullable', 'integer', 'min:0'],
-            'annual_leave_2' => ['nullable', 'integer', 'min:0'],
-            'annual_leave_3' => ['nullable', 'integer', 'min:0'],
+            'annual_leave_1' => ['nullable', 'integer'],
+            'annual_leave_2' => ['nullable', 'integer'],
+            'annual_leave_3' => ['nullable', 'integer'],
             'is_get_annual_leave' => ['nullable', 'boolean'],
             'avatar' => ['nullable', 'string'],
         ];

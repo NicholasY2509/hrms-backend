@@ -79,7 +79,7 @@ class AnnualLeaveService
      * Logic:
      * 1. Deduct from annual_leave_2 (last year) first, up to balance 0.
      * 2. If still needed, deduct from annual_leave_3 (this year) up to balance 0.
-     * 3. If still needed, deduct from annual_leave_2 (last year) even if it goes negative.
+     * 3. If still needed, deduct from annual_leave_3 (this year) even if it goes negative.
      *
      * @param Employee $employee
      * @param float $amount
@@ -117,10 +117,10 @@ class AnnualLeaveService
             $details[$currentYear] = ($details[$currentYear] ?? 0) + $deductAL3;
         }
 
-        // 3. Deduct from annual_leave_2 (Last Year) - negative allowed
+        // 3. Deduct from annual_leave_3 (This Year) - negative allowed
         if ($remaining > 0) {
-            $employee->annual_leave_2 -= $remaining;
-            $details[$lastYear] = ($details[$lastYear] ?? 0) + $remaining;
+            $employee->annual_leave_3 -= $remaining;
+            $details[$currentYear] = ($details[$currentYear] ?? 0) + $remaining;
             $remaining = 0;
         }
 
