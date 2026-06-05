@@ -48,4 +48,9 @@ return [
         'secret' => env('LEGACY_SYSTEM_SECRET'),
     ],
 
+    'passport' => [
+        'url' => env('PASSPORT_URL'),
+        'token' => env('PASSPORT_API_TOKEN'),
+    ],
+
 ];

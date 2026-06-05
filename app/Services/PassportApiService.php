@@ -12,8 +12,8 @@ class PassportApiService
 
     public function __construct()
     {
-        $this->baseUrl = rtrim(config('services.passport.url', env('PASSPORT_URL')), '/');
-        $this->apiToken = config('services.passport.token', env('PASSPORT_API_TOKEN'));
+        $this->baseUrl = rtrim(config('services.passport.url'), '/');
+        $this->apiToken = config('services.passport.token');
     }
 
     /**
