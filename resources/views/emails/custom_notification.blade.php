@@ -1,4 +1,3 @@
-```blade
 <!DOCTYPE html>
 <html>
 
@@ -75,11 +74,11 @@
               @if(isset($data['subtitle']))
                 <p
                   style="
-                                                                                                                                    margin:14px 0 0 0;
-                                                                                                                                    font-size:16px;
-                                                                                                                                    line-height:1.7;
-                                                                                                                                    color:#6B7280;
-                                                                                                                                  ">
+                                                                                                                                                                                  margin:14px 0 0 0;
+                                                                                                                                                                                  font-size:16px;
+                                                                                                                                                                                  line-height:1.7;
+                                                                                                                                                                                  color:#6B7280;
+                                                                                                                                                                                ">
                   {{ $data['subtitle'] }}
                 </p>
               @endif
@@ -222,4 +221,3 @@
 </body>
 
 </html>
-```
