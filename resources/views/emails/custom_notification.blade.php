@@ -22,7 +22,7 @@
     }
 
     .header {
-      background-color: #3730A3;
+      background-color: #023e8a;
       padding: 40px;
       color: #ffffff;
       text-align: left;
@@ -73,7 +73,7 @@
     }
 
     .button {
-      background-color: #3730A3;
+      background-color: #023e8a;
       color: #ffffff;
       padding: 14px 32px;
       border-radius: 8px;
@@ -94,7 +94,7 @@
     }
 
     .subcopy a {
-      color: #3730A3;
+      color: #023e8a;
       word-break: break-all;
     }
 
