@@ -51,9 +51,9 @@ class StoreEmployeeRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
             'ktp' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'kartu_keluarga' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'ijazah' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'file_pendukung' => ['required', 'array'],
+            'kartu_keluarga' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'ijazah' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'file_pendukung' => ['nullable', 'array'],
             'file_pendukung.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
             'avatar' => ['required', 'file', 'image', 'max:2048'],
         ];
