@@ -17,6 +17,7 @@ use App\Modules\Employee\Requests\UpdateEmployeeRequest;
 use App\Modules\Employee\Requests\GenerateNikRequest;
 use App\Modules\Employee\Services\EmployeeService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 
 class EmployeeManagementController extends Controller
 {
@@ -47,11 +48,16 @@ class EmployeeManagementController extends Controller
         }
 
         $perPage = $request->input('per_page', 15);
+        $page = $request->input('page', 1);
 
-        $employees = $this->employeeService->listEmployees($perPage, $filters);
+        $cacheKey = 'employees_management_index_' . md5(json_encode(compact('filters', 'perPage', 'page')));
 
-        $resource = EmployeeResource::collection($employees);
-        $data = $resource->response()->getData(true);
+        $data = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($perPage, $filters) {
+            $employees = $this->employeeService->listEmployees($perPage, $filters);
+            $resource = EmployeeResource::collection($employees);
+            
+            return $resource->response()->getData(true);
+        });
 
         return $this->successResponse(
             $data,
