@@ -44,9 +44,12 @@ class AttendanceSettingController extends Controller
             DB::beginTransaction();
 
             $updatedSettings = [];
-            foreach ($request->validated('settings') as $key => $value) {
-                $setting = AttendanceSetting::where('key', $key)->first();
-                if ($setting) {
+            $settingsData = $request->validated('settings');
+            
+            $settings = AttendanceSetting::whereIn('key', array_keys($settingsData))->get()->keyBy('key');
+            
+            foreach ($settingsData as $key => $value) {
+                if ($setting = $settings->get($key)) {
                     $setting->value = $value;
                     $setting->save();
                     $updatedSettings[] = $setting;

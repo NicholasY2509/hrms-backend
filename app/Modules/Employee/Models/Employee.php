@@ -369,11 +369,14 @@ class Employee extends Model
         $query->when($filters['search'] ?? null, function ($query, $search) {
             $search = preg_replace('/\s+/', ' ', trim($search)); // Normalize spaces
             $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('employee_id_number', 'like', "%{$search}%")
-                  ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%")
-                  ->orWhere(DB::raw("CONCAT(last_name, ' ', first_name)"), 'like', "%{$search}%");
+                $terms = explode(' ', $search);
+                
+                $q->where('employee_id_number', 'like', "%{$search}%");
+                
+                foreach ($terms as $term) {
+                    $q->orWhere('first_name', 'like', "%{$term}%")
+                      ->orWhere('last_name', 'like', "%{$term}%");
+                }
             });
         });
 

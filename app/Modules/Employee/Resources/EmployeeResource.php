@@ -45,10 +45,6 @@ class EmployeeResource extends JsonResource
                 'id' => $this->work_employee_status->id,
                 'name' => $this->work_employee_status->name,
             ] : null,
-            'work_employee_type' => $this->work_employee_type ? [
-                'id' => $this->work_employee_type->id,
-                'name' => $this->work_employee_type->name,
-            ] : null,
             'email' => $user?->email ?? $this->company_email,
             'company_email' => $this->company_email,
             'photo_url' => $this->profile_url,

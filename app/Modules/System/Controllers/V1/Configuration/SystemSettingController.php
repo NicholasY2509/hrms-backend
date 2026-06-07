@@ -54,14 +54,18 @@ class SystemSettingController extends Controller
             'settings' => 'required|array',
         ]);
 
-        foreach ($request->settings as $key => $value) {
-            $setting = SystemSetting::where('key', $key)->first();
-            if ($setting) {
-                $setting->update([
-                    'value' => is_array($value) ? json_encode($value) : (string) $value,
-                ]);
+        $settingsData = $request->settings;
+        $settings = SystemSetting::whereIn('key', array_keys($settingsData))->get()->keyBy('key');
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($settingsData, $settings) {
+            foreach ($settingsData as $key => $value) {
+                if ($setting = $settings->get($key)) {
+                    $setting->update([
+                        'value' => is_array($value) ? json_encode($value) : (string) $value,
+                    ]);
+                }
             }
-        }
+        });
 
         return $this->successResponse(
             null,

@@ -221,7 +221,8 @@ class EmployeeService
      */
     public function updateDetail(int $id, string $type, array $data, array $config): Employee
     {
-        $employee = $this->employeeRepository->findById($id);
+        return DB::transaction(function () use ($id, $type, $data, $config) {
+            $employee = $this->employeeRepository->findById($id);
 
         if ($type === 'insurance') {
             // Specifically handle insurance type to update both Employee fields and insurances relationship
@@ -360,11 +361,12 @@ class EmployeeService
             }
         }
         
-        if ($userId = $employee->user_employee?->user_id) {
-            Cache::forget('auth_me_user_' . $userId);
-        }
+            if ($userId = $employee->user_employee?->user_id) {
+                Cache::forget('auth_me_user_' . $userId);
+            }
 
-        return $employee->fresh();
+            return $employee->fresh();
+        });
     }
 
     /**

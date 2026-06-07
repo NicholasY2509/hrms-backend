@@ -43,7 +43,7 @@ class EmployeeRepository
                 // 'work_employee_type'
             ])
             ->filter($filters)
-            ->paginate($perPage);
+            ->simplePaginate($perPage);
     }
 
     /**
