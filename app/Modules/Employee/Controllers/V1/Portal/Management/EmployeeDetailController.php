@@ -107,14 +107,14 @@ class EmployeeDetailController extends Controller
         }
 
         if (isset($config['is_single']) && $config['is_single'] === true) {
-            $data = $employee->{$relationship}()->first();
+            $data = $employee->{$relationship};
             return $this->successResponse(
                 $data ? new $resourceClass($data) : null,
                 Str::title($type) . ' data retrieved'
             );
         }
 
-        $data = $employee->{$relationship}()->get();
+        $data = $employee->{$relationship};
 
         return $this->successResponse(
             $resourceClass::collection($data),
