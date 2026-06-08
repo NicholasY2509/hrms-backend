@@ -28,9 +28,10 @@ class EmployeeRepository
      *
      * @param int $perPage
      * @param array $filters
+     * @param int $page
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginate(int $perPage = 15, array $filters = [])
+    public function paginate(int $perPage = 15, array $filters = [], int $page = 1)
     {
         return Employee::query()
             ->with([
@@ -43,7 +44,7 @@ class EmployeeRepository
                 // 'work_employee_type'
             ])
             ->filter($filters)
-            ->paginate($perPage);
+            ->paginate($perPage, ['*'], 'page', $page);
     }
 
     /**

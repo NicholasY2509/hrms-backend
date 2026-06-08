@@ -42,11 +42,18 @@ class EmployeeService
      *
      * @param int $perPage
      * @param array $filters
+     * @param int $page
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function listEmployees(int $perPage = 15, array $filters = [])
+    public function listEmployees(int $perPage = 15, array $filters = [], int $page = 1)
     {
-        return $this->employeeRepository->paginate($perPage, $filters);
+        $cacheParams = compact('filters', 'perPage', 'page');
+        ksort($cacheParams);
+        $cacheKey = 'employees_list_' . md5(json_encode($cacheParams));
+
+        return Cache::tags(['employees', 'management_index'])->remember($cacheKey, now()->addMinutes(30), function () use ($perPage, $filters, $page) {
+            return $this->employeeRepository->paginate($perPage, $filters, $page);
+        });
     }
 
     /**
@@ -56,7 +63,9 @@ class EmployeeService
      */
     public function getEmployeeSummary()
     {
-        return $this->employeeRepository->getSummary();
+        return Cache::tags(['employees', 'management_summary'])->remember('employee_summary', now()->addMinutes(30), function () {
+            return $this->employeeRepository->getSummary();
+        });
     }
 
     /**
@@ -163,6 +172,8 @@ class EmployeeService
             $passportApiService = app(PassportApiService::class);
             $passportApiService->createUser($passportData);
 
+            Cache::tags(['employees'])->flush();
+
             return $employee->load(['user_employee.user', 'attachments']);
         });
     }
@@ -213,7 +224,11 @@ class EmployeeService
     public function updateEmployee(int $id, array $data): Employee
     {
         // Business logic for update can go here
-        return $this->employeeRepository->update($id, $data);
+        $employee = $this->employeeRepository->update($id, $data);
+        
+        Cache::tags(['employees'])->flush();
+        
+        return $employee;
     }
 
     /**
@@ -274,6 +289,8 @@ class EmployeeService
             if ($userId = $employee->user_employee?->user_id) {
                 Cache::forget('auth_me_user_' . $userId);
             }
+
+            Cache::tags(['employees'])->flush();
 
             return $employee->fresh();
         }
@@ -365,6 +382,8 @@ class EmployeeService
                 Cache::forget('auth_me_user_' . $userId);
             }
 
+            Cache::tags(['employees'])->flush();
+
             return $employee->fresh();
         });
     }
@@ -378,7 +397,11 @@ class EmployeeService
     public function deleteEmployee(int $id): bool
     {
         // Business logic for deletion can go here
-        return $this->employeeRepository->delete($id);
+        $deleted = $this->employeeRepository->delete($id);
+        
+        Cache::tags(['employees'])->flush();
+        
+        return $deleted;
     }
 
     /**

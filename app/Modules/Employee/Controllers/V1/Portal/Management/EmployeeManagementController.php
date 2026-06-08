@@ -50,24 +50,9 @@ class EmployeeManagementController extends Controller
         $perPage = $request->input('per_page', 15);
         $page = $request->input('page', 1);
 
-        $cacheKey = 'employees_management_index_' . md5(json_encode(compact('filters', 'perPage', 'page')));
-
-        $hit = true;
-        $data = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($perPage, $filters, &$hit) {
-            $hit = false;
-            $employees = $this->employeeService->listEmployees($perPage, $filters);
-            $resource = EmployeeResource::collection($employees);
-            
-            return $resource->response()->getData(true);
-        });
-
-        // Inject the cache status into the response data
-        if (is_array($data)) {
-            $data['cache_debug'] = [
-                'hit' => $hit,
-                'key' => $cacheKey
-            ];
-        }
+        $employees = $this->employeeService->listEmployees($perPage, $filters, $page);
+        $resource = EmployeeResource::collection($employees);
+        $data = $resource->response()->getData(true);
 
         return $this->successResponse(
             $data,
@@ -83,9 +68,7 @@ class EmployeeManagementController extends Controller
      */
     public function summary(): JsonResponse
     {
-        $summary = Cache::remember('employee_management_summary', now()->addMinutes(30), function () {
-            return $this->employeeService->getEmployeeSummary();
-        });
+        $summary = $this->employeeService->getEmployeeSummary();
 
         return $this->successResponse($summary,
             'Employee summary retrieved'
