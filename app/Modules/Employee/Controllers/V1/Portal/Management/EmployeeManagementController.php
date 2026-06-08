@@ -49,10 +49,15 @@ class EmployeeManagementController extends Controller
 
         $perPage = $request->input('per_page', 15);
         $page = $request->input('page', 1);
+        $cacheParams = compact('filters', 'perPage', 'page');
+        ksort($cacheParams);
+        $cacheKey = 'employees_management_index_' . md5(json_encode($cacheParams));
 
-        $employees = $this->employeeService->listEmployees($perPage, $filters, $page);
-        $resource = EmployeeResource::collection($employees);
-        $data = $resource->response()->getData(true);
+        $data = Cache::tags(['employees', 'management_index'])->remember($cacheKey, now()->addMinutes(30), function () use ($perPage, $filters, $page) {
+            $employees = $this->employeeService->listEmployees($perPage, $filters, $page);
+            $resource = EmployeeResource::collection($employees);
+            return $resource->response()->getData(true);
+        });
 
         return $this->successResponse(
             $data,

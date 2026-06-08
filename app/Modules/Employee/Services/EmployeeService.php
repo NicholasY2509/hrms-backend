@@ -47,13 +47,7 @@ class EmployeeService
      */
     public function listEmployees(int $perPage = 15, array $filters = [], int $page = 1)
     {
-        $cacheParams = compact('filters', 'perPage', 'page');
-        ksort($cacheParams);
-        $cacheKey = 'employees_list_' . md5(json_encode($cacheParams));
-
-        return Cache::tags(['employees', 'management_index'])->remember($cacheKey, now()->addMinutes(30), function () use ($perPage, $filters, $page) {
-            return $this->employeeRepository->paginate($perPage, $filters, $page);
-        });
+        return $this->employeeRepository->paginate($perPage, $filters, $page);
     }
 
     /**
