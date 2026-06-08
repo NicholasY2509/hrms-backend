@@ -55,10 +55,9 @@ class AnnualLeave extends Model
 
         $query->when($filters['search'] ?? null, function ($q, $search) {
             $q->where(function ($sq) use ($search) {
+                $employeeIds = Employee::filter(['search' => $search])->pluck('id');
                 $sq->where('keterangan', 'like', '%' . $search . '%')
-                    ->orWhereHas('employee', function ($eq) use ($search) {
-                        $eq->filter(['search' => $search]);
-                    });
+                   ->orWhereIn('employee_id', $employeeIds);
             });
         });
 
