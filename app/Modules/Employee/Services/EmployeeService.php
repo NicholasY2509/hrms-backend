@@ -53,12 +53,12 @@ class EmployeeService
     /**
      * Get summary of employees by status.
      *
-     * @return \Illuminate\Support\Collection
+     * @return array
      */
     public function getEmployeeSummary()
     {
         return Cache::tags(['employees', 'management_summary'])->remember('employee_summary', now()->addMinutes(30), function () {
-            return $this->employeeRepository->getSummary();
+            return $this->employeeRepository->getSummary()->toArray();
         });
     }
 
