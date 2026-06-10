@@ -373,10 +373,14 @@ class Employee extends Model
                 
                 $q->where('employee_id_number', 'like', "%{$search}%");
                 
-                foreach ($terms as $term) {
-                    $q->orWhere('first_name', 'like', "%{$term}%")
-                      ->orWhere('last_name', 'like', "%{$term}%");
-                }
+                $q->orWhere(function ($nameQuery) use ($terms) {
+                    foreach ($terms as $term) {
+                        $nameQuery->where(function ($termQuery) use ($term) {
+                            $termQuery->where('first_name', 'like', "%{$term}%")
+                                      ->orWhere('last_name', 'like', "%{$term}%");
+                        });
+                    }
+                });
             });
         });
 

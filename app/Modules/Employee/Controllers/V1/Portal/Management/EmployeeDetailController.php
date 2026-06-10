@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Modules\Employee\Models\Employee;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Modules\Employee\Resources\EmployeeOverviewResource;
 use App\Modules\Employee\Resources\EmployeePersonalResource;
