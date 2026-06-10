@@ -87,24 +87,12 @@
             font-size: 8pt;
             color: #666;
         }
-
-        .watermark {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 60pt;
-            color: rgba(0, 0, 0, 0.05);
-            z-index: -1;
-            white-space: nowrap;
-        }
     </style>
 </head>
 
 <body>
     @foreach($data as $coe)
         <div class="container">
-            <div class="watermark">ASLI / ORIGINAL</div>
 
             <div class="text-center">
                 <div class="header-title">SURAT KETERANGAN</div>
