@@ -107,55 +107,44 @@
             <div class="watermark">ASLI / ORIGINAL</div>
 
             <div class="text-center">
-                <div class="header-title">SURAT KETERANGAN KERJA</div>
-                <div class="document-no">Nomor: {{ $coe->document_no }}</div>
+                <div class="header-title">SURAT KETERANGAN</div>
+                <div class="document-no">Nomor : {{ $coe->document_no }}</div>
             </div>
 
             <div class="content-section">
-                <p>Yang bertanda tangan di bawah ini, Manajemen <b>PT. Deltamas Surya Indah Mulia</b>, dengan ini
-                    menerangkan bahwa:</p>
+                <p>Yang bertanda tangan dibawah ini, dengan ini menerangkan bahwa:</p>
             </div>
 
             <table class="details-table">
                 <tr>
                     <td>Nama</td>
                     <td>:</td>
-                    <td><b>{{ $coe->employee?->full_name }}</b></td>
+                    <td>{{ strtoupper($coe->employee?->full_name) }}</td>
                 </tr>
                 <tr>
-                    <td>Nomor Induk Karyawan</td>
+                    <td>NIK</td>
                     <td>:</td>
                     <td>{{ $coe->employee?->employee_id_number }}</td>
                 </tr>
                 <tr>
-                    <td>Jabatan Terakhir</td>
+                    <td>Tempat/Tgl Lahir</td>
                     <td>:</td>
-                    <td>{{ $coe->employee?->position?->name }}</td>
-                </tr>
-                <tr>
-                    <td>Masa Kerja</td>
-                    <td>:</td>
-                    <td>
-                        {{ \Carbon\Carbon::parse($coe->employee?->join_date)->translatedFormat('d F Y') }}
-                        s/d
-                        {{ \Carbon\Carbon::parse($coe->employee?->latestResignation?->effective_date)->translatedFormat('d F Y') }}
-                    </td>
+                    <td>{{ strtoupper($coe->employee?->place_birth) }} / {{ \Carbon\Carbon::parse($coe->employee?->date_birth)->translatedFormat('d F Y') }}</td>
                 </tr>
             </table>
 
             <div class="content-section text-justify">
                 <p>
-                    Adalah benar yang bersangkutan pernah bekerja pada <b>PT. Deltamas Surya Indah Mulia</b> dalam kurun
-                    waktu tersebut di atas. Selama bekerja, yang bersangkutan telah menunjukkan dedikasi dan loyalitas yang
-                    baik terhadap perusahaan.
+                    Benar pernah bekerja di <b>PT. Deltamas Surya Indah Mulia</b> sejak {{ \Carbon\Carbon::parse($coe->employee?->join_date)->translatedFormat('d F Y') }} dengan
+                    jabatan terakhir sebagai <b>{{ strtoupper($coe->employee?->position?->name) }}</b>.
                 </p>
                 <p>
-                    Kami mengucapkan terima kasih atas segala bantuan dan partisipasi yang telah diberikan kepada perusahaan
-                    selama ini. Semoga prestasi dan pengalaman yang didapat selama bekerja di perusahaan kami dapat
-                    bermanfaat untuk kesuksesan di masa yang akan datang.
+                    Sejak tanggal <b>{{ \Carbon\Carbon::parse($coe->employee?->latestResignation?->effective_date)->translatedFormat('d F Y') }}</b>, telah mengundurkan diri dari perusahaan atas kemauannya
+                    sendiri. Selama bekerja ia telah memperlihatkan dedikasi kerja dan kerajinan yang baik
+                    dalam menjalankan tugasnya.
                 </p>
                 <p>
-                    Demikian Surat Keterangan Kerja ini dibuat untuk dapat dipergunakan sebagaimana mestinya.
+                    Demikian surat keterangan ini dibuat dengan sebenarnya untuk dapat dipergunakan seperlunya.
                 </p>
             </div>
 
