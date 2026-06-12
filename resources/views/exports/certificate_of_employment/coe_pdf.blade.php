@@ -20,6 +20,7 @@
 
         .container {
             width: 100%;
+            position: relative;
         }
 
         .text-center {
@@ -87,12 +88,26 @@
             font-size: 8pt;
             color: #666;
         }
+
+        .watermark {
+            position: absolute;
+            top: 350px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            transform: rotate(-45deg);
+            font-size: 130pt;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.08);
+            z-index: -1;
+        }
     </style>
 </head>
 
 <body>
     @foreach($data as $coe)
         <div class="container">
+            <div class="watermark">ASLI</div>
 
             <div class="text-center">
                 <div class="header-title">SURAT KETERANGAN</div>
@@ -117,17 +132,21 @@
                 <tr>
                     <td>Tempat/Tgl Lahir</td>
                     <td>:</td>
-                    <td>{{ strtoupper($coe->employee?->place_birth) }} / {{ \Carbon\Carbon::parse($coe->employee?->date_birth)->translatedFormat('d F Y') }}</td>
+                    <td>{{ strtoupper($coe->employee?->place_birth) }} /
+                        {{ \Carbon\Carbon::parse($coe->employee?->date_birth)->translatedFormat('d F Y') }}</td>
                 </tr>
             </table>
 
             <div class="content-section text-justify">
                 <p>
-                    Benar pernah bekerja di <b>PT. Deltamas Surya Indah Mulia</b> sejak {{ \Carbon\Carbon::parse($coe->employee?->join_date)->translatedFormat('d F Y') }} dengan
+                    Benar pernah bekerja di <b>PT. Deltamas Surya Indah Mulia</b> sejak
+                    {{ \Carbon\Carbon::parse($coe->employee?->join_date)->translatedFormat('d F Y') }} dengan
                     jabatan terakhir sebagai <b>{{ strtoupper($coe->employee?->position?->name) }}</b>.
                 </p>
                 <p>
-                    Sejak tanggal <b>{{ \Carbon\Carbon::parse($coe->employee?->latestResignation?->effective_date)->translatedFormat('d F Y') }}</b>, telah mengundurkan diri dari perusahaan atas kemauannya
+                    Sejak tanggal
+                    <b>{{ \Carbon\Carbon::parse($coe->employee?->latestResignation?->effective_date)->translatedFormat('d F Y') }}</b>,
+                    telah mengundurkan diri dari perusahaan atas kemauannya
                     sendiri. Selama bekerja ia telah memperlihatkan dedikasi kerja dan kerajinan yang baik
                     dalam menjalankan tugasnya.
                 </p>
