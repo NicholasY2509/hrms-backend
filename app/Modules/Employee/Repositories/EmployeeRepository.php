@@ -33,18 +33,175 @@ class EmployeeRepository
      */
     public function paginate(int $perPage = 15, array $filters = [], int $page = 1)
     {
-        return Employee::query()
-            ->with([
-                'position', 
-                'department', 
-                'work_location', 
-                'user_employee.user', 
-                'supervisor.employee', 
-                'work_employee_status', 
-                // 'work_employee_type'
-            ])
-            ->filter($filters)
-            ->paginate($perPage, ['*'], 'page', $page);
+        $query = DB::table('employees as e')
+            ->leftJoin('departments as d', 'e.department_id', '=', 'd.id')
+            ->leftJoin('work_positions as wp', 'e.work_position_id', '=', 'wp.id')
+            ->leftJoin('work_locations as wl', 'e.work_location_id', '=', 'wl.id')
+            ->leftJoin('work_employee_statuses as wes', 'e.work_employee_status_id', '=', 'wes.id')
+            ->leftJoin('user_employees as ue', 'e.id', '=', 'ue.employee_id')
+            ->leftJoin('users as u', 'ue.user_id', '=', 'u.id')
+            ->leftJoin('supervisors as s', 'e.supervisor_id', '=', 's.id')
+            ->leftJoin('employees as se', 's.employee_id', '=', 'se.id')
+            ->whereNull('e.deleted_at')
+            ->select([
+                'e.id',
+                'e.employee_id_number',
+                'e.id_card_number',
+                'e.first_name',
+                'e.last_name',
+                'e.initial_name',
+                'e.company_email',
+                'e.avatar',
+                'e.join_date',
+                'e.resign_date',
+                'e.phone_number',
+                'e.handphone',
+                'e.current_address',
+                'e.place_birth',
+                'e.date_birth',
+                'e.annual_leave_2',
+                'e.annual_leave_3',
+                'd.id as department_id',
+                'd.name as department_name',
+                'wp.id as position_id',
+                'wp.name as position_name',
+                'wl.id as work_location_id',
+                'wl.name as work_location_name',
+                'wes.id as work_employee_status_id',
+                'wes.name as work_employee_status_name',
+                'u.email as user_email',
+                'se.id as supervisor_employee_id',
+                'se.employee_id_number as supervisor_nik',
+                'se.first_name as supervisor_first_name',
+                'se.last_name as supervisor_last_name',
+            ]);
+
+        // Replicating Employee::scopeFilter logic for RAW Query
+        $query->when($filters['search'] ?? null, function ($q, $search) {
+            $search = preg_replace('/\s+/', ' ', trim($search));
+            $q->where(function ($subQ) use ($search) {
+                $terms = explode(' ', $search);
+                $subQ->where('e.employee_id_number', 'like', "%{$search}%");
+                $subQ->orWhere(function ($nameQuery) use ($terms) {
+                    foreach ($terms as $term) {
+                        $nameQuery->where(function ($termQuery) use ($term) {
+                            $termQuery->where('e.first_name', 'like', "%{$term}%")
+                                      ->orWhere('e.last_name', 'like', "%{$term}%");
+                        });
+                    }
+                });
+            });
+        });
+
+        $query->when($filters['work_position_id'] ?? null, function ($q, $positionId) {
+            $q->where('e.work_position_id', $positionId);
+        });
+
+        $query->when($filters['team_id'] ?? null, function ($q, $teamId) {
+            $q->where('e.team_id', $teamId);
+        });
+
+        $query->when($filters['department_id'] ?? null, function ($q, $departmentId) {
+            $q->where('e.department_id', $departmentId);
+        });
+
+        $query->when($filters['work_location_id'] ?? null, function ($q, $locationId) {
+            $q->where('e.work_location_id', $locationId);
+        });
+
+        $query->when($filters['work_employee_status_id'] ?? null, function ($q, $statusId) {
+            $q->where('e.work_employee_status_id', $statusId);
+        });
+
+        $query->when($filters['supervisor_employee_id'] ?? null, function ($q, $supervisorId) {
+            $supervisor = Employee::find($supervisorId);
+            if ($supervisor) {
+                $matrixRules = \App\Modules\Organization\Models\PositionHierarchyMatrix::where('supervisor_work_position_id', $supervisor->work_position_id)
+                    ->where(function($mq) use ($supervisor) {
+                        $mq->whereNull('work_location_id')
+                          ->orWhere('work_location_id', $supervisor->work_location_id);
+                    })
+                    ->get(['department_id', 'work_position_id', 'work_location_id']);
+
+                if ($matrixRules->isNotEmpty()) {
+                    $q->where(function ($sq) use ($matrixRules, $supervisor) {
+                        foreach ($matrixRules as $rule) {
+                            $sq->orWhere(function ($ssq) use ($rule, $supervisor) {
+                                $ssq->where('e.department_id', $rule->department_id)
+                                   ->where('e.work_position_id', $rule->work_position_id);
+                                   
+                                if ($rule->work_location_id !== null) {
+                                    $ssq->where('e.work_location_id', $supervisor->work_location_id);
+                                }
+                            });
+                        }
+                    });
+
+                    if ($supervisor->team_id) {
+                        $q->where('e.team_id', $supervisor->team_id);
+                    }
+                } else {
+                    $q->whereRaw('1 = 0');
+                }
+            }
+        });
+
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+
+        // Map standard objects to match exactly what EmployeeResource expects natively
+        $paginator->getCollection()->transform(function ($item) {
+            return (object) [
+                'id' => $item->id,
+                'nik' => $item->employee_id_number,
+                'employee_id_number' => $item->employee_id_number,
+                'id_card_number' => $item->id_card_number,
+                'full_name' => trim(($item->first_name ?? '') . ' ' . ($item->last_name ?? '')),
+                'first_name' => $item->first_name,
+                'last_name' => $item->last_name,
+                'initial_name' => $item->initial_name,
+                'department' => $item->department_id ? (object) [
+                    'id' => $item->department_id,
+                    'name' => $item->department_name,
+                ] : null,
+                'position' => $item->position_id ? (object) [
+                    'id' => $item->position_id,
+                    'name' => $item->position_name,
+                ] : null,
+                'work_location' => $item->work_location_id ? (object) [
+                    'id' => $item->work_location_id,
+                    'name' => $item->work_location_name,
+                ] : null,
+                'work_employee_status' => $item->work_employee_status_id ? (object) [
+                    'id' => $item->work_employee_status_id,
+                    'name' => $item->work_employee_status_name,
+                ] : null,
+                'user_employee' => (object) [
+                    'user' => (object) [
+                        'email' => $item->user_email,
+                    ]
+                ],
+                'company_email' => $item->company_email,
+                'profile_url' => \App\Services\StorageService::url($item->avatar),
+                'join_date' => $item->join_date,
+                'resign_date' => $item->resign_date,
+                'phone_number' => $item->phone_number,
+                'handphone' => $item->handphone,
+                'current_address' => $item->current_address,
+                'place_birth' => $item->place_birth,
+                'date_birth' => $item->date_birth,
+                'annual_leave_2' => $item->annual_leave_2,
+                'annual_leave_3' => $item->annual_leave_3,
+                'supervisor' => $item->supervisor_employee_id ? (object) [
+                    'employee' => (object) [
+                        'id' => $item->supervisor_employee_id,
+                        'full_name' => trim(($item->supervisor_first_name ?? '') . ' ' . ($item->supervisor_last_name ?? '')),
+                        'nik' => $item->supervisor_nik,
+                    ]
+                ] : null,
+            ];
+        });
+
+        return $paginator;
     }
 
     /**
