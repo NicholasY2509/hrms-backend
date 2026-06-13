@@ -11,6 +11,7 @@ use App\Modules\UnpaidLeave\Resources\V1\UnpaidLeaveCalendarResource;
 use App\Modules\UnpaidLeave\Resources\V1\HolidayResource;
 use App\Modules\UnpaidLeave\Services\UnpaidLeaveService;
 use App\Traits\ApiResponses;
+use App\Traits\AppliesManagementFilters;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -21,7 +22,7 @@ use Illuminate\Http\JsonResponse;
  */
 class UnpaidLeaveManagementController extends Controller
 {
-    use ApiResponses;
+    use ApiResponses, AppliesManagementFilters;
 
     public function __construct(
         protected UnpaidLeaveService $unpaidLeaveService
@@ -34,11 +35,7 @@ class UnpaidLeaveManagementController extends Controller
     {
         $filters = $request->validated();
         
-        $user = $request->user();
-        $userRoles = (array) ($user->remote_roles ?? []);
-        if (in_array('Department Head', $userRoles) && $user->employee) {
-            $filters['department_id'] = $user->employee->department_id;
-        }
+        $filters = $this->applyManagementFilters($filters, $request);
         
         $perPage = $request->query('per_page', 15);
 

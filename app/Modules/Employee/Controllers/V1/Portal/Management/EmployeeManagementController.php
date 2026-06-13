@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Employee\Models\Employee;
 use App\Modules\Employee\Resources\EmployeeResource;
 use App\Traits\ApiResponses;
+use App\Traits\AppliesManagementFilters;
 use App\Modules\Employee\Requests\ListEmployeeRequest;
 use App\Modules\Employee\Requests\StoreEmployeeRequest;
 use App\Modules\Employee\Requests\UpdateEmployeeRequest;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\Cache;
 
 class EmployeeManagementController extends Controller
 {
-    use ApiResponses;
+    use ApiResponses, AppliesManagementFilters;
 
     protected EmployeeService $employeeService;
 
@@ -41,11 +42,7 @@ class EmployeeManagementController extends Controller
         $filters = $request->validated();
         $filters['work_employee_status_id'] = $request->input('work_employee_status_id', 1);
         
-        $user = $request->user();
-        $userRoles = (array) ($user->remote_roles ?? []);
-        if (in_array('Department Head', $userRoles) && $user->employee) {
-            $filters['department_id'] = $user->employee->department_id;
-        }
+        $filters = $this->applyManagementFilters($filters, $request);
 
         $perPage = $request->input('per_page', 15);
         $page = $request->input('page', 1);

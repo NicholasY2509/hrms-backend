@@ -10,6 +10,7 @@ use App\Modules\Overtime\Requests\V1\GetOvertimeManagementRequest;
 use App\Modules\Overtime\Resources\V1\OvertimeResource;
 use App\Modules\Overtime\Services\OvertimeService;
 use App\Traits\ApiResponses;
+use App\Traits\AppliesManagementFilters;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,7 +25,7 @@ use App\Modules\Overtime\Services\OvertimeTemplateService;
  */
 class OvertimeManagementController extends Controller
 {
-    use ApiResponses;
+    use ApiResponses, AppliesManagementFilters;
 
     public function __construct(
         protected OvertimeRepository $repository,
@@ -39,11 +40,7 @@ class OvertimeManagementController extends Controller
     {
         $filters = $request->validated();
         
-        $user = $request->user();
-        $userRoles = (array) ($user->remote_roles ?? []);
-        if (in_array('Department Head', $userRoles) && $user->employee) {
-            $filters['department_id'] = $user->employee->department_id;
-        }
+        $filters = $this->applyManagementFilters($filters, $request);
 
         $perPage = $request->query('per_page', 15);
 
@@ -142,11 +139,7 @@ class OvertimeManagementController extends Controller
         $filters = $request->validated();
         $filters['is_settled'] = true;
 
-        $user = $request->user();
-        $userRoles = (array) ($user->remote_roles ?? []);
-        if (in_array('Department Head', $userRoles) && $user->employee) {
-            $filters['department_id'] = $user->employee->department_id;
-        }
+        $filters = $this->applyManagementFilters($filters, $request);
         
         $report = $this->reportService->requestReport([
             'type' => 'overtime',
