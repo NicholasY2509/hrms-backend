@@ -76,12 +76,22 @@ class TeamAttendanceExport implements FromQuery, WithHeadings, WithStyles, WithM
             END
         ";
 
+        $orderCase = "
+            CASE 
+                WHEN employees.work_position_id IN (26, 62, 63) THEN 4
+                WHEN departments.name = 'GR' THEN 2
+                WHEN departments.name = 'BP' THEN 3
+                ELSE 1 
+            END
+        ";
+
         $query->select(
             DB::raw("'Team' as group_type"),
             DB::raw("{$groupCase} as group_name"),
+            DB::raw("{$orderCase} as group_order"),
             DB::raw("COUNT(DISTINCT employees.id) as headcount")
-        )->groupByRaw($groupCase)
-         ->orderByRaw($groupCase);
+        )->groupByRaw("{$groupCase}, {$orderCase}")
+         ->orderByRaw("group_order ASC, group_name ASC");
 
         DB::statement("SET SESSION group_concat_max_len = 1000000");
 

@@ -211,21 +211,21 @@ class EmployeeRepository
      */
     public function getSummary()
     {
-        $counts = Employee::query()
-            ->select('work_employee_status_id', DB::raw('count(*) as total'))
-            ->groupBy('work_employee_status_id')
-            ->get();
-
-        $statuses = DB::table('work_employee_statuses')->get();
-
-        return $statuses->map(function ($status) use ($counts) {
-            $count = $counts->where('work_employee_status_id', $status->id)->first();
-            return [
-                'id' => $status->id,
-                'name' => $status->name,
-                'count' => $count ? $count->total : 0
-            ];
-        });
+        return DB::table('work_employee_statuses as wes')
+            ->leftJoin('employees as e', function ($join) {
+                $join->on('wes.id', '=', 'e.work_employee_status_id')
+                     ->whereNull('e.deleted_at');
+            })
+            ->select('wes.id', 'wes.name', DB::raw('COUNT(e.id) as count'))
+            ->groupBy('wes.id', 'wes.name')
+            ->get()
+            ->map(function ($status) {
+                return [
+                    'id' => $status->id,
+                    'name' => $status->name,
+                    'count' => (int) $status->count
+                ];
+            });
     }
 
     /**
