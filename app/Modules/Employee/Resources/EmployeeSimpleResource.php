@@ -18,6 +18,7 @@ class EmployeeSimpleResource extends JsonResource
             'id' => $this->id,
             'name' => $this->full_name,
             'photo_url' => $this->profile_url,
+            'initial' => $this->initial_name,
         ];
     }
 }
