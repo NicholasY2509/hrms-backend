@@ -168,7 +168,7 @@
                 <tr>
                     <td class="text-center">{{ $loop->iteration }}</td>
                     <td class="text-center">{{ \Carbon\Carbon::parse($item->date)->translatedFormat('d M Y') }}</td>
-                    <td>{{ $item->employee?->full_name }}</td>
+                    <td>{{ $item->employee?->alias }}</td>
                     <td>{{ $item->employee?->position?->name }}</td>
                     <td class="text-center">{{ $item->start_time }}</td>
                     <td class="text-center">{{ $item->finish_time }}</td>
