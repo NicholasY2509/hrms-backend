@@ -56,10 +56,8 @@ class AutoRejectStaleRequestsCommand extends Command
             $settingKey = $typeMap[$request->approvable_type] ?? null;
             $limitDays = (int) ($settings->get($settingKey) ?? $defaultDays);
             
-            $cutoffDate = Carbon::now()->subDays($limitDays);
-
             // Determine the reference date for comparison
-            $referenceDate = $request->created_at;
+            $referenceDate = Carbon::parse($request->created_at);
             if ($request->approvable_type === Overtime::class) {
                 $model = $request->approvable;
                 if ($model && !empty($model->date)) {
@@ -67,7 +65,13 @@ class AutoRejectStaleRequestsCommand extends Command
                 }
             }
 
-            if ($referenceDate->lt($cutoffDate)) {
+            // Set to start of the day so the specific time is ignored
+            $referenceDate = $referenceDate->startOfDay();
+
+            // The deadline is the very end of the day (23:59:59), X days after the reference date
+            $deadline = $referenceDate->copy()->addDays($limitDays)->endOfDay();
+
+            if (now()->gt($deadline)) {
                 try {
                     DB::transaction(function () use ($request, $limitDays) {
                         // 1. Update all pending steps to rejected
