@@ -31,7 +31,7 @@
           <!-- Banner Image -->
           <tr>
             <td>
-              <img src="{{ asset('images/email-banner.png') }}" alt="Banner" width="600" style="
+              <img src="{{ $message->embed(public_path('images/email-banner.png')) }}" alt="Banner" width="600" style="
                   width:100%;
                   max-width:600px;
                   display:block;
@@ -49,7 +49,7 @@
                 <tr>
                   <td align="left">
 
-                    <img src="{{ asset('images/logo.png') }}" alt="Deltamas HRMS" width="56" style="
+                    <img src="{{ $message->embed(public_path('images/logo.png')) }}" alt="Deltamas HRMS" width="56" style="
                         display:block;
                         margin-bottom:24px;
                         border-radius:12px;
@@ -74,11 +74,11 @@
               @if(isset($data['subtitle']))
                 <p
                   style="
-                                                                                                                                                                                                                                                                                                    margin:14px 0 0 0;
-                                                                                                                                                                                                                                                                                                    font-size:16px;
-                                                                                                                                                                                                                                                                                                    line-height:1.7;
-                                                                                                                                                                                                                                                                                                    color:#6B7280;
-                                                                                                                                                                                                                                                                                                  ">
+                                                                                                                                                                                                                                                                                                      margin:14px 0 0 0;
+                                                                                                                                                                                                                                                                                                      font-size:16px;
+                                                                                                                                                                                                                                                                                                      line-height:1.7;
+                                                                                                                                                                                                                                                                                                      color:#6B7280;
+                                                                                                                                                                                                                                                                                                    ">
                   {{ $data['subtitle'] }}
                 </p>
               @endif
