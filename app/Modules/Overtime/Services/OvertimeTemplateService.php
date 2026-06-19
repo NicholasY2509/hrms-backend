@@ -65,16 +65,16 @@ class OvertimeTemplateService
                     ->first();
                 
                 if ($specialDeptHead) {
-                    $deptHeadName = $specialDeptHead->full_name;
+                    $deptHeadName = $specialDeptHead->alias ?? $specialDeptHead->full_name;
                 }
             }
         }
 
         return [
-            'branch_manager' => $branchHead?->full_name ?? 'NICHOLAS BOEDIMAN', // Fallback to legacy if not found
-            'adh' => $adh?->full_name ?? 'YANNY SUGIANTO',
-            'hrd' => $hrd?->full_name ?? 'SITI MAHARANI RAMBE',
-            'som' => $som?->full_name ?? 'SUWARNO',
+            'branch_manager' => $branchHead?->alias ?? $branchHead?->full_name ?? 'NICHOLAS BOEDIMAN', // Fallback to legacy if not found
+            'adh' => $adh?->alias ?? $adh?->full_name ?? 'YANNY SUGIANTO',
+            'hrd' => $hrd?->alias ?? $hrd?->full_name ?? 'SITI MAHARANI RAMBE',
+            'som' => $som?->alias ?? $som?->full_name ?? 'SUWARNO',
             'dept_head' => $deptHeadName,
         ];
     }

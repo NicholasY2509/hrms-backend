@@ -5,16 +5,21 @@
     <meta charset="utf-8">
     <title>Form Pengajuan Lembur</title>
     <style>
+        @page {
+            size: A4 landscape;
+            margin: 1cm;
+        }
+
         body {
             font-family: "Times New Roman", Times, serif;
-            font-size: 10px;
+            font-size: 7px;
             margin: 5px;
         }
 
         .header {
             text-align: center;
             font-weight: bold;
-            font-size: 11px;
+            font-size: 9px;
             margin-bottom: 8px;
         }
 
@@ -85,7 +90,7 @@
 
         .signature-title {
             font-style: italic;
-            font-size: 9px;
+            font-size: 6px;
             color: #666;
         }
     </style>
