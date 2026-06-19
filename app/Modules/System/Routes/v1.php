@@ -8,6 +8,7 @@ use App\Modules\System\Controllers\V1\Portal\Employee\MyDashboardController;
 use App\Modules\System\Controllers\V1\Portal\Management\ManagementDashboardController;
 use App\Modules\System\Controllers\V1\ReportController;
 use App\Modules\System\Controllers\V1\SystemController;
+use App\Modules\System\Controllers\V1\MediaController;
 use Illuminate\Support\Facades\Route;
 
 // Standard System Routes
@@ -19,6 +20,9 @@ Route::middleware(['api.auth'])->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/mobile-dashboard', [MobileDashboardController::class, 'index']);
+
+    // Media Upload Route
+    Route::post('/media/generate-upload-url', [MediaController::class, 'generateUploadUrl']);
 
     // Employee Portal Routes (Web Dashboard)
     Route::prefix('portal/employee')

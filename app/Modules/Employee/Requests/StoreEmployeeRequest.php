@@ -50,11 +50,11 @@ class StoreEmployeeRequest extends FormRequest
             'residence_address' => ['nullable', 'string'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
-            'ktp' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'kartu_keluarga' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'ijazah' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'ktp' => ['nullable', 'string', 'max:1000'],
+            'kartu_keluarga' => ['nullable', 'string', 'max:1000'],
+            'ijazah' => ['nullable', 'string', 'max:1000'],
             'file_pendukung' => ['nullable', 'array'],
-            'file_pendukung.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'file_pendukung.*' => ['string', 'max:1000'],
             'avatar' => ['required', 'file', 'image', 'max:2048'],
         ];
     }
