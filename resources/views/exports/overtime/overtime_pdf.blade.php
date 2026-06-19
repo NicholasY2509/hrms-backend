@@ -5,76 +5,58 @@
     <meta charset="utf-8">
     <title>Form Pengajuan Lembur</title>
     <style>
-        @page {
-            size: A4 landscape;
-            margin: 1cm;
-        }
-
         body {
             font-family: "Times New Roman", Times, serif;
-            font-size: 10pt;
-            line-height: 1.3;
-            color: #000;
-            margin: 0;
-            padding: 0;
+            font-size: 10px;
+            margin: 5px;
         }
 
         .header {
             text-align: center;
             font-weight: bold;
-            font-size: 12pt;
-            margin-bottom: 20px;
-            text-decoration: underline;
+            font-size: 11px;
+            margin-bottom: 8px;
         }
 
-        .info-section {
-            margin-bottom: 15px;
+        .info-row {
+            margin-bottom: 4px;
         }
 
-        .info-table {
-            border: none;
-            width: auto;
-        }
-
-        .info-table td {
-            padding: 2px 0;
-            border: none;
-        }
-
-        .info-table td:first-child {
-            width: 150px;
+        .info-label {
             font-weight: bold;
+            display: inline-block;
+            width: 120px;
         }
 
-        .info-table td:nth-child(2) {
-            width: 20px;
-        }
-
-        .data-table {
+        table {
             width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 10px;
         }
 
-        .data-table th,
-        .data-table td {
-            border: 1px solid #000;
-            padding: 2px 3px;
+        th {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
             text-align: left;
-            font-size: 7.5pt;
+            font-weight: bold;
+            border: 1px solid #ddd;
+            height: 18px;
         }
 
-        .data-table th {
-            background-color: #f2f2f2;
-            text-align: center;
+        td {
+            padding: 2px 4px;
+            border: 1px solid #ddd;
+            height: 16px;
+            vertical-align: middle;
         }
 
-        .text-center {
-            text-align: center !important;
-        }
-
-        .text-right {
-            text-align: right !important;
+        th:nth-child(8),
+        td:nth-child(8) {
+            width: 200px;
+            max-width: 200px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .total-row {
@@ -83,37 +65,27 @@
         }
 
         .signature-section {
-            margin-top: 30px;
-            width: 100%;
+            margin-top: 15px;
         }
 
-        .signature-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        .signature-row {}
 
-        .signature-table td {
+        .signature-cell {
             text-align: center;
+            min-height: 200px;
             vertical-align: top;
-            padding-top: 10px;
             border: none;
-            width: 20%;
         }
 
-        .signature-space {
-            height: 60px;
+        .signature-cell-name {
+            padding-top: 60px
         }
 
-        .signature-name {
-            font-weight: bold;
-            text-decoration: underline;
-        }
+        .signature-name {}
 
-        .footer-info {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            font-size: 8pt;
+        .signature-title {
+            font-style: italic;
+            font-size: 9px;
             color: #666;
         }
     </style>
@@ -127,115 +99,113 @@
 
     <div class="header">FORM PENGAJUAN LEMBUR</div>
 
-    <div class="info-section">
-        <table class="info-table">
-            <tr>
-                <td>NOMOR DOKUMEN</td>
-                <td>:</td>
-                <td>{{ $report->document_no }}</td>
-            </tr>
-            <tr>
-                <td>PERIODE</td>
-                <td>:</td>
-                <td>{{ \Carbon\Carbon::parse($meta['filters']['start_date'] ?? now())->translatedFormat('d F Y') }} -
-                    {{ \Carbon\Carbon::parse($meta['filters']['end_date'] ?? now())->translatedFormat('d F Y') }}
-                </td>
-            </tr>
-            <tr>
-                <td>DEPARTMENT</td>
-                <td>:</td>
-                <td>{{ $template['department_name'] }}</td>
-            </tr>
-        </table>
+    <div class="info-row">
+        <span class="info-label">NO</span>
+        <span>: {{ $report->document_no }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">HAL</span>
+        <span>: PENGAJUAN LEMBUR</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">PERIODE LEMBUR</span>
+        <span>:
+            {{ \Carbon\Carbon::parse($meta['filters']['start_date'] ?? now())->locale('id')->translatedFormat('d F Y') }}
+            -
+            {{ \Carbon\Carbon::parse($meta['filters']['end_date'] ?? now())->locale('id')->translatedFormat('d F Y') }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">DEPARTMENT:</span>
+        <span>: {{ $template['department_name'] }}</span>
     </div>
 
-    <table class="data-table">
+    <table>
         <thead>
             <tr>
-                <th width="3%">No</th>
-                <th width="10%">Tanggal</th>
-                <th width="15%">Nama Karyawan</th>
-                <th width="12%">Posisi</th>
-                <th width="8%">Mulai</th>
-                <th width="8%">Selesai</th>
-                <th width="8%">Jam</th>
+                <th>No</th>
+                <th>Tanggal</th>
+                <th>Nama</th>
+                <th>Posisi Kerja</th>
+                <th>Waktu Mulai</th>
+                <th>Waktu Selesai</th>
+                <th>Jumlah Jam</th>
                 <th>Keterangan</th>
-                <th width="12%">Nilai Lembur</th>
+                <th>Nilai Lembur</th>
             </tr>
         </thead>
         <tbody>
             @foreach($data as $item)
                 <tr>
-                    <td class="text-center">{{ $loop->iteration }}</td>
-                    <td class="text-center">{{ \Carbon\Carbon::parse($item->date)->translatedFormat('d M Y') }}</td>
-                    <td>{{ $item->employee?->alias }}</td>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ \Carbon\Carbon::parse($item->date)->locale('id')->translatedFormat('d F Y') }}</td>
+                    <td>{{ strtoupper($item->employee?->alias ?? '') }}</td>
                     <td>{{ $item->employee?->position?->name }}</td>
-                    <td class="text-center">{{ $item->start_time }}</td>
-                    <td class="text-center">{{ $item->finish_time }}</td>
-                    <td class="text-center">{{ $item->total_time }}</td>
+                    <td>{{ $item->start_time }}</td>
+                    <td>{{ $item->finish_time }}</td>
+                    <td>{{ $item->total_time }}</td>
                     <td>{{ $item->note }}</td>
-                    <td class="text-right">Rp {{ number_format((float) ($item->real_overtime_price ?? 0), 0, ',', '.') }}
-                    </td>
+                    <td>Rp {{ number_format((float) ($item->real_overtime_price ?? 0), 0, ',', '.') }}</td>
                 </tr>
             @endforeach
-        </tbody>
-        <tfoot>
             <tr class="total-row">
-                <td colspan="6" class="text-right">TOTAL</td>
-                <td class="text-center">{{ number_format($template['totals']['hours'], 1) }}</td>
+                <td colspan="6" style="text-align: right;"><strong>TOTAL</strong></td>
+                <td style="text-align: center;"><strong>{{ number_format($template['totals']['hours'], 1) }}</strong>
+                </td>
                 <td></td>
-                <td class="text-right">Rp {{ number_format($template['totals']['price'], 0, ',', '.') }}</td>
+                <td colspan="1"><strong>Rp {{ number_format($template['totals']['price'], 0, ',', '.') }}</strong></td>
             </tr>
-        </tfoot>
+        </tbody>
     </table>
 
     <div class="signature-section">
-        <p>Medan, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+        <div class="signature-row">
+            <span>Medan, {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }}</span>
+        </div>
 
-        <table class="signature-table">
-            <tr>
-                <td>Dibuat Oleh,</td>
-                <td>Diajukan Oleh,</td>
-                <td colspan="{{ $template['show_som'] ? 3 : 2 }}">Disetujui Oleh,</td>
-            </tr>
-            <tr>
-                <td>
-                    <div class="signature-space"></div>
-                    <div class="signature-name">
-                        {{ $template['signatures']['dept_head'] ?? $meta['dept_head_name'] ?? '..........................' }}
-                    </div>
-                    <div>Dept Head</div>
+        <table style="margin-top: 2px; width: 100%; border: none;">
+            <tr style="">
+                <td class="signature-cell" style="width: 20%;">
+                    <div class="signature-name">Dibuat Oleh</div>
                 </td>
-                <td>
-                    <div class="signature-space"></div>
-                    <div class="signature-name">{{ $template['signatures']['hrd'] }}</div>
-                    <div>HRD</div>
+                <td class="signature-cell" style="width: 20%;">
+                    <div class="signature-name">Diajukan Oleh</div>
+                </td>
+                <td class="signature-cell" colspan="{{ $template['show_som'] ? 3 : 2 }}">
+                    <div class="signature-name">Disetujui Oleh</div>
+                </td>
+            </tr>
+            <tr></tr>
+            <tr></tr>
+            <tr></tr>
+            <tr style="">
+                <td class="signature-cell-name signature-cell">
+                    <div class="signature-name">
+                        {{ strtoupper($template['signatures']['dept_head'] ?? $meta['dept_head_name'] ?? '-') }}
+                    </div>
+                    <div class="signature-title">Dept Head</div>
+                </td>
+                <td class="signature-cell-name signature-cell">
+                    <div class="signature-name">{{ strtoupper($template['signatures']['hrd'] ?? '-') }}</div>
+                    <div class="signature-title">HRD</div>
                 </td>
 
                 @if($template['show_som'])
-                    <td>
-                        <div class="signature-space"></div>
-                        <div class="signature-name">{{ $template['signatures']['som'] }}</div>
-                        <div>SOM</div>
+                    <td class="signature-cell-name signature-cell">
+                        <div class="signature-name">{{ strtoupper($template['signatures']['som'] ?? '-') }}</div>
+                        <div class="signature-title">SOM</div>
                     </td>
                 @endif
 
-                <td>
-                    <div class="signature-space"></div>
-                    <div class="signature-name">{{ $template['signatures']['adh'] }}</div>
-                    <div>ADH</div>
+                <td class="signature-cell-name signature-cell">
+                    <div class="signature-name">{{ strtoupper($template['signatures']['adh'] ?? '-') }}</div>
+                    <div class="signature-title">ADH</div>
                 </td>
-                <td>
-                    <div class="signature-space"></div>
-                    <div class="signature-name">{{ $template['signatures']['branch_manager'] }}</div>
-                    <div>Branch Manager</div>
+                <td class="signature-cell-name signature-cell">
+                    <div class="signature-name">{{ strtoupper($template['signatures']['branch_manager'] ?? '-') }}</div>
+                    <div class="signature-title">Branch Manager</div>
                 </td>
             </tr>
         </table>
-    </div>
-
-    <div class="footer-info">
-        Dicetak pada: {{ \Carbon\Carbon::now()->translatedFormat('d F Y H:i') }} | Sistem HRMS Deltamas
     </div>
 </body>
 
