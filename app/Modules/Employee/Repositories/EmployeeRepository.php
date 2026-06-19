@@ -147,14 +147,18 @@ class EmployeeRepository
         });
 
         $query->when($filters['sort_by'] ?? null, function ($q, $sortBy) use ($filters) {
-            $sortDir = $filters['sort_dir'] ?? 'asc';
+            $sortDir = strtolower($filters['sort_dir'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
             if ($sortBy === 'employee_id_number') {
-                $q->orderBy(DB::raw('CAST(e.employee_id_number AS UNSIGNED)'), $sortDir);
+                $q->orderByRaw("IF(e.employee_id_number REGEXP '^[0-9]+$', 0, 1) $sortDir")
+                  ->orderByRaw("IF(e.employee_id_number REGEXP '^[0-9]+$', LENGTH(e.employee_id_number), 0) $sortDir")
+                  ->orderBy('e.employee_id_number', $sortDir);
             } else {
                 $q->orderBy('e.' . $sortBy, $sortDir);
             }
         }, function ($q) {
-            $q->orderBy(DB::raw('CAST(e.employee_id_number AS UNSIGNED)'), 'asc');
+            $q->orderByRaw("IF(e.employee_id_number REGEXP '^[0-9]+$', 0, 1) asc")
+              ->orderByRaw("IF(e.employee_id_number REGEXP '^[0-9]+$', LENGTH(e.employee_id_number), 0) asc")
+              ->orderBy('e.employee_id_number', 'asc');
         });
 
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
