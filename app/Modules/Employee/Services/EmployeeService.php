@@ -184,13 +184,27 @@ class EmployeeService
         ];
 
         foreach ($attachmentTypes as $key => $label) {
-            if (isset($data[$key]) && $data[$key] instanceof \Illuminate\Http\UploadedFile) {
-                $path = StorageService::store($data[$key], 'employee_attachments');
-                EmployeeAttachment::create([
-                    'employee_id' => $employee->id,
-                    'name' => $label,
-                    'path' => $path,
-                ]);
+            if (isset($data[$key])) {
+                if ($data[$key] instanceof \Illuminate\Http\UploadedFile) {
+                    $path = StorageService::store($data[$key], 'employee_attachments');
+                    EmployeeAttachment::create([
+                        'employee_id' => $employee->id,
+                        'name' => $label,
+                        'path' => $path,
+                    ]);
+                } elseif (is_string($data[$key])) {
+                    $path = $data[$key];
+                    $disk = config('filesystems.default') === 'gcs' ? 'gcs' : 'public';
+                    $newPath = 'employee_attachments/' . \Illuminate\Support\Str::uuid() . '_' . basename($path);
+                    if (\Illuminate\Support\Facades\Storage::disk($disk)->exists($path)) {
+                        \Illuminate\Support\Facades\Storage::disk($disk)->move($path, $newPath);
+                        EmployeeAttachment::create([
+                            'employee_id' => $employee->id,
+                            'name' => $label,
+                            'path' => $newPath,
+                        ]);
+                    }
+                }
             }
         }
 
@@ -203,6 +217,18 @@ class EmployeeService
                         'name' => $file->getClientOriginalName(),
                         'path' => $path,
                     ]);
+                } elseif (is_string($file)) {
+                    $path = $file;
+                    $disk = config('filesystems.default') === 'gcs' ? 'gcs' : 'public';
+                    $newPath = 'employee_attachments/' . \Illuminate\Support\Str::uuid() . '_' . basename($path);
+                    if (\Illuminate\Support\Facades\Storage::disk($disk)->exists($path)) {
+                        \Illuminate\Support\Facades\Storage::disk($disk)->move($path, $newPath);
+                        EmployeeAttachment::create([
+                            'employee_id' => $employee->id,
+                            'name' => 'File Pendukung',
+                            'path' => $newPath,
+                        ]);
+                    }
                 }
             }
         }
