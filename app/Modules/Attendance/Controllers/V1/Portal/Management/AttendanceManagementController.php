@@ -12,6 +12,7 @@ use App\Modules\Attendance\Resources\AttendanceManagementResource;
 use App\Modules\Attendance\Services\AttendanceCalculationService;
 use App\Modules\Attendance\Services\AttendanceService;
 use App\Traits\ApiResponses;
+use App\Traits\AppliesManagementFilters;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -20,7 +21,7 @@ use Illuminate\Http\JsonResponse;
  */
 class AttendanceManagementController extends Controller
 {
-    use ApiResponses;
+    use ApiResponses, AppliesManagementFilters;
 
     public function __construct(
         protected AttendanceService $service,
@@ -68,8 +69,10 @@ class AttendanceManagementController extends Controller
      */
     public function index(AttendanceIndexRequest $request): JsonResponse
     {
+        $filters = $request->validated();
+        $filters = $this->applyManagementFilters($filters, $request);
         $attendances = $this->service->getPaginated(
-            $request->validated(),
+            $filters,
             $request->input('per_page', 15)
         );
 
