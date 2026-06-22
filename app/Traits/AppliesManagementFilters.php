@@ -28,6 +28,7 @@ trait AppliesManagementFilters
 
         if (in_array('Supervisor', $userRoles) && $user->employee) {
             $filters['team_id'] = $user->employee->team_id;
+            $filters['department_id'] = $user->employee->department_id;
         }
 
         return $filters;
