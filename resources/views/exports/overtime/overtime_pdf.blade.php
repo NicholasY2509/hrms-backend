@@ -12,14 +12,14 @@
 
         body {
             font-family: "Times New Roman", Times, serif;
-            font-size: 7px;
+            font-size: 10px;
             margin: 5px;
         }
 
         .header {
             text-align: center;
             font-weight: bold;
-            font-size: 9px;
+            font-size: 12px;
             margin-bottom: 8px;
         }
 
@@ -90,7 +90,7 @@
 
         .signature-title {
             font-style: italic;
-            font-size: 6px;
+            font-size: 9px;
             color: #666;
         }
     </style>
