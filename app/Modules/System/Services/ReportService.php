@@ -71,11 +71,37 @@ class ReportService
      */
     private function generateDocumentNo(string $type): string
     {
+        if ($type === 'overtime') {
+            $month = now()->month;
+            $year = now()->year;
+            
+            $reportCount = \App\Modules\System\Models\Report::where('type', 'overtime')
+                ->whereMonth('created_at', $month)
+                ->whereYear('created_at', $year)
+                ->count();
+                
+            $legacyCount = \Illuminate\Support\Facades\DB::table('overtime_exports')
+                ->whereMonth('created_at', $month)
+                ->whereYear('created_at', $year)
+                ->count();
+                
+            $count = $reportCount + $legacyCount;
+            $sequence = str_pad($count + 1, 3, '0', STR_PAD_LEFT);
+            
+            $romanMonths = [
+                1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
+                7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
+            ];
+            $romanMonth = $romanMonths[$month];
+            
+            return "{$sequence}/{$romanMonth}/DTM/{$year}";
+        }
+
         $date = now()->format('Ymd');
         $code = config("reports.map.{$type}.code", 'GEN');
         
         // Count reports generated today to get the sequence
-        $count = Report::whereDate('created_at', now()->toDateString())->count();
+        $count = \App\Modules\System\Models\Report::whereDate('created_at', now()->toDateString())->count();
         $sequence = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
 
         return "REP/{$date}/{$sequence}/{$code}";
