@@ -107,7 +107,7 @@ jobs:
           php artisan queue:restart || true
 
           # Reload PHP-FPM agar OPcache clear
-          sudo systemctl reload php8.3-fpm || sudo systemctl reload php8.2-fpm || true
+          sudo systemctl reload php8.4-fpm || true
 
           # ==============================
           # Cleanup old releases (Keep only 5 latest)
