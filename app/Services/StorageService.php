@@ -12,6 +12,38 @@ use Intervention\Image\ImageManager;
 class StorageService
 {
     /**
+     * Check if GCS is properly configured.
+     *
+     * @return bool
+     */
+    public static function isGcsConfigured(): bool
+    {
+        $gcsConfig = config('filesystems.disks.gcs');
+        if (empty($gcsConfig['bucket']) || ($gcsConfig['driver'] ?? '') !== 'gcs') {
+            return false;
+        }
+
+        $keyPath = $gcsConfig['keyFilePath'] ?? $gcsConfig['keyFile'] ?? null;
+        return is_array($keyPath) || (is_string($keyPath) && file_exists($keyPath));
+    }
+
+    /**
+     * Get the storage disk to use, with fallback to 'public' if GCS is missing.
+     *
+     * @return string
+     */
+    public static function getDisk(): string
+    {
+        $defaultDisk = config('filesystems.default', 'public');
+        
+        if ($defaultDisk === 'gcs' && !self::isGcsConfigured()) {
+            return 'public';
+        }
+        
+        return $defaultDisk;
+    }
+
+    /**
      * Store a file in the given path.
      *
      * @param UploadedFile $file
@@ -37,7 +69,7 @@ class StorageService
                 $fileName = pathinfo($fileName, PATHINFO_FILENAME) . '.jpg';
                 $fullPath = $directory . '/' . $fileName;
 
-                Storage::put($fullPath, (string) $encoded);
+                Storage::disk(self::getDisk())->put($fullPath, (string) $encoded);
 
                 return $fullPath;
             }
@@ -45,7 +77,7 @@ class StorageService
             Log::warning('Image compression failed: ' . $e->getMessage());
         }
 
-        return $file->storeAs($directory, $fileName);
+        return $file->storeAs($directory, $fileName, ['disk' => self::getDisk()]);
     }
 
     /**
@@ -65,26 +97,20 @@ class StorageService
         }
 
         // Prioritize GCS temporary URLs if configured
-        $gcsConfig = config('filesystems.disks.gcs');
-        if (!empty($gcsConfig['bucket']) && ($gcsConfig['driver'] ?? '') === 'gcs') {
-            $keyPath = $gcsConfig['keyFilePath'] ?? $gcsConfig['keyFile'] ?? null;
-            
+        if (self::isGcsConfigured()) {
             try {
-                // Only attempt if key is an array (decoded JSON) or a valid existing file path
-                if (is_array($keyPath) || (is_string($keyPath) && file_exists($keyPath))) {
-                    $cacheKey = 'gcs_temp_url_' . md5($path);
-                    return \Illuminate\Support\Facades\Cache::remember($cacheKey, now()->addMinutes(55), function () use ($path) {
-                        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
-                        $disk = Storage::disk('gcs');
-                        return $disk->temporaryUrl($path, now()->addMinutes(60));
-                    });
-                }
+                $cacheKey = 'gcs_temp_url_' . md5($path);
+                return \Illuminate\Support\Facades\Cache::remember($cacheKey, now()->addMinutes(55), function () use ($path) {
+                    /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+                    $disk = Storage::disk('gcs');
+                    return $disk->temporaryUrl($path, now()->addMinutes(60));
+                });
             } catch (\Throwable $e) {
                 // Fallback to default behavior if GCS fails
                 Log::warning('GCS temporary URL generation failed: ' . $e->getMessage());
             }
         }
 
-        return Storage::url($path);
+        return Storage::disk(self::getDisk())->url($path);
     }
 }
