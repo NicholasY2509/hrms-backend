@@ -34,7 +34,7 @@ jobs:
           ssh ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOFSETUP
           set -e
 
-          APP_DIR=/var/www/hrms-api.deltamastoyota.com
+          APP_DIR=/var/www/hrms-api.test.com
           RELEASE=$RELEASE
 
           mkdir -p \$APP_DIR/releases
@@ -97,7 +97,7 @@ jobs:
           ssh ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOFACTIVATE
           set -e
 
-          APP_DIR=/var/www/hrms-api.deltamastoyota.com
+          APP_DIR=/var/www/hrms-api.test.com
           RELEASE=${{ env.RELEASE }}
 
           # Update current symlink
