@@ -119,13 +119,14 @@
         @endphp
         <div class="container">
             <div class="text-right date-section">
-                Medan, {{ \Carbon\Carbon::parse($resignation->confirmed_at ?? $resignation->created_at)->translatedFormat('d F Y') }}
+                Medan,
+                {{ \Carbon\Carbon::parse($resignation->confirmed_at ?? $resignation->created_at)->translatedFormat('d F Y') }}
             </div>
 
             <div class="address-section">
                 Kepada Yth,<br>
                 <b>Bapak/Ibu Kepala Department dan HRD</b><br>
-                PT. Deltamas Surya Indah Mulia<br>
+                PT. XXX<br>
                 Ditempat
             </div>
 

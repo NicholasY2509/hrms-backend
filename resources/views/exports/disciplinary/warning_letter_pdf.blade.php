@@ -137,7 +137,7 @@
             </div>
 
             <div class="management-header">
-                MANAGEMENT PT. DELTAMAS SURYA INDAH MULIA
+                MANAGEMENT PT. XXXX
             </div>
 
             <div class="section-title">MENGINGAT / MENIMBANG :</div>
@@ -191,7 +191,7 @@
                 <div class="signature-box">
                     <p>Dikeluarkan di : Medan</p>
                     <p>Tanggal : {{ \Carbon\Carbon::parse($warningLetter->warning_at)->translatedFormat('d F Y') }}</p>
-                    <p><b>PT. DELTAMAS SURYA INDAH MULIA</b></p>
+                    <p><b>PT. XXXX</b></p>
                     <div class="signature-space"></div>
                     <p>__________________________</p>
                     <p>Management</p>

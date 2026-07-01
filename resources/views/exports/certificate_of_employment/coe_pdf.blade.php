@@ -133,13 +133,14 @@
                     <td>Tempat/Tgl Lahir</td>
                     <td>:</td>
                     <td>{{ strtoupper($coe->employee?->place_birth) }} /
-                        {{ \Carbon\Carbon::parse($coe->employee?->date_birth)->translatedFormat('d F Y') }}</td>
+                        {{ \Carbon\Carbon::parse($coe->employee?->date_birth)->translatedFormat('d F Y') }}
+                    </td>
                 </tr>
             </table>
 
             <div class="content-section text-justify">
                 <p>
-                    Benar pernah bekerja di <b>PT. Deltamas Surya Indah Mulia</b> sejak
+                    Benar pernah bekerja di <b>PT. XXX</b> sejak
                     {{ \Carbon\Carbon::parse($coe->employee?->join_date)->translatedFormat('d F Y') }} dengan
                     jabatan terakhir sebagai <b>{{ strtoupper($coe->employee?->position?->name) }}</b>.
                 </p>
@@ -157,7 +158,7 @@
 
             <div class="signature-section">
                 <p>Medan, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-                <p><b>PT. Deltamas Surya Indah Mulia</b></p>
+                <p><b>PT. XXX</b></p>
                 <div class="signature-space"></div>
                 <p><b><u>Nicholas Boediman</u></b></p>
                 <p>Kepala Cabang</p>

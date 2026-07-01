@@ -127,7 +127,7 @@
         <div class="container">
             <div class="logo-box">
                 {{-- Logo placeholder --}}
-                <b style="font-size: 14pt;">PT. DELTAMAS SURYA INDAH MULIA</b>
+                <b style="font-size: 14pt;">PT. XXX</b>
             </div>
 
             <div class="title-box">
