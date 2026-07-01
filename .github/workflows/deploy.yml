@@ -98,7 +98,6 @@ jobs:
           # ==============================
           # Laravel Optimize
           # ==============================
-          
           php artisan migrate --force
           php artisan config:cache
           php artisan route:cache
@@ -132,6 +131,12 @@ jobs:
           php artisan queue:restart || true
 
           sudo systemctl reload php8.4-fpm || true
+
+          php artisan queue:restart || true
+
+          sudo systemctl reload php8.4-fpm || true
+
+          sudo systemctl reload nginx || true
 
           cd \$APP_DIR/releases
           ls -1t | tail -n +6 | xargs -r rm -rf
