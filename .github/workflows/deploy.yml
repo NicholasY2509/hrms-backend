@@ -21,7 +21,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.HRMS_API_PROD_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan ${{ secrets.HRMS_API_PROD_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p 777 ${{ secrets.HRMS_API_PROD_HOST }} >> ~/.ssh/known_hosts
 
       # ==============================
       # Deploy ke server
@@ -31,7 +31,7 @@ jobs:
           RELEASE=$(date +%Y_%m_%d_%H%M)
           echo "RELEASE=$RELEASE" >> $GITHUB_ENV
 
-          ssh ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOFSETUP
+          ssh -p 777 ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOFSETUP
           set -e
 
           APP_DIR=/var/www/hrms-api.test.com
@@ -52,7 +52,7 @@ jobs:
           ln -sfn \$APP_DIR/shared/.env .env
 
           # ==============================
-          # Shared storage (WAJIB rm dulu)
+          # Shared storage
           # ==============================
           rm -rf storage
           mkdir -p \$APP_DIR/shared/storage/app/public
@@ -73,9 +73,13 @@ jobs:
           ln -sfn \$APP_DIR/shared/bootstrap/cache bootstrap/cache
 
           # ==============================
-          # Composer (tetap di server karena butuh PHP extensions)
+          # Install dependencies
           # ==============================
-          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+          composer install \
+            --no-dev \
+            --optimize-autoloader \
+            --no-interaction \
+            --prefer-dist
 
           # ==============================
           # Laravel optimize
@@ -90,29 +94,25 @@ jobs:
           EOFSETUP
 
       # ==============================
-      # Switch symlink & restart services
+      # Activate Release
       # ==============================
       - name: Activate Release
         run: |
-          ssh ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOFACTIVATE
+          ssh -p 777 ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOFACTIVATE
           set -e
 
           APP_DIR=/var/www/hrms-api.test.com
           RELEASE=${{ env.RELEASE }}
 
-          # Update current symlink
           ln -sfn \$APP_DIR/releases/\$RELEASE \$APP_DIR/current
 
           cd \$APP_DIR/current
+
           php artisan queue:restart || true
 
-          # Reload PHP-FPM agar OPcache clear
           sudo systemctl reload php8.4-fpm || true
 
-          # ==============================
-          # Cleanup old releases (Keep only 5 latest)
-          # ==============================
           cd \$APP_DIR/releases
-          ls -1t | tail -n +6 | xargs -d '\n' rm -rf
+          ls -1t | tail -n +6 | xargs -r rm -rf
 
           EOFACTIVATE
