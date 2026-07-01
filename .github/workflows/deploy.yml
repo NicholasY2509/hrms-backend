@@ -19,8 +19,8 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.HRMS_API_PROD_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.HRMS_API_PROD_SSH_KEY }}" > ~/.ssh/github-actions
+          chmod 600 ~/.ssh/github-actions
           ssh-keyscan -p 777 ${{ secrets.HRMS_API_PROD_HOST }} >> ~/.ssh/known_hosts
 
       # ==============================
@@ -31,7 +31,13 @@ jobs:
           RELEASE=$(date +%Y_%m_%d_%H%M)
           echo "RELEASE=$RELEASE" >> $GITHUB_ENV
 
-          ssh -p 777 ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOFSETUP
+          ssh \
+            -i ~/.ssh/github-actions \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -p 777 \
+            ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOFSETUP
+
           set -e
 
           APP_DIR=/var/www/hrms-api.test.com
@@ -43,7 +49,11 @@ jobs:
           eval "\$(ssh-agent -s)"
           ssh-add ~/.ssh/hrms-api-deploy
 
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
           git clone git@github.com:${{ github.repository }}.git \$RELEASE
+
           cd \$RELEASE
 
           # ==============================
@@ -56,13 +66,16 @@ jobs:
           # ==============================
           rm -rf storage
           mkdir -p \$APP_DIR/shared/storage/app/public
-          mkdir -p \$APP_DIR/shared/storage/framework/{sessions,views,cache/data}
+          mkdir -p \$APP_DIR/shared/storage/framework/sessions
+          mkdir -p \$APP_DIR/shared/storage/framework/views
+          mkdir -p \$APP_DIR/shared/storage/framework/cache/data
           mkdir -p \$APP_DIR/shared/storage/logs
           ln -sfn \$APP_DIR/shared/storage storage
 
           # ==============================
           # Symlink GCS key
           # ==============================
+          mkdir -p storage/app
           ln -sfn \$APP_DIR/shared/gcs-key.json storage/app/gcs-key.json
 
           # ==============================
@@ -73,16 +86,16 @@ jobs:
           ln -sfn \$APP_DIR/shared/bootstrap/cache bootstrap/cache
 
           # ==============================
-          # Install dependencies
+          # Install Composer
           # ==============================
           composer install \
             --no-dev \
+            --prefer-dist \
             --optimize-autoloader \
-            --no-interaction \
-            --prefer-dist
+            --no-interaction
 
           # ==============================
-          # Laravel optimize
+          # Laravel Optimize
           # ==============================
           php artisan cache:clear
           php artisan migrate --force
@@ -98,7 +111,13 @@ jobs:
       # ==============================
       - name: Activate Release
         run: |
-          ssh -p 777 ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOFACTIVATE
+          ssh \
+            -i ~/.ssh/github-actions \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -p 777 \
+            ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOFACTIVATE
+
           set -e
 
           APP_DIR=/var/www/hrms-api.test.com
