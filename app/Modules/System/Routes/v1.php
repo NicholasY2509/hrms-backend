@@ -12,11 +12,14 @@ use App\Modules\System\Controllers\V1\MediaController;
 use Illuminate\Support\Facades\Route;
 
 // Standard System Routes
-Route::get('/test-passport', [SystemController::class, 'testPassport']);
 Route::get('/app-config', [SystemController::class, 'appConfig']);
 
-// Auth Routes
-Route::middleware(['api.auth'])->group(function () {
+// Public Auth Routes
+Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/refresh', [AuthController::class, 'refresh']);
+
+// Protected Routes
+Route::middleware(['auth:api'])->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/mobile-dashboard', [MobileDashboardController::class, 'index']);
@@ -52,10 +55,7 @@ Route::middleware(['api.auth'])->group(function () {
                 Route::post('/tasks/queue/restart', 'restartQueue');
             });
 
-            Route::get('passport-clients', [\App\Modules\System\Controllers\V1\Configuration\PassportDataController::class, 'clients']);
-            Route::get('passport-roles', [\App\Modules\System\Controllers\V1\Configuration\PassportDataController::class, 'roles']);
-            Route::get('global-passport-roles', [\App\Modules\System\Controllers\V1\Configuration\GlobalPassportRoleController::class, 'index']);
-            Route::post('global-passport-roles', [\App\Modules\System\Controllers\V1\Configuration\GlobalPassportRoleController::class, 'store']);
+            // Passport integrations removed
         });
 
     Route::prefix('portal/management')

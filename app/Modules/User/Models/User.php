@@ -9,14 +9,14 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Passport\HasApiTokens;
+use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 #[Fillable(['email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
-    use HasApiTokens, HasFactory, Notifiable, LogsActivity;
+    use HasFactory, Notifiable, LogsActivity;
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -75,5 +75,34 @@ class User extends Authenticatable
                 $query->where('email', 'like', "%$search%");
             });
         });
+    }
+
+    /**
+     * Get the identifier that will be stored in the subject claim of the JWT.
+     *
+     * @return mixed
+     */
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    /**
+     * Return a key value array, containing any custom claims to be added to the JWT.
+     *
+     * @return array
+     */
+    public function getJWTCustomClaims()
+    {
+        // Extract roles from the user's employee work position if available
+        $roles = [];
+        $employee = $this->employee()->with('work_position.passportRoles')->first();
+        if ($employee && $employee->work_position) {
+            $roles = $employee->work_position->passportRoles->pluck('name')->toArray();
+        }
+
+        return [
+            'roles' => $roles,
+        ];
     }
 }

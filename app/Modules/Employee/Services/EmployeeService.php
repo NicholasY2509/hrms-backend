@@ -10,7 +10,6 @@ use App\Modules\Organization\Models\WorkPosition;
 use App\Modules\Payroll\Models\TaxPtkpSetting;
 use App\Modules\System\Models\PassportClient;
 use App\Modules\User\Models\User;
-use App\Services\PassportApiService;
 use App\Services\StorageService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -133,39 +132,8 @@ class EmployeeService
             // 8. Handle Attachments (KTP, KK, Ijazah, Supporting Files)
             $this->handleAttachments($employee, $attachmentData);
 
-            // 9. Passport API Sync
-            $globalRoles = \App\Modules\System\Models\PassportRole::where('is_global', true)->get();
-            $globalRoleIds = $globalRoles->pluck('passport_role_id')->toArray();
-            $globalClientIds = $globalRoles->pluck('passport_client_id')->toArray();
+            // (Removed Passport API Sync)
             
-            $workPositionRoleIds = [];
-            $workPositionClientIds = [];
-            
-            if ($employee->work_position_id) {
-                $workPosition = \App\Modules\Organization\Models\WorkPosition::with('passportRoles')->find($employee->work_position_id);
-                if ($workPosition) {
-                    $workPositionRoleIds = $workPosition->passportRoles->pluck('passport_role_id')->toArray();
-                    $workPositionClientIds = $workPosition->passportRoles->pluck('passport_client_id')->toArray();
-                }
-            }
-            
-            $passportRoles = array_unique(array_merge($globalRoleIds, $workPositionRoleIds));
-            $passportClients = array_unique(array_merge($globalClientIds, $workPositionClientIds));
-
-            $passportData = [
-                'employee_id_number' => $employee->employee_id_number,
-                'first_name' => $employee->first_name,
-                'last_name' => $employee->last_name,
-                'full_name' => $employee->full_name,
-                'email' => $user->email,
-                'password' => $data['password'], // Raw password for passport sync
-                'clients' => $passportClients,
-                'roles' => $passportRoles,
-            ];
-            
-            $passportApiService = app(PassportApiService::class);
-            $passportApiService->createUser($passportData);
-
             Cache::tags(['employees'])->flush();
 
             return $employee->load(['user_employee.user', 'attachments']);

@@ -39,7 +39,6 @@ return Application::configure(basePath: dirname(__DIR__))
         
         $middleware->alias([
             'throttle.auth' => ThrottleRequests::class . ':auth',
-            'api.auth' => UnifiedApiAuth::class,
             'legacy.auth' => VerifyLegacySignature::class,
             'role' => RequireRole::class,
         ]);
