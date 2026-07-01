@@ -3,18 +3,19 @@
 namespace App\Modules\Organization\Models;
 
 use App\Modules\Employee\Models\Employee;
-use App\Modules\System\Models\PassportRole;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Permission\Traits\HasRoles;
 
 class WorkPosition extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasRoles;
 
     protected $table = 'work_positions';
     protected $guarded = ['id'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
+    protected $guard_name = 'api'; // default guard for spatie roles
 
     public function scopeFilter($query, array $filters)
     {
@@ -42,10 +43,5 @@ class WorkPosition extends Model
     public function employees(): HasMany
     {
         return $this->hasMany(Employee::class, 'work_position_id', 'id');
-    }
-
-    public function passportRoles()
-    {
-        return $this->belongsToMany(PassportRole::class, 'work_position_passport_role', 'work_position_id', 'passport_role_id');
     }
 }

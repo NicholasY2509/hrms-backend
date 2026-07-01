@@ -94,15 +94,24 @@ class User extends Authenticatable implements JWTSubject
      */
     public function getJWTCustomClaims()
     {
-        // Extract roles from the user's employee work position if available
+        // Extract roles and permissions from the user's employee work position if available
         $roles = [];
-        $employee = $this->employee()->with('work_position.passportRoles')->first();
+        $permissions = [];
+        
+        $employee = $this->employee()->with('work_position.roles.permissions')->first();
         if ($employee && $employee->work_position) {
-            $roles = $employee->work_position->passportRoles->pluck('name')->toArray();
+            $roles = $employee->work_position->roles->pluck('name')->toArray();
+            
+            // Collect permissions from all assigned roles
+            $employee->work_position->roles->each(function ($role) use (&$permissions) {
+                $permissions = array_merge($permissions, $role->permissions->pluck('name')->toArray());
+            });
+            $permissions = array_unique($permissions);
         }
 
         return [
             'roles' => $roles,
+            'permissions' => array_values($permissions),
         ];
     }
 }

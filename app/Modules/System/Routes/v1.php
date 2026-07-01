@@ -55,7 +55,9 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::post('/tasks/queue/restart', 'restartQueue');
             });
 
-            // Passport integrations removed
+            // Role & Permission Management
+            Route::get('/permissions', [\App\Modules\System\Controllers\V1\Configuration\RoleController::class, 'getPermissions']);
+            Route::apiResource('roles', \App\Modules\System\Controllers\V1\Configuration\RoleController::class);
         });
 
     Route::prefix('portal/management')

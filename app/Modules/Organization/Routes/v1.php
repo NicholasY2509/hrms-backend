@@ -25,8 +25,8 @@ Route::middleware(['api.auth'])->group(function () {
         ->group(function () {
             
         Route::apiResource('position-hierarchy-matrices', PositionHierarchyMatrixController::class);
-        Route::get('work-positions/{id}/passport-roles', [\App\Modules\Organization\Controllers\V1\Configuration\WorkPositionPassportRoleController::class, 'index']);
-        Route::post('work-positions/{id}/passport-roles', [\App\Modules\Organization\Controllers\V1\Configuration\WorkPositionPassportRoleController::class, 'store']);
+        Route::get('work-positions/{id}/roles', [\App\Modules\Organization\Controllers\V1\Configuration\WorkPositionRoleController::class, 'index']);
+        Route::post('work-positions/{id}/roles', [\App\Modules\Organization\Controllers\V1\Configuration\WorkPositionRoleController::class, 'store']);
         Route::get('org-chart', [OrganizationChartController::class, 'index']);
         Route::get('org-chart/{positionId}/employees', [OrganizationChartController::class, 'employees']);
 

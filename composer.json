@@ -21,7 +21,8 @@
         "php-open-source-saver/jwt-auth": "^2.9",
         "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-activitylog": "^5.0",
-        "spatie/laravel-google-cloud-storage": "^2.3"
+        "spatie/laravel-google-cloud-storage": "^2.3",
+        "spatie/laravel-permission": "^8.1"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

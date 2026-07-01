@@ -10,9 +10,8 @@ class RequireRole
 {
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        return $next($request); // TEMPORARY BYPASS
-        $user = auth()->user();
-        $userRoles = $user?->remote_roles;
+        $payload = auth()->payload();
+        $userRoles = $payload ? $payload->get('roles') : [];
 
         // Ensure $userRoles is an array
         if (is_string($userRoles)) {
