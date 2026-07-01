@@ -8,7 +8,6 @@ on:
     branches:
       - main
 
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -24,9 +23,6 @@ jobs:
           chmod 600 ~/.ssh/github-actions
           ssh-keyscan -p 777 ${{ secrets.HRMS_API_PROD_HOST }} >> ~/.ssh/known_hosts
 
-      # ==============================
-      # Deploy ke server
-      # ==============================
       - name: Create Release & Setup
         run: |
           RELEASE=$(date +%Y_%m_%d_%H%M)
@@ -37,15 +33,18 @@ jobs:
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             -p 777 \
-            ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOFSETUP
-
+            ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOF
           set -e
 
           APP_DIR=/var/www/hrms-api.test.com
           RELEASE=$RELEASE
 
           mkdir -p \$APP_DIR/releases
+          mkdir -p \$APP_DIR/shared
+
           cd \$APP_DIR/releases
+
+          rm -rf \$RELEASE
 
           eval "\$(ssh-agent -s)"
           ssh-add ~/.ssh/hrms-api-deploy-ci
@@ -57,59 +56,47 @@ jobs:
 
           cd \$RELEASE
 
-          # ==============================
-          # Symlink .env
-          # ==============================
+          # .env
           ln -sfn \$APP_DIR/shared/.env .env
 
-          # ==============================
-          # Shared storage
-          # ==============================
+          # Storage
           rm -rf storage
           mkdir -p \$APP_DIR/shared/storage/app/public
+          mkdir -p \$APP_DIR/shared/storage/framework/cache/data
           mkdir -p \$APP_DIR/shared/storage/framework/sessions
           mkdir -p \$APP_DIR/shared/storage/framework/views
-          mkdir -p \$APP_DIR/shared/storage/framework/cache/data
           mkdir -p \$APP_DIR/shared/storage/logs
           ln -sfn \$APP_DIR/shared/storage storage
 
-          # ==============================
-          # Symlink GCS key
-          # ==============================
-          mkdir -p storage/app
-          ln -sfn \$APP_DIR/shared/gcs-key.json storage/app/gcs-key.json
-
-          # ==============================
-          # Shared bootstrap cache
-          # ==============================
+          # Bootstrap cache
           rm -rf bootstrap/cache
           mkdir -p \$APP_DIR/shared/bootstrap/cache
           ln -sfn \$APP_DIR/shared/bootstrap/cache bootstrap/cache
 
-          # ==============================
-          # Install Composer
-          # ==============================
-          composer install \
-            --no-dev \
-            --prefer-dist \
-            --optimize-autoloader \
-            --no-interaction
+          # GCS Key (optional)
+          if [ -f "\$APP_DIR/shared/gcs-key.json" ]; then
+              mkdir -p storage/app
+              ln -sfn \$APP_DIR/shared/gcs-key.json storage/app/gcs-key.json
+          fi
 
-          # ==============================
-          # Laravel Optimize
-          # ==============================
+          composer install \
+              --no-dev \
+              --prefer-dist \
+              --no-interaction \
+              --optimize-autoloader \
+              --classmap-authoritative
+
+          chmod -R ug+rwx storage bootstrap/cache
+
+          php artisan optimize:clear
           php artisan migrate --force
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
           php artisan event:cache
-          php artisan cache:clear
 
-          EOFSETUP
+          EOF
 
-      # ==============================
-      # Activate Release
-      # ==============================
       - name: Activate Release
         run: |
           ssh \
@@ -117,12 +104,15 @@ jobs:
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             -p 777 \
-            ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOFACTIVATE
-
+            ${{ secrets.HRMS_API_PROD_USER }}@${{ secrets.HRMS_API_PROD_HOST }} << EOF
           set -e
 
           APP_DIR=/var/www/hrms-api.test.com
           RELEASE=${{ env.RELEASE }}
+
+          if [ -d "\$APP_DIR/current" ] && [ ! -L "\$APP_DIR/current" ]; then
+              rm -rf \$APP_DIR/current
+          fi
 
           ln -sfn \$APP_DIR/releases/\$RELEASE \$APP_DIR/current
 
@@ -130,15 +120,10 @@ jobs:
 
           php artisan queue:restart || true
 
-          sudo systemctl reload php8.4-fpm || true
-
-          php artisan queue:restart || true
-
-          sudo systemctl reload php8.4-fpm || true
-
-          sudo systemctl reload nginx || true
+          sudo systemctl reload php8.4-fpm
+          sudo systemctl reload nginx
 
           cd \$APP_DIR/releases
-          ls -1t | tail -n +6 | xargs -r rm -rf
+          ls -1dt */ | tail -n +6 | xargs -r rm -rf
 
-          EOFACTIVATE
+          EOF
