@@ -30,7 +30,7 @@ return new class extends Migration
 
         Schema::create('work_position_passport_role', function (Blueprint $table) {
             $table->id();
-            $table->integer('work_position_id');
+            $table->unsignedBigInteger('work_position_id');
             $table->unsignedBigInteger('passport_role_id');
             $table->timestamps();
 

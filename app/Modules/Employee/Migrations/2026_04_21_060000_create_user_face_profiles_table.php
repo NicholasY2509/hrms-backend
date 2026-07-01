@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('user_face_profiles', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('user_id')->unique();
+            $table->unsignedBigInteger('user_id')->unique();
             $table->text('face_embedding'); // Stored as JSON or serialized array
             $table->timestamps();
 

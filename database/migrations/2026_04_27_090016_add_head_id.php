@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('departments', function (Blueprint $table) {
-            $table->unsignedInteger('dept_head_id')->nullable()->after('name');
+            $table->unsignedBigInteger('dept_head_id')->nullable()->after('name');
         });
 
         Schema::table('teams', function (Blueprint $table) {
-            $table->unsignedInteger('team_head_id')->nullable()->after('name');
+            $table->unsignedBigInteger('team_head_id')->nullable()->after('name');
         });
     }
 

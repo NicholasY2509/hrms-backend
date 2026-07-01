@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('approval_rules', function (Blueprint $table) {
-            $table->bigInteger('work_location_id')->nullable()->after('work_position_id');
+            $table->unsignedBigInteger('work_location_id')->nullable()->after('work_position_id');
             $table->foreign('work_location_id')->references('id')->on('work_locations')->onDelete('set null');
             $table->index('work_location_id');
         });

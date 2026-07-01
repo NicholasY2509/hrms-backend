@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('department_heads', function (Blueprint $table) {
             $table->id();
             // Match exact types: departments.id = INT, work_locations.id = BIGINT, employees.id = BIGINT
-            $table->integer('department_id');
-            $table->bigInteger('work_location_id');
-            $table->bigInteger('employee_id');
+            $table->unsignedBigInteger('department_id');
+            $table->unsignedBigInteger('work_location_id');
+            $table->unsignedBigInteger('employee_id');
             $table->timestamps();
 
             $table->unique(['department_id', 'work_location_id']);

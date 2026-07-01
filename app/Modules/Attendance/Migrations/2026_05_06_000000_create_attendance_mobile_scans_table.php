@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('attendance_mobile_scans', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('attendance_id');
+            $table->unsignedBigInteger('attendance_id');
             $table->foreign('attendance_id')->references('id')->on('attendances')->onDelete('cascade');
-            $table->bigInteger('employee_id');
+            $table->unsignedBigInteger('employee_id');
             $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
             $table->string('scan_type'); // 'in' or 'out'
             $table->time('scan_time');

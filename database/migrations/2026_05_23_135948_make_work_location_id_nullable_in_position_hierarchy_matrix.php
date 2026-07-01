@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('position_hierarchy_matrix', function (Blueprint $table) {
             $table->dropForeign('position_hierarchy_matrix_work_location_id_foreign');
             $table->dropUnique('pos_hier_matrix_unique');
-            $table->bigInteger('work_location_id')->nullable()->change();
+            $table->unsignedBigInteger('work_location_id')->nullable()->change();
             
             $table->unique(['work_location_id', 'department_id', 'work_position_id'], 'pos_hier_matrix_unique');
             $table->foreign('work_location_id')->references('id')->on('work_locations')->cascadeOnDelete();
@@ -29,7 +29,7 @@ return new class extends Migration
         Schema::table('position_hierarchy_matrix', function (Blueprint $table) {
             $table->dropForeign('position_hierarchy_matrix_work_location_id_foreign');
             $table->dropUnique('pos_hier_matrix_unique');
-            $table->bigInteger('work_location_id')->nullable(false)->change();
+            $table->unsignedBigInteger('work_location_id')->nullable(false)->change();
             
             $table->unique(['work_location_id', 'department_id', 'work_position_id'], 'pos_hier_matrix_unique');
             $table->foreign('work_location_id')->references('id')->on('work_locations')->cascadeOnDelete();

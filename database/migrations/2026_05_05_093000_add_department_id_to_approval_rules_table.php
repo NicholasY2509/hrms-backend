@@ -14,7 +14,7 @@ return new class extends Migration
         // Handle partial state from prior failed runs
         if (!Schema::hasColumn('approval_rules', 'department_id')) {
             Schema::table('approval_rules', function (Blueprint $table) {
-                $table->integer('department_id')->nullable()->after('work_location_id');
+                $table->unsignedBigInteger('department_id')->nullable()->after('work_location_id');
                 $table->foreign('department_id')->references('id')->on('departments')->onDelete('set null');
                 $table->index('department_id');
             });

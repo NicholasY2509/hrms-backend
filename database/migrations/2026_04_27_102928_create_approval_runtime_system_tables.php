@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('approval_requests', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('approval_rule_id');
+            $table->unsignedBigInteger('approval_rule_id');
             $table->string('approvable_type');
             $table->unsignedBigInteger('approvable_id');
             $table->string('status')->default('pending'); // pending, approved, rejected, cancelled
@@ -25,7 +25,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('approval_request_id');
             $table->string('approver_type'); // user, group, supervisor, dept_head
-            $table->unsignedInteger('approver_id')->nullable(); // The resolved User ID or Group ID
+            $table->unsignedBigInteger('approver_id')->nullable(); // The resolved User ID or Group ID
             $table->integer('sequence');
             $table->string('status')->default('pending'); // pending, approved, rejected
             $table->text('notes')->nullable();

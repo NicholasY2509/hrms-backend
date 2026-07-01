@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('position_hierarchy_matrix', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('work_location_id');
-            $table->integer('department_id');
-            $table->integer('work_position_id');
-            $table->integer('supervisor_work_position_id');
+            $table->unsignedBigInteger('work_location_id');
+            $table->unsignedBigInteger('department_id');
+            $table->unsignedBigInteger('work_position_id');
+            $table->unsignedBigInteger('supervisor_work_position_id');
             $table->timestamps();
             
             $table->foreign('work_location_id')->references('id')->on('work_locations')->cascadeOnDelete();

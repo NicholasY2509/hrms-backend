@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('shift_exchanges', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('employee_id');
+            $table->unsignedBigInteger('employee_id');
             $table->date('date');
-            $table->integer('original_working_hour_id');
-            $table->integer('requested_working_hour_id');
-            $table->bigInteger('exchange_with_employee_id')->nullable();
+            $table->unsignedBigInteger('original_working_hour_id');
+            $table->unsignedBigInteger('requested_working_hour_id');
+            $table->unsignedBigInteger('exchange_with_employee_id')->nullable();
             $table->text('reason');
             $table->timestamp('settled_at')->nullable();
             $table->timestamps();

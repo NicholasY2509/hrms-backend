@@ -49,7 +49,7 @@ return new class extends Migration
 
         Schema::create('employee_salaries', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('employee_id');
+            $table->unsignedBigInteger('employee_id');
             $table->decimal('bpjs_base_amount', 15, 2)->comment('Formerly amount - for BPJS base');
             $table->decimal('actual_base_amount', 15, 2)->comment('Formerly real_amount - for OT & Tax');
             $table->date('effective_date');
@@ -64,7 +64,7 @@ return new class extends Migration
 
         Schema::create('employee_salary_components', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('employee_id');
+            $table->unsignedBigInteger('employee_id');
             $table->foreignId('salary_component_id')->constrained('salary_components')->onDelete('cascade');
             $table->decimal('amount', 15, 2)->nullable()->comment('Specific override amount');
             $table->string('formula')->nullable()->comment('Optional logic/multiplier');
@@ -80,7 +80,7 @@ return new class extends Migration
 
         Schema::create('employee_tax_profiles', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('employee_id');
+            $table->unsignedBigInteger('employee_id');
             $table->string('npwp_number')->nullable();
             $table->foreignId('ptkp_setting_id')->constrained('tax_ptkp_settings');
             $table->enum('tax_method', ['gross', 'gross_up', 'net'])->default('gross');
